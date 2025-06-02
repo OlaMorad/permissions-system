@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Traits\HasPermissions;
 
 class Manager extends Model
 {
+      use HasPermissions;
+      protected $fillable=[
+        'user_id',
+        'role_id'
+      ];
     public function user()
     {
         return $this->belongsTo(User::class);

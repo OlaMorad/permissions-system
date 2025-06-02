@@ -7,6 +7,13 @@ use Spatie\Permission\Models\Role;
 
 class Employee extends Model
 {
+
+    protected $fillable=[
+      'user_id',
+      'role_id',
+      'manager_id'
+
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);
