@@ -8,19 +8,14 @@ use Spatie\Permission\Models\Role;
 use App\Http\Requests\EmployeeRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\Employee;
+use App\Services\RegisterService;
 
 class employeeController extends Controller
 {
-     public function create_employee(UserRequest $request, $roleName)
+    public function __construct(protected RegisterService $registerService) {}
+    public function create_employee(UserRequest $request)
     {
-        $user = User::create_user($request);
-        $role = Role::where('name', $roleName)->firstOrFail();
-    
-        Employee::create([
-            'user_id' => $user->id,
-            'role_id' => $role->id,
-            'manager_id'=>1
-        ]);
+        $employee = $this->registerService->register_employee($request->validated());
 
         return response()->json(['message' => 'تم إنشاء الموظف بنجاح']);
     }
