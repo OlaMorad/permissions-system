@@ -2,37 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RegisterManagerRequest;
-use App\Http\Requests\UserRequest;
-use App\Models\Manager;
 use App\Models\User;
-use App\Services\RegisterService;
+use App\Models\Manager;
 use Illuminate\Http\Request;
+use App\Services\RegisterService;
+use App\Http\Requests\UserRequest;
 use Spatie\Permission\Models\Role;
+use App\Http\Resources\successResource;
+use App\Http\Requests\RegisterManagerRequest;
 
 class ManagerController extends Controller
 {
-    // public function create_manager(UserRequest $request, $roleName)
-    // {
-    //     $user = User::create_user($request);
-    //     $role = Role::where('name', $roleName)->firstOrFail();
-    //     Manager::create([
-    //         'user_id' => $user->id,
-    //         'role_id' => $role->id,
-    //     ]);
 
-    //     return response()->json(['message' => 'تم إنشاء المدير بنجاح']);
-    // }
     public function __construct(protected RegisterService $managerService) {}
+
 
     public function create_manager(RegisterManagerRequest $request, $role_id)
     {
-        $user = $this->managerService->registerManager($request->validated());
+        $this->managerService->registerManager($request->validated());
 
-        return response()->json([
-            'message' => 'تم إنشاء حساب رئيس القسم بنجاح',
-            // 'manager' => $user->load('roles')->getRoleNames()
-        ]);
+        return new successResource([]);
     }
 
     public function ManagerRoles()
@@ -41,5 +30,6 @@ class ManagerController extends Controller
         return response()->json([
             'roles' => $roles
         ]);
+
     }
 }

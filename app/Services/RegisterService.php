@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\successResource;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\Manager;
@@ -11,23 +12,16 @@ use Spatie\Permission\Models\Role;
 
 class RegisterService
 {
-    public function registerManager(array $data): User
+    public function registerManager(array $data)
     {
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+        $user = User::create_user($data);
 
         $role = Role::find($data['role_id']);
-        $user->assignRole($role->name);
 
         Manager::create([
             'user_id' => $user->id,
             'role_id' => $role->id,
         ]);
-
-        return $user;
     }
 
     public function register_employee(array $data): User
@@ -44,12 +38,8 @@ class RegisterService
         if (!$employeeRoleName) {
             throw new \Exception('هذا المدير لا يملك صلاحية إنشاء موظفين.');
         }
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
-        $user->assignRole($employeeRoleName);
+
+        $user = User::create_user($data);
 
         $manager = Manager::where('user_id', $managerUser->id)->firstOrFail();
 
@@ -61,6 +51,8 @@ class RegisterService
 
         return $user;
     }
+
+
     protected array $allowedRolesMap = [
         'Head of Front Desk' => 'Front Desk User',
         'Head of Certificate Officer' => 'Certificate Officer',
