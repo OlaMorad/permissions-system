@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
-use App\Http\Resources\successResource;
 use App\Services\AuthService;
 
 class AuthController extends Controller
