@@ -20,6 +20,7 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware('auth:api')->controller(AuthController::class)->group(function () {
     Route::post('/logout', 'logout');
     Route::post('/refresh', 'refresh');
+    Route::post('/reset-password/{user_id}', 'ResetPassword');
 });
 
 // Route::post('addManager/{roleName}',[managerController::class,'create_manager']);
