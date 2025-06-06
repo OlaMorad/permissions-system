@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -12,41 +13,51 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::middleware(['working.hours'])->group(
+    function () {
 
-Route::controller(AuthController::class)->group(function () {
-    Route::post('/login', 'login');
-});
+        Route::controller(AuthController::class)->group(function () {
+            Route::post('/login', 'login');
+        });
 
-Route::middleware('auth:api')->controller(AuthController::class)->group(function () {
-    Route::post('/logout', 'logout');
-    Route::post('/refresh', 'refresh');
-    Route::post('/reset-password/{user_id}', 'ResetPassword');
-});
+        Route::middleware('auth:api', 'Verify.Session')->controller(AuthController::class)->group(function () {
+            Route::post('/logout', 'logout');
+            Route::post('/refresh', 'refresh');
+            Route::post('/reset-password/{user_id}', 'ResetPassword');
+        });
 
-// Route::middleware(['auth:api'])->group(function () {
-//     Route::post('/register-manager/{role_id}', [ManagerController::class, 'create_manager'])
-//         ->middleware('role:sub_admin');
-// });
-// Route::get('Manager_Roles',[managerController::class, 'ManagerRoles']);
+        // Route::middleware(['auth:api'])->group(function () {
+        //     Route::post('/register-manager/{role_id}', [ManagerController::class, 'create_manager'])
+        //         ->middleware('role:sub_admin');
+        // });
+        // Route::get('Manager_Roles',[managerController::class, 'ManagerRoles']);
 
-Route::middleware(['auth:api'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
-
-
-
-
-Route::controller(ManagerController::class)->group(function () {
-    Route::get('Manager_Roles', 'ManagerRoles');
-    Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:sub_admin', 'auth:api']);
-    Route::get('show_my_employees','show_my_employees')->middleware('auth:api');
-        Route::get('show_all_managers','show_all_managers');
-
-});
+        Route::middleware(['auth:api', 'Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
 
 
 
 
-Route::controller(permissionController::class)->group(function () {
-    Route::post('addPermissions/{userId}', 'add_permission');
-    Route::get('show_my_permissions', 'show_my_permissions')->middleware('auth:api');
-    Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
-});
+        Route::controller(ManagerController::class)->group(function () {
+            Route::get('Manager_Roles', 'ManagerRoles');
+            Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:sub_admin', 'auth:api', 'Verify.Session']);
+            Route::get('show_my_employees', 'show_my_employees')->middleware('auth:api', 'Verify.Session');
+            Route::get('show_all_managers', 'show_all_managers');
+        });
+
+
+
+
+        Route::controller(permissionController::class)->group(function () {
+            Route::post('addPermissions/{userId}', 'add_permission');
+            Route::get('show_my_permissions', 'show_my_permissions')->middleware('auth:api');
+            Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
+        });
+
+
+
+        Route::middleware(['auth:api', 'role:admin'])->group(function () {
+            Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
+        });
+    }
+);
+
