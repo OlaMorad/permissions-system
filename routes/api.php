@@ -53,11 +53,8 @@ Route::middleware(['working.hours'])->group(
             Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
         });
 
-
-
         Route::middleware(['auth:api', 'role:admin'])->group(function () {
             Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
         });
     }
 );
-
