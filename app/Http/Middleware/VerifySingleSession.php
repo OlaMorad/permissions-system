@@ -18,6 +18,9 @@ class VerifySingleSession
      */
     public function handle($request, Closure $next)
     {
+         if ($request->is('api/refresh')) {
+        return $next($request);
+    }
         try {
             // التحقق من التوكن
             $token = JWTAuth::getToken();

@@ -12,7 +12,7 @@ class AdminController extends Controller
     {
         $data = $request->validated();
 
-        $workingHours = WorkingHour::updateOrCreate($data);
+        $workingHours = WorkingHour::updateOrCreate(['id'=>1],$data);
 
        return new successResource([
             $workingHours

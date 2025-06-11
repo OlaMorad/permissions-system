@@ -13,7 +13,9 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::middleware(['working.hours'])->group(
+
+
+Route::middleware(['working.hours','throttle:10,1'])->group(
     function () {
 
         Route::controller(AuthController::class)->group(function () {
@@ -26,11 +28,7 @@ Route::middleware(['working.hours'])->group(
             Route::post('/reset-password/{user_id}', 'ResetPassword');
         });
 
-        // Route::middleware(['auth:api'])->group(function () {
-        //     Route::post('/register-manager/{role_id}', [ManagerController::class, 'create_manager'])
-        //         ->middleware('role:sub_admin');
-        // });
-        // Route::get('Manager_Roles',[managerController::class, 'ManagerRoles']);
+
 
         Route::middleware(['auth:api', 'Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
 
