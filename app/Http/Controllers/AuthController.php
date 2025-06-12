@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\ResetPasswordRequest;
-use App\Http\Resources\failResource;
 use App\Http\Resources\successResource;
 use App\Services\AccountsManagementService;
 use App\Services\AuthService;
@@ -49,14 +48,10 @@ class AuthController extends Controller
     {
 
 
-        $result = $this->service->resetPassword(
+        return $this->service->resetPassword(
             (int) $user_id,
             $request->input('old_password'),
             $request->input('new_password')
         );
-        if (!$result) {
-            return new failResource(["البيانات المدخلة غير صحيحة او ليس  لديك صلاحية لتغيير كلمة السر "]);
-        }
-        return new successResource(["تم تغيير كلمة المرور بنجاح"]);
     }
 }
