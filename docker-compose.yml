@@ -1,8 +1,8 @@
-
-
 services:
   app:
-    image: laravelsail/php82-composer
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: laravel_app
     working_dir: /var/www/html
     volumes:
@@ -12,23 +12,25 @@ services:
     depends_on:
       - db
     command: >
-      sh -c "composer install &&
+      sh -c "if [ ! -f .env ]; then cp .env.example .env; fi &&
+             composer install &&
              php artisan key:generate &&
+             sleep 15 &&
              php artisan migrate &&
              php artisan db:seed &&
              php artisan serve --host=0.0.0.0 --port=8000"
 
   db:
-    image: mysql:8.0
+    image: mysql:8.0.30
     container_name: mysql_container
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD:
+      MYSQL_ROOT_PASSWORD: secret_password123
       MYSQL_DATABASE: Spatie_JWT
-      MYSQL_USER: root
-      MYSQL_PASSWORD:
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
 
