@@ -42,6 +42,7 @@ class VerifySingleSession
             // الحصول على وقت آخر تسجيل دخول من قاعدة البيانات
             $dbLoginTime = $user->last_login_at ? Carbon::parse($user->last_login_at)->timestamp : null;
 
+            // dd($dbLoginTime);
             // التحقق أن التوكن هو الأحدث
             if ($tokenLoginTime !== $dbLoginTime) {
                 return response()->json(['message' => 'تم تسجيل دخول جديد، هذا التوكن لم يعد صالحًا'], 401);
