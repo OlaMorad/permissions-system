@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use App\Http\Resources\failResource;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\successResource;
@@ -23,7 +24,12 @@ class AuthService
             'email' => $user->email
         ];
         $user->last_login_at = now();
-        $user->save();
+                $user->save();
+
+        $token = JWTAuth::claims([
+    'last_login_at' => Carbon::parse($user->last_login_at)->timestamp,
+])->fromUser($user);
+
         return new successResource([
             'access_token' => $token,
             'user' => $userData,
