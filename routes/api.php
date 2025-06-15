@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FormController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
@@ -62,5 +63,20 @@ Route::middleware(['throttle:10,1'])->group(
         ROute::post('edit_status_internal_mails','edit_status_internal_mails')->middleware('Verify.Session');
         Route::get('show_import_internal_mails','show_import_internal_mails')->middleware('Verify.Session');
         });
+
+        Route::controller(FormController::class)->group(
+    function () {
+        Route::prefix('form')->group(function () {
+
+            //  تحميل نموذج من ملف Word
+            Route::post('/upload-word', [FormController::class, 'storeFromWord']);
+
+            //  إنشاء نموذج يدوي
+            Route::post('/manual', [FormController::class, 'storeManually']);
+            Route::get('/{id}', [FormController::class, 'show_Form']);
+        });
+        Route::get('show_Forms', 'index')->middleware('auth:api', 'role:Head of Front Desk');
+    }
+);
     }
 );
