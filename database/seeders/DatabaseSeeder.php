@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             PermissionsSeeder::class,
             Role_PermissionSeeder::class,
             AdminSeeder::class,
+            pathSeeder::class,
         ]);
     }
 }
