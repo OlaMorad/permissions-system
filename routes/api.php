@@ -1,12 +1,13 @@
 <?php
 
-use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
 use App\Http\Controllers\permissionController;
+use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\Head_of_Front_Desk_Controller;
 
 Route::get('/user', function (Request $request) {
@@ -15,7 +16,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::middleware(['working.hours','throttle:10,1'])->group(
+Route::middleware(['throttle:10,1'])->group(
     function () {
 
         Route::controller(AuthController::class)->group(function () {
@@ -53,6 +54,13 @@ Route::middleware(['working.hours','throttle:10,1'])->group(
 
         Route::middleware(['auth:api', 'role:admin'])->group(function () {
             Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
+        });
+
+        Route::controller(InternalMailController::class)->group(function(){
+        Route::post('create_internal_mail','create_internal_mail')->middleware('Verify.Session');
+        Route::get('show_internal_mails_by_status/{status}','show_internal_mails_by_status')->middleware('Verify.Session');
+        ROute::post('edit_status_internal_mails','edit_status_internal_mails')->middleware('Verify.Session');
+        Route::get('show_import_internal_mails','show_import_internal_mails')->middleware('Verify.Session');
         });
     }
 );
