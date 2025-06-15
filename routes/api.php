@@ -6,9 +6,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
+use App\Http\Controllers\FormController;
 use App\Http\Controllers\permissionController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\Head_of_Front_Desk_Controller;
+use App\Models\Form;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -16,51 +18,44 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::middleware(['throttle:10,1'])->group(
+Route::middleware(['working.hours','throttle:10,1'])->group(
     function () {
 
-        Route::controller(AuthController::class)->group(function () {
-            Route::post('/login', 'login');
-        });
+Route::controller(AuthController::class)->group(function () {
+    Route::post('/login', 'login');
+});
 
-        Route::middleware('auth:api', 'Verify.Session')->controller(AuthController::class)->group(function () {
-            Route::post('/logout', 'logout');
-            Route::post('/refresh', 'refresh');
-            Route::post('/reset-password/{user_id}', 'ResetPassword');
-        });
-
-
-
-        Route::middleware(['auth:api', 'Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
+Route::middleware('auth:api', 'Verify.Session')->controller(AuthController::class)->group(function () {
+    Route::post('/logout', 'logout');
+    Route::post('/refresh', 'refresh');
+    Route::post('/reset-password/{user_id}', 'ResetPassword');
+});
 
 
 
-
-        Route::controller(ManagerController::class)->group(function () {
-            Route::get('Manager_Roles', 'ManagerRoles');
-            Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:sub_admin', 'auth:api', 'Verify.Session']);
-            Route::get('show_my_employees', 'show_my_employees')->middleware('auth:api', 'Verify.Session');
-            Route::get('show_all_managers', 'show_all_managers');
-        });
+Route::middleware(['auth:api', 'Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
 
 
 
 
-        Route::controller(permissionController::class)->group(function () {
-            Route::post('addPermissions/{userId}', 'add_permission');
-            Route::get('show_my_permissions', 'show_my_permissions')->middleware('auth:api');
-            Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
-        });
+Route::controller(ManagerController::class)->group(function () {
+    Route::get('Manager_Roles', 'ManagerRoles');
+    Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:sub_admin', 'auth:api', 'Verify.Session']);
+    Route::get('show_my_employees', 'show_my_employees')->middleware('auth:api', 'Verify.Session');
+    Route::get('show_all_managers', 'show_all_managers');
+});
+
+
+
+
+Route::controller(permissionController::class)->group(function () {
+    Route::post('addPermissions/{userId}', 'add_permission');
+    Route::get('show_my_permissions', 'show_my_permissions')->middleware('auth:api');
+    Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
+});
 
         Route::middleware(['auth:api', 'role:admin'])->group(function () {
             Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
-        });
-
-        Route::controller(InternalMailController::class)->group(function(){
-        Route::post('create_internal_mail','create_internal_mail')->middleware('Verify.Session');
-        Route::get('show_internal_mails_by_status/{status}','show_internal_mails_by_status')->middleware('Verify.Session');
-        ROute::post('edit_status_internal_mails','edit_status_internal_mails')->middleware('Verify.Session');
-        Route::get('show_import_internal_mails','show_import_internal_mails')->middleware('Verify.Session');
         });
     }
 );

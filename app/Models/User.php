@@ -68,4 +68,9 @@ class User extends Authenticatable implements JWTSubject
             'password' => Hash::make($request['password']),
         ]);
     }
+    
+    public function formContent()
+    {
+        return $this->hasOne(FormContent::class);
+    }
 }
