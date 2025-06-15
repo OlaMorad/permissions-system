@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('form_contents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('form_id')->references('id')->on('forms');
-            $table->foreignId('user_id')->references('id')->on('users');
+            $table->foreignId('doctor_id')->references('id')->on('doctors');
             $table->timestamps();
         });
     }

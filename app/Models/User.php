@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -68,9 +69,11 @@ class User extends Authenticatable implements JWTSubject
             'password' => Hash::make($request['password']),
         ]);
     }
-    
-    public function formContent()
+
+   
+
+      public function doctor(): HasOne
     {
-        return $this->hasOne(FormContent::class);
+        return $this->hasOne(Doctor::class);
     }
 }
