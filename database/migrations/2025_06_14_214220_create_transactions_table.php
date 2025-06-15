@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('doctor_id')->references('id')->on('doctors');
             $table->foreignId('form_content_id')->references('id')->on('form_contents');
             $table->enum('mail_status', ['exported', 'imported']);
             $table->timestamps();

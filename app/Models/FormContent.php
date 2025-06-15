@@ -12,9 +12,9 @@ class FormContent extends Model
     {
         return $this->belongsTo(Form::class);
     }
-    public function user()
+    public function doctor()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Doctor::class);
     }
     public function media()
     {
