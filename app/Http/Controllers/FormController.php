@@ -8,6 +8,7 @@ use App\Http\Resources\successResource;
 use App\Models\Form;
 use App\Services\ManualFormInputService;
 use App\Services\FormCreationService;
+use App\Services\FormService;
 use App\Services\WordFormInputService;
 use Illuminate\Http\Request;
 
@@ -52,5 +53,17 @@ class FormController extends Controller
     {
         $form = Form::with('elements','paths')->findOrFail($id);
         return new successResource([$form]);
+    }
+
+    public function show_active_Form()
+    {
+        $form = Form::where('status','active')->select('name')->get();
+        return new successResource([$form]);
+    }
+
+
+    public function UpdateFormStatus($id, FormService $formService)
+    {
+        return $formService->UpdateStatus((int)$id);
     }
 }
