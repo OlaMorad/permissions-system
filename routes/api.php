@@ -80,3 +80,4 @@ Route::middleware(['throttle:10,1'])->group(
 );
     }
 );
+
