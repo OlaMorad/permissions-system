@@ -7,6 +7,7 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
+use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\permissionController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\Head_of_Front_Desk_Controller;
@@ -78,5 +79,9 @@ Route::middleware(['throttle:10,1'])->group(
         Route::get('show_Forms', 'index')->middleware('auth:api', 'role:Head of Front Desk');
     }
 );
+
+Route::controller(FormContentController::class)->group(function(){
+    Route::post('create_form_content','create_form_content')->middleware(['Verify.Session']);
+});
     }
 );
