@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
+    protected $fillable=[
+        'doctor_id',
+        'form_content_id',
+        'mail_status'
+    ];
     public function content()
     {
         return $this->belongsTo(FormContent::class);

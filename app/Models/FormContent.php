@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class FormContent extends Model
 {
-    protected $fillable = ['form_id', 'user_id'];
+    protected $fillable = ['form_id', 'doctor_id'];
 
     public function form()
     {
@@ -25,4 +25,9 @@ class FormContent extends Model
     {
         return $this->hasOne(Transaction::class);
     }
+
+    public function elementValues()
+{
+    return $this->hasMany(form_element_value::class);
+}
 }
