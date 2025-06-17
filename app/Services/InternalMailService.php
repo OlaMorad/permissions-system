@@ -24,12 +24,6 @@ class InternalMailService
         return ['manager' => $manager, 'role' => $role];
     }
 
-    // تحقق إذا المستخدم هو مدير ورقمه يبدأ بـ Head
-    private function isHeadManager($role): bool
-    {
-        return $role && str_starts_with($role->name, 'Head');
-    }
-///////////////////////////////////////
     public function create_internal_mail($request)
 {
     $currentUser = Auth::user();
@@ -85,8 +79,6 @@ class InternalMailService
     $mail->paths()->attach($pathIds);
 }
 
-
-///////////////////////////////////////
 public function show_internal_mails_by_status($status)
 {
     try {
@@ -99,10 +91,6 @@ public function show_internal_mails_by_status($status)
     $data = $this->getCurrentManagerWithRole();
     if (!$data) {
         return response()->json(['message' => 'أنت لست مديراً.'], 403);
-    }
-
-    if (!$this->isHeadManager($data['role'])) {
-        return response()->json(['message' => 'ليس لديك صلاحية.'], 403);
     }
 
     $employeeIds = Employee::where('manager_id', $data['manager']->id)->pluck('user_id');
@@ -166,27 +154,7 @@ public function show_internal_mails_by_status($status)
     $currentUser = Auth::user();
 
     $roleName = $currentUser->getRoleNames()->first();
-
-    $roleToPathMap = [
-        'admin' => 'admin',
-        'sub_admin' => 'Sub_admin',
-        'Head of Front Desk' => 'Front Desk',
-        'Front Desk User' => 'Front Desk',
-        'Head of Finance Officer' => 'Finance',
-        'Finance Officer' => 'Finance',
-        'Head of Academic Committee' => 'Academic Committee',
-        'Academic Committee' => 'Academic Committee',
-        'Head of Certificate Officer' => 'Certificate',
-        'Certificate Officer' => 'Certificate',
-        'Head of Exam Officer' => 'Exam',
-        'Exam Officer' => 'Exam',
-        'Head of Residency Officer' => 'Residency',
-        'Residency Officer' => 'Residency',
-        'Head of Selection & Admission Officer' => 'Selection & Admission',
-        'Selection & Admission Officer' => 'Selection & Admission',
-        'Doctor' => 'Doctor'
-    ];
-
+$roleToPathMap=$this->roleToPathMap();
     // الحصول على اسم المسار بناء على الرول
     $pathName = $roleToPathMap[$roleName] ?? null;
 // dd($pathName);
@@ -247,4 +215,122 @@ public function show_internal_mails_by_status($status)
     return trim($roleName);
 }
 
+public function show_export_internal_mail_details($id){
+
+     $manager = $this->getCurrentManagerWithRole();
+     $is_admin=$this->is_admin();
+
+    if (!$manager && !$is_admin ) {
+        return response()->json(['message' => 'أنت لست مديراً.'], 403);
+    }
+
+if($manager){
+    $employeeIds = Employee::where('manager_id', $manager['manager']->id)->pluck('user_id');
+    $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
+        ->whereIn('from_user_id', $employeeIds)
+        ->find($id->id);
+
+        if (!$mail) {
+        return response()->json(['message' => 'هذا البريد لا يخص موظفيك.'], 403);
+    }}
+
+    if($is_admin){
+  $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
+        ->whereIn('from_user_id', [Auth::id()])->find($id->id);
+    }
+    return response()->json([
+        'id' => $mail->id,
+        'subject' => $mail->subject,
+        'body'=>$mail->body,
+        'sender' => $mail->fromUser->name ?? null,
+        'status' => $mail->status,
+        'sent_at' => $mail->updated_at->toDateTimeString(),
+        'to' => $mail->paths->pluck('name'),
+    ]);
+}
+
+//التحقق اذا كان المستخدم الحالي ادمن او سب ادمن
+public function is_admin(){
+
+        $currentUser = Auth::user();
+        $userRole = $currentUser->getRoleNames()->first();
+        $adminRoles = ['admin', 'Sub Admin'];
+       if (in_array($userRole, $adminRoles))
+       return true;
+
+}
+
+public function show_import_internal_mail_details($request){
+
+     $currentUser = Auth::user();
+    $roleName = $currentUser->getRoleNames()->first();
+    $roleToPathMap = $this->roleToPathMap();
+    $pathName = $roleToPathMap[$roleName] ?? null;
+
+    if (!$pathName) {
+        return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
+    }
+
+    $pathId = Path::where('name', $pathName)->value('id');
+
+    if (!$pathId) {
+        return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
+    }
+
+    $mailId = $request->id;
+
+    // تأكد أن البريد موجود ومساره يحتوي على path_id للمستخدم
+    $isPathLinked = DB::table('internal_mail_paths')
+        ->where('internal_mail_id', $mailId)
+        ->where('path_id', $pathId)
+        ->exists();
+
+    if (!$isPathLinked) {
+        return response()->json(['message' => 'لا تملك صلاحية لرؤية هذا البريد.'], 403);
+    }
+
+    $mail = InternalMail::with('fromUser:id,name')
+        ->where('id', $mailId)
+        ->where('status', StatusInternalMail::APPROVED)
+        ->first();
+
+    if (!$mail) {
+        return response()->json(['message' => 'البريد غير موجود أو لم يتمت الموافقة عليه.'], 404);
+    }
+
+    $user = $mail->fromUser;
+    $senderRole = $user->getRoleNames()->first() ?? 'غير معروف';
+    $officeName = str_replace([' User', ' Officer'], '', $senderRole);
+
+    return response()->json([
+        'id' => $mail->id,
+        'from_office' => $officeName,
+        'subject' => $mail->subject,
+        'body'=> $mail->body,
+        'received_at' => $mail->updated_at->toDateTimeString(),
+    ]);
+}
+
+
+public function roleToPathMap(){
+   return  [
+        'admin' => 'admin',
+        'sub_admin' => 'Sub_admin',
+        'Head of Front Desk' => 'Front Desk',
+        'Front Desk User' => 'Front Desk',
+        'Head of Finance Officer' => 'Finance',
+        'Finance Officer' => 'Finance',
+        'Head of Academic Committee' => 'Academic Committee',
+        'Academic Committee' => 'Academic Committee',
+        'Head of Certificate Officer' => 'Certificate',
+        'Certificate Officer' => 'Certificate',
+        'Head of Exam Officer' => 'Exam',
+        'Exam Officer' => 'Exam',
+        'Head of Residency Officer' => 'Residency',
+        'Residency Officer' => 'Residency',
+        'Head of Selection & Admission Officer' => 'Selection & Admission',
+        'Selection & Admission Officer' => 'Selection & Admission',
+        'Doctor' => 'Doctor',
+    ];
+}
 }
