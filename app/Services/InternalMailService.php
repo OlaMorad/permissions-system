@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Path;
 use App\Models\User;
 use App\Models\Manager;
 use App\Models\Employee;
@@ -28,40 +29,68 @@ class InternalMailService
     {
         return $role && str_starts_with($role->name, 'Head');
     }
-
+///////////////////////////////////////
     public function create_internal_mail($request)
-    {
-        $currentUser = Auth::user();
-        $targetUser = User::find($request->to_user_id);
+{
+    $currentUser = Auth::user();
+    $adminRoles = ['admin', 'Sub Admin'];
+    $userRole = $currentUser->getRoleNames()->first();
+    // إذا لم يكن Admin أو Sub Admin، نرجع إلى جدول employees
+    if (!in_array($userRole, $adminRoles)) {
+        $currentEmployee = Employee::where('user_id', $currentUser->id)->first();
 
-        if (!$targetUser) {
-            return response()->json(['message' => 'المستخدم المستلم غير موجود.'], 404);
+        if (!$currentEmployee) {
+            return response()->json(['message' => 'لا يمكن العثور على بيانات الموظف.'], 404);
         }
 
-        $adminRoles = ['Admin', 'Sub Admin'];
-        $status = in_array($currentUser->name, $adminRoles)
-            ? StatusInternalMail::APPROVED
-            : StatusInternalMail::PENDING;
-
-        $mail = InternalMail::create([
-            'from_user_id' => $currentUser->id,
-            'to_user_id' => $targetUser->id,
-            'status' => $status,
-            'subjcet' => $request->subject,
-            'body' => $request->body,
-        ]);
-
-        return [
-            'to_user_id' => $mail->to_user_id,
-            'status' => $mail->status,
-            'subject' => $mail->subject,
-            'body' => $mail->body,
-        ];
+        $userRole = DB::table('roles')
+                      ->where('id', $currentEmployee->role_id)
+                      ->value('name');
     }
 
+    if (!$userRole) {
+        return response()->json(['message' => 'لا يمكن تحديد دور المستخدم.'], 403);
+    }
+
+    // استخراج اسم الدائرة من الرول
+    $senderPathName = $this->extractPathNameFromRole($userRole);
+
+    // إيجاد القسم المقابل في جدول paths
+    $senderPath = Path::whereRaw('LOWER(name) = ?', [strtolower($senderPathName)])->first();
+
+    if (!$senderPath) {
+        return response()->json(['message' => 'لم يتم العثور على قسم المستخدم.'], 404);
+    }
+
+    $pathIds = $request->input('to_path_ids');
+
+    // إذا لم يتم تحديد أقسام، نرسل لجميع الأقسام عدا قسم المُرسل
+    if (empty($pathIds)) {
+        $pathIds = Path::where('id', '!=', $senderPath->id)->pluck('id')->all();
+    }
+
+    // تحديد حالة البريد
+    $status = in_array($userRole, $adminRoles)
+                ? StatusInternalMail::APPROVED
+                : StatusInternalMail::PENDING;
+
+    $mail = InternalMail::create([
+        'from_user_id' => $currentUser->id,
+        'status'       => $status,
+        'subject'      => $request->subject,
+        'body'         => $request->body,
+    ]);
+
+    // ربط الأقسام
+    $mail->paths()->attach($pathIds);
+}
+
+
+///////////////////////////////////////
 public function show_internal_mails_by_status($status)
 {
     try {
+        //نحول الحالة المدخلة الى نوع enum
         $statusEnum = StatusInternalMail::from($status);
     } catch (\ValueError) {
         return response()->json(['message' => 'الحالة غير صحيحة.'], 422);
@@ -78,18 +107,18 @@ public function show_internal_mails_by_status($status)
 
     $employeeIds = Employee::where('manager_id', $data['manager']->id)->pluck('user_id');
 
-    $mails = InternalMail::with('toUser:id,name') // علاقة لجلب اسم المستلم
+    $mails = InternalMail::with(['fromUser:id,name', 'paths:id,name']) // أضفنا paths هنا
         ->whereIn('from_user_id', $employeeIds)
         ->where('status', $statusEnum->value)
-        ->select('id', 'to_user_id', 'subjcet', 'updated_at', 'from_user_id') // نختار الحقول المطلوبة + from_user_id لأننا بنستخدمه داخل الـ with عشان العلاقة
+        ->select('id', 'subject', 'updated_at', 'from_user_id')
         ->get();
 
-    $dataFormatted = $mails->map(function ($mail) {
+   $dataFormatted = $mails->map(function ($mail) {
         return [
             'id' => $mail->id,
-            'subject' => $mail->subjcet,
-            'to_user_name' => $mail->toUser->name ?? 'غير معروف',
-            'updated_at' => $mail->updated_at->toDateTimeString(),
+            'subject' => $mail->subject,
+            'sender_at' => $mail->updated_at->toDateTimeString(),
+            'to' => $mail->paths->pluck('name'), // نرجع الدوائر يلي المفروض ينرسل لها البريد
         ];
     });
 
@@ -132,31 +161,90 @@ public function show_internal_mails_by_status($status)
         ]);
     }
 
-    public function show_import_internal_mails()
-    {
-        $currentUser = Auth::user();
+ public function show_import_internal_mails()
+{
+    $currentUser = Auth::user();
 
-        $mails = InternalMail::with('fromUser:id,name')
-            ->where('to_user_id', $currentUser->id)
-            ->where('status', StatusInternalMail::APPROVED)
-            ->select('id', 'from_user_id', 'subjcet', 'body', 'updated_at')
-            ->get();
+    $roleName = $currentUser->getRoleNames()->first();
 
-return $data = $mails->map(function ($mail) {
-    $user = $mail->fromUser;
-    $roleName = $user->getRoleNames()->first() ?? 'غير معروف';
-
-    // نحذف الكلمات مثل "User" أو "Officer" إذا وجدت
-    $officeName = str_replace([' User', ' Officer'], '', $roleName);
-
-    return [
-        'id' => $mail->id,
-        'from_office' => $officeName,
-        'subjcet' => $mail->subjcet,
-        'body' => $mail->body,
-        'received_at' => $mail->updated_at->toDateTimeString(),
+    $roleToPathMap = [
+        'admin' => 'admin',
+        'sub_admin' => 'Sub_admin',
+        'Head of Front Desk' => 'Front Desk',
+        'Front Desk User' => 'Front Desk',
+        'Head of Finance Officer' => 'Finance',
+        'Finance Officer' => 'Finance',
+        'Head of Academic Committee' => 'Academic Committee',
+        'Academic Committee' => 'Academic Committee',
+        'Head of Certificate Officer' => 'Certificate',
+        'Certificate Officer' => 'Certificate',
+        'Head of Exam Officer' => 'Exam',
+        'Exam Officer' => 'Exam',
+        'Head of Residency Officer' => 'Residency',
+        'Residency Officer' => 'Residency',
+        'Head of Selection & Admission Officer' => 'Selection & Admission',
+        'Selection & Admission Officer' => 'Selection & Admission',
+        'Doctor' => 'Doctor'
     ];
-});
 
+    // الحصول على اسم المسار بناء على الرول
+    $pathName = $roleToPathMap[$roleName] ?? null;
+// dd($pathName);
+    if (!$pathName) {
+        return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
     }
+
+    $pathId = Path::where('name', $pathName)->value('id');
+// dd( $pathId );
+    if (!$pathId) {
+        return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
+    }
+
+    // جلب جميع الإيميلات التي تم الموافقة عليها
+    $approvedMails = InternalMail::with('fromUser:id,name')
+        ->where('status', StatusInternalMail::APPROVED)
+        ->select('id', 'from_user_id', 'subject', 'updated_at')
+        ->get();
+
+    // جلب ids الإيميلات التي تحتوي على path_id مطابق
+    $mailIdsForPath = DB::table('internal_mail_paths')
+        ->where('path_id', $pathId)
+        ->whereIn('internal_mail_id', $approvedMails->pluck('id')->toArray())
+        ->pluck('internal_mail_id')
+        ->unique();
+
+    // فلترة الإيميلات بحيث تبقى فقط التي تتوافق مع المسار
+    $filteredMails = $approvedMails->filter(function($mail) use ($mailIdsForPath) {
+        return $mailIdsForPath->contains($mail->id);
+    });
+
+    return $filteredMails->map(function ($mail) {
+        $user = $mail->fromUser;
+        $roleName = $user->getRoleNames()->first() ?? 'غير معروف';
+
+        // حذف الكلمات الزائدة
+        $officeName = str_replace([' User', ' Officer'], '', $roleName);
+
+        return [
+            'id' => $mail->id,
+            'from_office' => $officeName,
+            'subject' => $mail->subject,
+            'received_at' => $mail->updated_at->toDateTimeString(),
+        ];
+    })->values(); // إعادة ترقيم المفاتيح بشكل مرتب
+}
+
+
+    private function extractPathNameFromRole(string $roleName): string
+{
+    // إزالة الكلمات المفتاحية مثل Head, Officer, User, etc.
+    $keywordsToRemove = ['Head of', 'Officer', 'User'];
+
+    foreach ($keywordsToRemove as $keyword) {
+        $roleName = str_ireplace($keyword, '', $roleName); // case-insensitive replace
+    }
+
+    return trim($roleName);
+}
+
 }

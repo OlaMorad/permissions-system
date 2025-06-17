@@ -15,9 +15,9 @@ return new class extends Migration
         Schema::create('internal_mails', function (Blueprint $table) {
             $table->id();
             $table->foreignId('from_user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('to_user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
+            // $table->foreignId('to_user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('status')->default(StatusInternalMail::PENDING->value);
-            $table->String('subjcet');
+            $table->String('subject');
             $table->text('body');
             $table->timestamps();
         });
