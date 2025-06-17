@@ -9,9 +9,9 @@ class internalMail extends Model
 {
     protected $fillable=[
         'from_user_id',
-        'to_user_id',
+        // 'to_user_id',
         'status',
-        'subjcet',
+        'subject',
         'body'
     ];
 
@@ -24,8 +24,14 @@ class internalMail extends Model
     return $this->belongsTo(User::class, 'from_user_id');
 }
 
-   public function toUser()
+//    public function toUser()
+//     {
+//         return $this->belongsTo(User::class, 'to_user_id');
+//     }
+
+
+    public function paths()
     {
-        return $this->belongsTo(User::class, 'to_user_id');
+        return $this->belongsToMany(Path::class, 'internal_mail_paths');
     }
 }

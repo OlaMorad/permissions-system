@@ -16,7 +16,7 @@ class InternalMailController extends Controller
     public function create_internal_mail(InternalMailRequest $request){
 
       $response=  $this->InternalMailService->create_internal_mail($request);
-      return new successResource([$response]);
+      return new successResource([]);
     }
 
 
@@ -30,7 +30,7 @@ class InternalMailController extends Controller
 
    return $response=  $this->InternalMailService->edit_status_internal_mails($request);
 }
-
+//عرض البريد الداخلي الوارد للمدير
 public function show_import_internal_mails(){
      return $response=  $this->InternalMailService->show_import_internal_mails();
 }
