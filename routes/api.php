@@ -63,10 +63,13 @@ Route::middleware(['throttle:10,1'])->group(
             Route::get('show_internal_mails_by_status/{status}', 'show_internal_mails_by_status')->middleware('Verify.Session');
             ROute::post('edit_status_internal_mails', 'edit_status_internal_mails')->middleware('Verify.Session');
             Route::get('show_import_internal_mails', 'show_import_internal_mails')->middleware('Verify.Session');
+            Route::get('show_export_internal_mail_details', 'show_export_internal_mail_details')->middleware('Verify.Session');
+            Route::get('show_import_internal_mail_details','show_import_internal_mail_details')->middleware('Verify.Session');
         });
 
-        Route::controller(FormController::class)->group(function () {
-                    Route::prefix('form')->group(function () { //  تحميل نموذج من ملف Word
+        Route::controller(FormController::class)->group(
+            function () {
+                Route::prefix('form')->group(function () { //  تحميل نموذج من ملف Word
                     Route::post('/upload-word', 'storeFromWord'); //  إنشاء نموذج يدوي
                     Route::post('/manual', 'storeManually');
                     Route::get('/show_all', 'index')->middleware('auth:api', 'role:Head of Front Desk');
