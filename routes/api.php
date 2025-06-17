@@ -11,6 +11,7 @@ use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\permissionController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\Head_of_Front_Desk_Controller;
+use App\Http\Controllers\TransactionController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -65,8 +66,9 @@ Route::middleware(['throttle:10,1'])->group(
             Route::get('show_import_internal_mails', 'show_import_internal_mails')->middleware('Verify.Session');
         });
 
-        Route::controller(FormController::class)->group(function () {
-                    Route::prefix('form')->group(function () { //  تحميل نموذج من ملف Word
+        Route::controller(FormController::class)->group(
+            function () {
+                Route::prefix('form')->group(function () { //  تحميل نموذج من ملف Word
                     Route::post('/upload-word', 'storeFromWord'); //  إنشاء نموذج يدوي
                     Route::post('/manual', 'storeManually');
                     Route::get('/show_all', 'index')->middleware('auth:api', 'role:Head of Front Desk');
@@ -76,7 +78,14 @@ Route::middleware(['throttle:10,1'])->group(
                 });
             }
         );
-
+        Route::controller(TransactionController::class)->group(function () {
+            Route::prefix('transaction')->group(function () {
+                Route::get('/import', 'Import_Transaction')->middleware('auth:api');
+                Route::get('/export', 'Export_Transaction')->middleware('auth:api');
+                Route::get('/show/{id}', 'showFormContent');
+                Route::put('/update/{id}', 'Update_Status_to_Complete')->middleware('auth:api');
+            });
+        });
         Route::controller(FormContentController::class)->group(function () {
             Route::post('create_form_content', 'create_form_content')->middleware(['Verify.Session']);
         });
