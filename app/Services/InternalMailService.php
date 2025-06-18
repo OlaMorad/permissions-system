@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Path;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Manager;
 use App\Models\Employee;
@@ -25,96 +26,95 @@ class InternalMailService
     }
 
     public function create_internal_mail($request)
-{
-    $currentUser = Auth::user();
-    $adminRoles = ['admin', 'Sub Admin'];
-    $userRole = $currentUser->getRoleNames()->first();
-    // إذا لم يكن Admin أو Sub Admin، نرجع إلى جدول employees
-    if (!in_array($userRole, $adminRoles)) {
-        $currentEmployee = Employee::where('user_id', $currentUser->id)->first();
+    {
 
-        if (!$currentEmployee) {
-            return response()->json(['message' => 'لا يمكن العثور على بيانات الموظف.'], 404);
+        $currentUser = Auth::user();
+        $admin = $this->is_admin();
+        $userRole = $currentUser->getRoleNames()->first();
+        // إذا لم يكن Admin أو Sub Admin، نرجع إلى جدول employees
+
+        if (!$admin) {
+            $currentEmployee = Employee::where('user_id', $currentUser->id)->first();
+            if (!$currentEmployee) {
+
+                return response()->json(['message' => 'لا يمكن العثور على بيانات الموظف.'], 404);
+            }
+
+            $userRole = DB::table('roles')
+                ->where('id', $currentEmployee->role_id)
+                ->value('name');
         }
 
-        $userRole = DB::table('roles')
-                      ->where('id', $currentEmployee->role_id)
-                      ->value('name');
+        if (!$userRole) {
+            return response()->json(['message' => 'لا يمكن تحديد دور المستخدم.'], 403);
+        }
+        // استخراج اسم الدائرة من الرول
+        $senderPathName = $this->filter_office_name($userRole);
+        // إيجاد القسم المقابل في جدول paths
+        $senderPath = Path::where('name', $senderPathName)->first();
+        if (!$senderPath) {
+            return response()->json(['message' => 'لم يتم العثور على قسم المستخدم.'], 404);
+        }
+
+        $pathIds = $request->input('to_path_ids');
+
+        // إذا لم يتم تحديد أقسام، نرسل لجميع الأقسام عدا قسم المُرسل
+        if (empty($pathIds)) {
+            $pathIds = Path::where('id', '!=', $senderPath->id)->pluck('id')->all();
+        }
+
+        // تحديد حالة البريد
+        $status = in_array($userRole, ['admin', 'Sub Admin'])
+            ? StatusInternalMail::APPROVED
+            : StatusInternalMail::PENDING;
+
+        $mail = InternalMail::create([
+            'from_user_id' => $currentUser->id,
+            'status'       => $status,
+            'subject'      => $request->subject,
+            'body'         => $request->body,
+        ]);
+
+        // نضيف المسار لجدول الكسر
+        $mail->paths()->attach($pathIds);
     }
 
-    if (!$userRole) {
-        return response()->json(['message' => 'لا يمكن تحديد دور المستخدم.'], 403);
+    public function show_internal_mails_by_status($status)
+    {
+        try {
+            //نحول الحالة المدخلة الى نوع enum
+            $statusEnum = StatusInternalMail::from($status);
+        } catch (\ValueError) {
+            return response()->json(['message' => 'الحالة غير صحيحة.'], 422);
+        }
+
+        $data = $this->getCurrentManagerWithRole();
+        if (!$data) {
+            return response()->json(['message' => 'أنت لست مديراً.'], 403);
+        }
+
+        $employeeIds = Employee::where('manager_id', $data['manager']->id)->pluck('user_id');
+
+        $mails = InternalMail::with(['fromUser:id,name', 'paths:id,name']) // أضفنا paths هنا
+            ->whereIn('from_user_id', $employeeIds)
+            ->where('status', $statusEnum->value)
+            ->select('id', 'subject', 'updated_at', 'from_user_id')
+            ->get();
+
+        $dataFormatted = $mails->map(function ($mail) {
+            return [
+                'id' => $mail->id,
+                'subject' => $mail->subject,
+                'sender_at' => $mail->updated_at->toDateTimeString(),
+                'to' => $mail->paths->pluck('name'), // نرجع الدوائر يلي المفروض ينرسل لها البريد
+            ];
+        });
+
+        return response()->json([
+            'status' => $statusEnum->value,
+            'mails' => $dataFormatted,
+        ]);
     }
-
-    // استخراج اسم الدائرة من الرول
-    $senderPathName = $this->extractPathNameFromRole($userRole);
-
-    // إيجاد القسم المقابل في جدول paths
-    $senderPath = Path::whereRaw('LOWER(name) = ?', [strtolower($senderPathName)])->first();
-
-    if (!$senderPath) {
-        return response()->json(['message' => 'لم يتم العثور على قسم المستخدم.'], 404);
-    }
-
-    $pathIds = $request->input('to_path_ids');
-
-    // إذا لم يتم تحديد أقسام، نرسل لجميع الأقسام عدا قسم المُرسل
-    if (empty($pathIds)) {
-        $pathIds = Path::where('id', '!=', $senderPath->id)->pluck('id')->all();
-    }
-
-    // تحديد حالة البريد
-    $status = in_array($userRole, $adminRoles)
-                ? StatusInternalMail::APPROVED
-                : StatusInternalMail::PENDING;
-
-    $mail = InternalMail::create([
-        'from_user_id' => $currentUser->id,
-        'status'       => $status,
-        'subject'      => $request->subject,
-        'body'         => $request->body,
-    ]);
-
-    // ربط الأقسام
-    $mail->paths()->attach($pathIds);
-}
-
-public function show_internal_mails_by_status($status)
-{
-    try {
-        //نحول الحالة المدخلة الى نوع enum
-        $statusEnum = StatusInternalMail::from($status);
-    } catch (\ValueError) {
-        return response()->json(['message' => 'الحالة غير صحيحة.'], 422);
-    }
-
-    $data = $this->getCurrentManagerWithRole();
-    if (!$data) {
-        return response()->json(['message' => 'أنت لست مديراً.'], 403);
-    }
-
-    $employeeIds = Employee::where('manager_id', $data['manager']->id)->pluck('user_id');
-
-    $mails = InternalMail::with(['fromUser:id,name', 'paths:id,name']) // أضفنا paths هنا
-        ->whereIn('from_user_id', $employeeIds)
-        ->where('status', $statusEnum->value)
-        ->select('id', 'subject', 'updated_at', 'from_user_id')
-        ->get();
-
-   $dataFormatted = $mails->map(function ($mail) {
-        return [
-            'id' => $mail->id,
-            'subject' => $mail->subject,
-            'sender_at' => $mail->updated_at->toDateTimeString(),
-            'to' => $mail->paths->pluck('name'), // نرجع الدوائر يلي المفروض ينرسل لها البريد
-        ];
-    });
-
-    return response()->json([
-        'status' => $statusEnum->value,
-        'mails' => $dataFormatted,
-    ]);
-}
 
 
     public function edit_status_internal_mails($request)
@@ -149,188 +149,159 @@ public function show_internal_mails_by_status($status)
         ]);
     }
 
- public function show_import_internal_mails()
-{
-    $currentUser = Auth::user();
+    public function show_import_internal_mails()
+    {
+        $pathData = $this->get_path_name();
+        if (!$pathData['path_name']) {
+            return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
+        }
+        if (!$pathData['path_id']) {
+            return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
+        }
+        // جلب جميع الإيميلات التي تم الموافقة عليها
+        $approvedMails = InternalMail::with('fromUser:id,name')
+            ->where('status', StatusInternalMail::APPROVED)
+            ->select('id', 'from_user_id', 'subject', 'updated_at')
+            ->get();
 
-    $roleName = $currentUser->getRoleNames()->first();
-$roleToPathMap=$this->roleToPathMap();
-    // الحصول على اسم المسار بناء على الرول
-    $pathName = $roleToPathMap[$roleName] ?? null;
-// dd($pathName);
-    if (!$pathName) {
-        return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
+        // جلب ids الإيميلات التي تحتوي على path_id مطابق
+        $mailIdsForPath = DB::table('internal_mail_paths')
+            ->where('path_id', $pathData['path_id'])
+            ->whereIn('internal_mail_id', $approvedMails->pluck('id')->toArray())
+            ->pluck('internal_mail_id')
+            ->unique();
+
+        // فلترة الإيميلات بحيث تبقى فقط التي تتوافق مع المسار
+        $filteredMails = $approvedMails->filter(function ($mail) use ($mailIdsForPath) {
+            return $mailIdsForPath->contains($mail->id);
+        });
+
+        return $filteredMails->map(function ($mail) {
+            $user = $mail->fromUser;
+            $roleName = $user->getRoleNames()->first() ?? 'غير معروف';
+
+            $officeName = $this->filter_office_name($roleName);
+
+            return [
+                'id' => $mail->id,
+                'from_office' => $officeName,
+                'subject' => $mail->subject,
+                'received_at' => $mail->updated_at->toDateTimeString(),
+            ];
+        })->values(); // إعادة ترقيم المفاتيح بشكل مرتب
     }
 
-    $pathId = Path::where('name', $pathName)->value('id');
-// dd( $pathId );
-    if (!$pathId) {
-        return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
-    }
 
-    // جلب جميع الإيميلات التي تم الموافقة عليها
-    $approvedMails = InternalMail::with('fromUser:id,name')
-        ->where('status', StatusInternalMail::APPROVED)
-        ->select('id', 'from_user_id', 'subject', 'updated_at')
-        ->get();
+    public function show_export_internal_mail_details($id)
+    {
 
-    // جلب ids الإيميلات التي تحتوي على path_id مطابق
-    $mailIdsForPath = DB::table('internal_mail_paths')
-        ->where('path_id', $pathId)
-        ->whereIn('internal_mail_id', $approvedMails->pluck('id')->toArray())
-        ->pluck('internal_mail_id')
-        ->unique();
+        $manager = $this->getCurrentManagerWithRole();
+        $is_admin = $this->is_admin();
 
-    // فلترة الإيميلات بحيث تبقى فقط التي تتوافق مع المسار
-    $filteredMails = $approvedMails->filter(function($mail) use ($mailIdsForPath) {
-        return $mailIdsForPath->contains($mail->id);
-    });
+        if (!$manager && !$is_admin) {
+            return response()->json(['message' => 'أنت لست مديراً.'], 403);
+        }
 
-    return $filteredMails->map(function ($mail) {
-        $user = $mail->fromUser;
-        $roleName = $user->getRoleNames()->first() ?? 'غير معروف';
+        if ($manager) {
+            $employeeIds = Employee::where('manager_id', $manager['manager']->id)->pluck('user_id');
+            $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
+                ->whereIn('from_user_id', $employeeIds)
+                ->find($id->id);
 
-        // حذف الكلمات الزائدة
-        $officeName = str_replace([' User', ' Officer'], '', $roleName);
+            if (!$mail) {
+                return response()->json(['message' => 'هذا البريد لا يخص موظفيك.'], 403);
+            }
+        }
 
-        return [
+        if ($is_admin) {
+            $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
+                ->whereIn('from_user_id', [Auth::id()])->find($id->id);
+        }
+        return response()->json([
             'id' => $mail->id,
-            'from_office' => $officeName,
             'subject' => $mail->subject,
-            'received_at' => $mail->updated_at->toDateTimeString(),
-        ];
-    })->values(); // إعادة ترقيم المفاتيح بشكل مرتب
-}
-
-
-    private function extractPathNameFromRole(string $roleName): string
-{
-    // إزالة الكلمات المفتاحية مثل Head, Officer, User, etc.
-    $keywordsToRemove = ['Head of', 'Officer', 'User'];
-
-    foreach ($keywordsToRemove as $keyword) {
-        $roleName = str_ireplace($keyword, '', $roleName); // case-insensitive replace
+            'body' => $mail->body,
+            'sender' => $mail->fromUser->name ?? null,
+            'status' => $mail->status,
+            'sent_at' => $mail->updated_at->toDateTimeString(),
+            'to' => $mail->paths->pluck('name'),
+        ]);
     }
 
-    return trim($roleName);
-}
-
-public function show_export_internal_mail_details($id){
-
-     $manager = $this->getCurrentManagerWithRole();
-     $is_admin=$this->is_admin();
-
-    if (!$manager && !$is_admin ) {
-        return response()->json(['message' => 'أنت لست مديراً.'], 403);
-    }
-
-if($manager){
-    $employeeIds = Employee::where('manager_id', $manager['manager']->id)->pluck('user_id');
-    $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
-        ->whereIn('from_user_id', $employeeIds)
-        ->find($id->id);
-
-        if (!$mail) {
-        return response()->json(['message' => 'هذا البريد لا يخص موظفيك.'], 403);
-    }}
-
-    if($is_admin){
-  $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
-        ->whereIn('from_user_id', [Auth::id()])->find($id->id);
-    }
-    return response()->json([
-        'id' => $mail->id,
-        'subject' => $mail->subject,
-        'body'=>$mail->body,
-        'sender' => $mail->fromUser->name ?? null,
-        'status' => $mail->status,
-        'sent_at' => $mail->updated_at->toDateTimeString(),
-        'to' => $mail->paths->pluck('name'),
-    ]);
-}
-
-//التحقق اذا كان المستخدم الحالي ادمن او سب ادمن
-public function is_admin(){
+    //التحقق اذا كان المستخدم الحالي ادمن او سب ادمن
+    public function is_admin()
+    {
 
         $currentUser = Auth::user();
         $userRole = $currentUser->getRoleNames()->first();
         $adminRoles = ['admin', 'Sub Admin'];
-       if (in_array($userRole, $adminRoles))
-       return true;
-
-}
-
-public function show_import_internal_mail_details($request){
-
-     $currentUser = Auth::user();
-    $roleName = $currentUser->getRoleNames()->first();
-    $roleToPathMap = $this->roleToPathMap();
-    $pathName = $roleToPathMap[$roleName] ?? null;
-
-    if (!$pathName) {
-        return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
+        if (in_array($userRole, $adminRoles))
+            return true;
     }
 
-    $pathId = Path::where('name', $pathName)->value('id');
+    public function show_import_internal_mail_details($request)
+    {
 
-    if (!$pathId) {
-        return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
+        $pathData = $this->get_path_name();
+        if (!$pathData['path_name']) {
+            return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
+        }
+        if (!$pathData['path_id']) {
+            return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
+        }
+        $mailId = $request->id;
+
+        // تأكد أن البريد موجود ومساره يحتوي على path_id للمستخدم
+        $isPathLinked = DB::table('internal_mail_paths')
+            ->where('internal_mail_id', $mailId)
+            ->where('path_id', $pathData['path_id'])
+            ->exists();
+        if (!$isPathLinked) {
+            return response()->json(['message' => 'لا تملك صلاحية لرؤية هذا البريد.'], 403);
+        }
+
+        $mail = InternalMail::with('fromUser:id,name')
+            ->where('id', $mailId)
+            ->where('status', StatusInternalMail::APPROVED)
+            ->first();
+
+        if (!$mail) {
+            return response()->json(['message' => 'البريد غير موجود أو لم يتمت الموافقة عليه.'], 404);
+        }
+
+        $user = $mail->fromUser;
+        $senderRole = $user->getRoleNames()->first() ?? 'غير معروف';
+        $officeName = $this->filter_office_name($senderRole);
+        return response()->json([
+            'id' => $mail->id,
+            'from_office' => $officeName,
+            'subject' => $mail->subject,
+            'body' => $mail->body,
+            'received_at' => $mail->updated_at->toDateTimeString(),
+        ]);
     }
 
-    $mailId = $request->id;
 
-    // تأكد أن البريد موجود ومساره يحتوي على path_id للمستخدم
-    $isPathLinked = DB::table('internal_mail_paths')
-        ->where('internal_mail_id', $mailId)
-        ->where('path_id', $pathId)
-        ->exists();
+    public function get_path_name()
+    {
+        $currentUser = Auth::user();
+        $roleName = $currentUser->getRoleNames()->first();
+        $role = Role::where('name', $roleName)->first();
 
-    if (!$isPathLinked) {
-        return response()->json(['message' => 'لا تملك صلاحية لرؤية هذا البريد.'], 403);
+        if ($role) {
+            $pathId = $role->path_id;
+            $pathName = Path::where('id', $pathId)->first();
+
+            return [
+                'path_name' => $pathName,
+                'path_id' => $pathId
+            ];
+        }
+        return null;
     }
 
-    $mail = InternalMail::with('fromUser:id,name')
-        ->where('id', $mailId)
-        ->where('status', StatusInternalMail::APPROVED)
-        ->first();
-
-    if (!$mail) {
-        return response()->json(['message' => 'البريد غير موجود أو لم يتمت الموافقة عليه.'], 404);
+    public function filter_office_name($roleName)
+    {
+        return str_replace([' User', ' Officer', 'Head of'], '', $roleName);
     }
-
-    $user = $mail->fromUser;
-    $senderRole = $user->getRoleNames()->first() ?? 'غير معروف';
-    $officeName = str_replace([' User', ' Officer'], '', $senderRole);
-
-    return response()->json([
-        'id' => $mail->id,
-        'from_office' => $officeName,
-        'subject' => $mail->subject,
-        'body'=> $mail->body,
-        'received_at' => $mail->updated_at->toDateTimeString(),
-    ]);
-}
-
-
-public function roleToPathMap(){
-   return  [
-        'admin' => 'admin',
-        'sub_admin' => 'Sub_admin',
-        'Head of Front Desk' => 'Front Desk',
-        'Front Desk User' => 'Front Desk',
-        'Head of Finance Officer' => 'Finance',
-        'Finance Officer' => 'Finance',
-        'Head of Academic Committee' => 'Academic Committee',
-        'Academic Committee' => 'Academic Committee',
-        'Head of Certificate Officer' => 'Certificate',
-        'Certificate Officer' => 'Certificate',
-        'Head of Exam Officer' => 'Exam',
-        'Exam Officer' => 'Exam',
-        'Head of Residency Officer' => 'Residency',
-        'Residency Officer' => 'Residency',
-        'Head of Selection & Admission Officer' => 'Selection & Admission',
-        'Selection & Admission Officer' => 'Selection & Admission',
-        'Doctor' => 'Doctor',
-    ];
-}
 }
