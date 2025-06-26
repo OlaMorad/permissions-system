@@ -2,68 +2,78 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FormStatus;
 use App\Http\Requests\ManualFormRequest;
 use App\Http\Requests\UploadWordRequest;
 use App\Http\Resources\successResource;
 use App\Models\Form;
 use App\Services\ManualFormInputService;
 use App\Services\FormCreationService;
+use App\Services\FormFactoryService;
 use App\Services\FormService;
 use App\Services\WordFormInputService;
 use Illuminate\Http\Request;
 
 class FormController extends Controller
 {
-    protected FormCreationService $formService;
+    public function __construct(
+        protected FormFactoryService $factory,
+        protected FormService $formService
+    ) {}
 
-    public function __construct(FormCreationService $formService)
-    {
-        $this->formService = $formService;
-    }
 
-    //  إنشاء فورم من ملف Word
     public function storeFromWord(UploadWordRequest $request)
     {
-        $file = $request->file('file');
-        $path = $file->getRealPath();
-        $pathIds = $request->input('path_ids');
-        $extractor = new WordFormInputService($path);
-        $form = $this->formService->create_Form($extractor, $file->getClientOriginalName(), $pathIds);
-
-        return new successResource([$form]);
+        $this->factory->createFromWord($request);
+        return new successResource(['تمت إضافة المعاملة بنجاح']);
     }
 
-    //  إنشاء فورم من إدخال يدوي
     public function storeManually(ManualFormRequest $request)
     {
-        $data = $request->validated();
-        $manual = new ManualFormInputService($data['elements']);
-        $form = $this->formService->create_Form($manual, $data['name'], $data['path_ids']);
-
-        return new successResource([$form]);
+        $this->factory->createFromManual($request);
+        return new successResource(['تمت إضافة المعاملة بنجاح']);
     }
 
     public function index()
     {
-        $data = Form::all();
+        $data = Form::all()->makeHidden(['updated_at']);
         return new successResource([$data]);
     }
 
     public function show_Form($id)
     {
-        $form = Form::with('elements','paths')->findOrFail($id);
-        return new successResource([$form]);
+        $form = Form::with('elements', 'paths')->findOrFail($id);
+        $response = [
+            'paths' => $form->paths->pluck('name'),
+            'elements' => $form->elements
+        ];
+        return new successResource([$response]);
+    }
+    public function activeForms()
+    {
+        $forms = Form::where('status', FormStatus::Active->value)->select('id','name','cost')->get();
+        return new successResource([$forms]);
     }
 
-    public function show_active_Form()
+    public function underReviewForms()
     {
-        $form = Form::where('status','active')->select('name')->get();
-        return new successResource([$form]);
+        $forms = Form::where('status', FormStatus::UNDER_REVIEW->value)->get()->makeHidden(['updated_at']);
+        return new successResource([$forms]);
     }
 
 
-    public function UpdateFormStatus($id, FormService $formService)
+    public function setUnderReviewToActive($id)
     {
-        return $formService->UpdateStatus((int)$id);
+        return $this->formService->changeUnderReviewToActive((int)$id);
+    }
+
+    public function setActiveToInactive($id)
+    {
+        return $this->formService->changeActiveToInactive((int)$id);
+    }
+
+    public function setInactiveToActive($id)
+    {
+        return $this->formService->changeInactiveToActive((int)$id);
     }
 }

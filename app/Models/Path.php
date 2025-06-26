@@ -8,6 +8,11 @@ class Path extends Model
 {
     protected $fillable=['name'];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     public function forms()
     {
         return $this->belongsToMany(Form::class,'form_path');
