@@ -54,12 +54,12 @@ class RegisterService
 
 
     protected array $allowedRolesMap = [
-        'Head of Front Desk' => 'Front Desk User',
-        'Head of Certificate Officer' => 'Certificate Officer',
-        'Head of Finance Officer' => 'Finance Officer',
-        'Head of Academic Committee' => 'Academic Committee',
-        'Head of Exam Officer' => 'Exam Officer',
-        'Head of Residency Officer' => 'Residency Officer',
-        'Head of Selection & Admission Officer' => 'Selection & Admission Officer',
+         'رئيس الديوان' =>  'موظف الديوان',
+        'رئيس الإقامة' =>  'موظف الإقامة',
+         'رئيس المالية' =>   'موظف المالية' ,
+       'رئيس مجالس علمية' => 'موظف مجالس علمية',
+         'رئيس الامتحانات' => 'موظف الامتحانات',
+        'رئيس الشهادات' =>  'موظف الشهادات',
+        'رئيس المفاضلة' => 'موظف المفاضلة',
     ];
 }

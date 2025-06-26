@@ -27,6 +27,9 @@ class RegisterManagerRequest extends FormRequest
             'name' => ['required', 'string'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'min:8'],
+            'address'  => ['required', 'string', 'max:255'],
+            'phone'    => ['required', 'string', 'regex:/^[0-9+\-\s]+$/', 'min:6', 'unique:users,phone'],
+            'avatar'   => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'role_id' => [
                 'required',
                 'integer',
@@ -38,7 +41,7 @@ class RegisterManagerRequest extends FormRequest
 
     private function ManagerRoleIds(): array
     {
-        return Role::where('name', 'like', 'Head of%')->pluck('id')->toArray();
+        return Role::where('name', 'like', 'رئيس%')->pluck('id')->toArray();
     }
 
     public function messages(): array
@@ -57,4 +60,3 @@ class RegisterManagerRequest extends FormRequest
         }
     }
 }
-

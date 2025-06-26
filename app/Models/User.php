@@ -26,6 +26,9 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'address',
+        'phone',
+        'avatar'
     ];
 
     /**
@@ -63,11 +66,20 @@ class User extends Authenticatable implements JWTSubject
 
     public static  function  create_user($request)
     {
-        return self::create([
-            'name'     => $request['name'],
-            'email'    => $request['email'],
-            'password' => Hash::make($request['password']),
-        ]);
+       // حفظ الصورة إذا تم رفعها
+    $avatarPath = null;
+    if (isset($request['avatar'])) {
+        $avatarPath = $request['avatar']->store('avatars', 'public');
+    }
+
+    return self::create([
+        'name'     => $request['name'],
+        'email'    => $request['email'],
+        'password' => Hash::make($request['password']),
+        'address'  => $request['address'],
+        'phone'    => $request['phone'],
+        'avatar'   => $avatarPath,
+    ]);
     }
 
 

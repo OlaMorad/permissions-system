@@ -17,6 +17,9 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'password' => Hash::make('admin@123'),
+                'phone'=>'0956883161',
+                'address'=>'دمشق',
+                'avatar'=>'...'
             ]
         );
 
@@ -28,6 +31,9 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Sub Admin',
                 'password' => Hash::make('sub_admin'),
+                 'phone'=>'0950883161',
+                'address'=>'دمشق',
+                'avatar'=>'...'
             ]
         );
 
@@ -37,6 +43,9 @@ class AdminSeeder extends Seeder
             'name' => 'heba',
             'email' => 'heba@gmail.com',
             'password' => Hash::make('heba2007'),
+             'phone'=>'0956823161',
+                'address'=>'دمشق',
+                'avatar'=>'...'
         ]);
         $doctor->assignRole('الطبيب');
         Doctor::create([
