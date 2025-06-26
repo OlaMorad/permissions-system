@@ -15,32 +15,37 @@ class RolesSeeder extends Seeder
     public function run(): void
     {
         $rolesWithPaths = [
-            'admin' => 'admin',
-            'sub_admin' => 'Sub_admin',
-            'Head of Front Desk' => 'Front Desk',
-            'Front Desk User' => 'Front Desk',
-            'Head of Finance Officer' => 'Finance',
-            'Finance Officer' => 'Finance',
-            'Head of Academic Committee' => 'Academic Committee',
-            'Academic Committee' => 'Academic Committee',
-            'Head of Certificate Officer' => 'Certificate',
-            'Certificate Officer' => 'Certificate',
-            'Head of Exam Officer' => 'Exam',
-            'Exam Officer' => 'Exam',
-            'Head of Residency Officer' => 'Residency',
-            'Residency Officer' => 'Residency',
-            'Head of Selection & Admission Officer' => 'Selection & Admission',
-            'Selection & Admission Officer' => 'Selection & Admission',
-            'Doctor' => 'Doctor',
+            'المدير' => 'المدير',
+            'نائب المدير' => 'نائب المدير',
+            'رئيس الديوان' => 'الديوان',
+            'موظف الديوان' => 'الديوان',
+            'رئيس المالية' => 'المالية',
+            'موظف المالية' => 'المالية',
+            'رئيس مجالس علمية' => 'المجالس العلمية',
+            'موظف مجالس علمية' => 'المجالس العلمية',
+            'رئيس الشهادات' => 'الشهادات',
+            'موظف الشهادات' => 'الشهادات',
+            'رئيس الامتحانات' => 'الامتحانات',
+            'موظف الامتحانات' => 'الامتحانات',
+            'رئيس الإقامة' => 'الإقامة',
+            'موظف الإقامة' => 'الإقامة',
+            'رئيس المفاضلة' => 'المفاضلة',
+            'موظف المفاضلة' =>  'المفاضلة',
+            'طبيب' => null, // الطبيب مو من ضمن المسار تبع المعاملة
         ];
 
         foreach ($rolesWithPaths as $roleName => $pathName) {
-            $path = Path::firstOrCreate(['name' => $pathName]);
+            $pathId = null;
+
+            if (!is_null($pathName)) {
+                $path = Path::firstOrCreate(['name' => $pathName]);
+                $pathId = $path->id;
+            }
 
             Role::updateOrCreate(
                 ['name' => $roleName],
-                ['path_id' => $path->id]
+                ['path_id' => $pathId]
             );
-    }
+        }
 }
 }
