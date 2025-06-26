@@ -3,10 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\FormStatus;
 
 class Form extends Model
 {
-    protected $fillable = ['name', 'status'];
+    protected $fillable = ['name', 'status', 'cost'];
+
+    protected $casts = [
+        'status' => FormStatus::class,
+    ];
 
     public function elements()
     {
