@@ -18,6 +18,10 @@ class VerifySingleSession
      */
     public function handle($request, Closure $next)
     {
+        if (!auth()->user()->is_active) {
+    abort(403, 'حسابك غير مفعل حالياً.');
+}
+
          if ($request->is('api/refresh')) {
         return $next($request);
     }
