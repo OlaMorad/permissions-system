@@ -22,7 +22,8 @@ class ManualFormRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string'],
+            'name' => ['required', 'string', 'unique:forms,name'],
+            'cost' => ['required', 'numeric', 'min:0'],
             'elements' => ['required', 'array'],
             'elements.*.label' => ['required', 'string'],
             'elements.*.type' => ['required', 'integer'],
@@ -38,6 +39,10 @@ class ManualFormRequest extends FormRequest
     {
         return [
             'name.required' => 'اسم النموذج مطلوب.',
+            'name.unique' => 'يوجد نموذج بهذا الاسم مسبقًا.',
+            'cost.required' => 'التكلفة مطلوبة.',
+            'cost.numeric' => 'يجب أن تكون التكلفة رقمًا.',
+            'cost.min' => 'لا يمكن أن تكون التكلفة سالبة.',
             'elements.required' => 'يجب إدخال عناصر النموذج.',
             'elements.*.label.required' => 'كل عنصر يجب أن يحتوي على تسمية.',
             'elements.*.type.required' => 'كل عنصر يجب أن يحتوي على نوع.',

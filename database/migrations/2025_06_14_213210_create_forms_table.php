@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create('forms', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->enum('status', array_column(FormStatus::cases(), 'value'))->default(FormStatus::UNDER_REVIEW->value);
+            $table->string('name')->unique();
+            $table->string('status')->default(FormStatus::UNDER_REVIEW->value);
             $table->float('cost')->unsigned();
             $table->timestamps();
         });
