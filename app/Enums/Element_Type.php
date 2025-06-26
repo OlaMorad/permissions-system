@@ -8,7 +8,7 @@ enum Element_Type: int
     case INPUT = 1;
     case NUMBER = 2;
     case DATE = 3;
-    case MEDIA  = 4;
-    case SELECT = 5;
+    case attached  = 4;
+    case Multiple_Choice = 5;
     case CHECKBOX = 6;
 }
