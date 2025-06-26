@@ -17,7 +17,7 @@ class ManualFormInputService implements FormInputInterface
     {
         $elements = [];
 
-        foreach ($this->data as $item) {
+        foreach ($this->data['elements'] as $item) {
             if (!isset($item['label']) || !isset($item['type'])) {
                 continue;
             }
@@ -29,5 +29,15 @@ class ManualFormInputService implements FormInputInterface
         }
 
         return $elements;
+    }
+
+    public function getPathIds(): array
+    {
+        return $this->data['path_ids'] ?? [];
+    }
+
+    public function getName(): string
+    {
+        return $this->data['name'];
     }
 }

@@ -9,6 +9,11 @@ class FormElement extends Model
 {
     protected $fillable = ['form_id', 'label', 'type'];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     protected $casts = [
         'type' => EnumsElement_Type::class,  //  ربط الحقل مع enum
     ];
