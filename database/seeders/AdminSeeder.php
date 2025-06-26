@@ -20,7 +20,7 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        $admin->assignRole('admin');
+        $admin->assignRole('المدير');
 
         //  Sub Admin
         $subAdmin = User::firstOrCreate(
@@ -31,14 +31,14 @@ class AdminSeeder extends Seeder
             ]
         );
 
-        $subAdmin->assignRole('sub_admin');
+        $subAdmin->assignRole('نائب المدير');
 
         $doctor = User::firstOrCreate([
             'name' => 'heba',
             'email' => 'heba@gmail.com',
             'password' => Hash::make('heba2007'),
         ]);
-        $doctor->assignRole('Doctor');
+        $doctor->assignRole('الطبيب');
         Doctor::create([
             'user_id' =>  $doctor->id,
         ]);

@@ -14,17 +14,16 @@ class pathSeeder extends Seeder
     public function run(): void
     {
         $paths = [
-            'Ministry',
-            'admin',
-            'Sub_admin',
-            'Front Desk',
-            'Finance',
-            'Academic Committee',
-            'Certificate',
-            'Exam',
-            'Residency',
-            'Selection & Admission',
-            'Doctor'
+            'الوزارة',
+            'المدير',
+            'نائب المدير',
+            'الديوان',
+            'المالية',
+            'المجالس العلمية',
+            'الشهادات',
+            'الامتحانات',
+            'الإقامة',
+            'المفاضلة',
         ];
         foreach ($paths as $path) {
             Path::firstOrCreate(['name' => $path]);

@@ -10,214 +10,347 @@ class Role_PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // ✅ Admin: كل الصلاحيات
-        $admin = Role::where('name', 'admin')->first();
-        $admin->syncPermissions(Permission::all());
+        // جلب كل الصلاحيات دفعة واحدة
+        $allPermissions = Permission::all()->pluck('name')->toArray();
 
-        // ✅ Sub Admin: صلاحيات عامة
-        $subAdmin = Role::where('name', 'sub_admin')->first();
-        $subAdmin->syncPermissions([
-            'manage users',
-            'assign employee permissions',
-            'create user',
-            'edit user',
-            'delete user',
-            'change user password',
-            'view dashboard',
-            'view activity logs',
-            'export reports',
-        ]);
+        // المدير => كل الصلاحيات
+        $admin = Role::where('name', 'المدير')->first();
+        if ($admin) {
+            $admin->syncPermissions($allPermissions);
+        }
 
-        // ✅ Head of Front Desk
-        $headFrontDesk = Role::where('name', 'Head of Front Desk')->first();
-        $headFrontDesk->syncPermissions([
-            'classify correspondence',
-            'view transaction details',
-            'forward transaction to departments',
-            'add new transaction',
-            'import transaction from Word',
-            'edit transaction',
-            'delete transaction',
-            'export transactions to Excel',
-            'import transactions from Excel',
-            'notify new mail',
-            'search transaction',
-            'view analytics reports',
-            'manage front desk staff',
-            'monitor front desk performance',
-            'edit front desk permissions',
-            'auto archive transactions',
-        ]);
+        // نائب المدير => صلاحيات نائب المدير فقط
+        $deputy = Role::where('name', 'نائب المدير')->first();
+        if ($deputy) {
+            $deputy->syncPermissions([
+                'مراجعة الطلبات المعلقة',
+                'تعديل حسابات رؤساء الأقسام',
+                'انشاء حسابات رؤساء الاقسام',
+                'عرض أرشيف النظام',
+                'إدارة الشكاوى',
+                'انشاء بريد داخلي',
+            ]);
+        }
 
-        // ✅ Front Desk User
-        $frontDesk = Role::where('name', 'Front Desk User')->first();
-        $frontDesk->syncPermissions([
-            'classify correspondence',
-            'view transaction details',
-            'add new transaction',
-            'search transaction',
-            'notify new mail',
-        ]);
+        // رئيس الديوان
+        $headFrontDesk = Role::where('name', 'رئيس الديوان')->first();
+        if ($headFrontDesk) {
+            $headFrontDesk->syncPermissions([
+                'انشاء حساب موظف الديوان',
+                'تعديل حساب موظف الديوان',
+                'عرض كل الموظفين في الدائرة',
+                'ادخال معاملة جديدة بشكل يدوي',
+                'ادخال معاملة جديدة بصيغة وورد',
+                'الغاء تفعيل حساب الموظف',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض كافةاستمارات المعاملات',
+                'الغاء تفعيل استمارة المعاملة',
+                'عرض المعاملة',
+                'عرض البريد الداخلي',
+                'الموافقة على البريد الداخلي',
+                'رفض البريد الداخلي',
+                'عرض عدد المعاملات المنجزة من قبل كل موظف',
+                'عرض تفاصيل احصائية بالبريد الخارجي',
+                'عرض تفاصيل احصائية بالبريد الداخلي',
+                'عرض المعاملات المنجزة لهذا الاسبوع',
+                'بحث عن معاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Head of Finance Officer
-        $headFinance = Role::where('name', 'Head of Finance Officer')->first();
-        $headFinance->syncPermissions([
-            'review bank receipts',
-            'confirm payment',
-            'forward finance transaction to front desk',
-            'view internal payments',
-            'view external payments',
-            'export finance records',
-            'import finance records',
-            'view finance analytics',
-            'manage finance staff',
-            'monitor finance performance',
-            'manage operational budget',
-            'manage salaries',
-            'export salary reports',
-            'edit finance staff permissions',
-            'auto archive finance transactions',
-            'finance notifications',
-            'search finance transaction',
-        ]);
+        // موظف الديوان
+        $frontDesk = Role::where('name', 'موظف الديوان')->first();
+        if ($frontDesk) {
+            $frontDesk->syncPermissions([
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'انشاء بريد داخلي',
+                'ارسال المعاملة للدائرة التالية',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'رفض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Finance Officer
-        $finance = Role::where('name', 'Finance Officer')->first();
-        $finance->syncPermissions([
-            'review bank receipts',
-            'confirm payment',
-            'view internal payments',
-            'view external payments',
-            'search finance transaction',
-        ]);
+        // رئيس المالية
+        $headFinance = Role::where('name', 'رئيس المالية')->first();
+        if ($headFinance) {
+            $headFinance->syncPermissions([
+                'انشاء حساب موظف المالية',
+                'تعديل حساب موظف المالية',
+                'عرض كل الموظفين في الدائرة',
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'عرض عدد المعاملات المنجزة من قبل كل موظف',
+                'عرض تفاصيل احصائية بالبريد الخارجي',
+                'عرض تفاصيل احصائية بالبريد الداخلي',
+                'عرض المعاملات المنجزة لهذا الاسبوع',
+                'الموافقة على البريد الداخلي',
+                'رفض البريد الداخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'عرض الارشيف',
+                'عرض ايصال الدفع',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Head of Academic Committee
-        $headAcademic = Role::where('name', 'Head of Academic Committee')->first();
-        $headAcademic->syncPermissions([
-            'receive academic requests',
-            'view academic request details',
-            'enter committee decision',
-            'upload session minutes',
-            'manage academic sessions schedule',
-            'archive academic decisions',
-            'manage academic committee staff',
-            'monitor academic performance',
-            'search academic transaction',
-            'notify academic inbox',
-        ]);
+        // موظف المالية
+        $finance = Role::where('name', 'موظف المالية')->first();
+        if ($finance) {
+            $finance->syncPermissions([
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'ارسال المعاملة للدائرة التالية',
+                'انشاء بريد داخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'رفض المعاملة',
+                'عرض الارشيف',
+                'عرض ايصال الدفع',
+                'رفض الايصال',
+                'تأكيد الايصال',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Academic Committee
-        $academic = Role::where('name', 'Academic Committee')->first();
-        $academic->syncPermissions([
-            'view academic request details',
-            'enter committee decision',
-            'upload session minutes',
-            'search academic transaction',
-        ]);
+        // رئيس المجالس العلمية
+        $headAcademic = Role::where('name', 'رئيس مجالس علمية')->first();
+        if ($headAcademic) {
+            $headAcademic->syncPermissions([
+                'انشاء حساب موظف المجالس العلمية',
+                'تعديل حساب موظف المجالس العلمية',
+                'عرض كل الموظفين في الدائرة',
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'عرض عدد المعاملات المنجزة من قبل كل موظف',
+                'عرض تفاصيل احصائية بالبريد الخارجي',
+                'عرض تفاصيل احصائية بالبريد الداخلي',
+                'عرض المعاملات المنجزة لهذا الاسبوع',
+                'الموافقة على البريد الداخلي',
+                'رفض البريد الداخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Head of Certificate Officer
-        $headCert = Role::where('name', 'Head of Certificate Officer')->first();
-        $headCert->syncPermissions([
-            'manage certificate transactions',
-            'issue certificates',
-            'manage doctors registry',
-            'manage certificate archive',
-            'manage certificate staff',
-            'search certificate transaction',
-            'notify certificate inbox',
-        ]);
+        // موظف المجالس العلمية
+        $academic = Role::where('name', 'موظف مجالس علمية')->first();
+        if ($academic) {
+            $academic->syncPermissions([
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'ارسال المعاملة للدائرة التالية',
+                'انشاء بريد داخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'رفض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Certificate Officer
-        $cert = Role::where('name', 'Certificate Officer')->first();
-        $cert->syncPermissions([
-            'issue certificates',
-            'search certificate transaction',
-        ]);
+        // رئيس الشهادات
+        $headCert = Role::where('name', 'رئيس الشهادات')->first();
+        if ($headCert) {
+            $headCert->syncPermissions([
+                'انشاء حساب موظف الشهادات',
+                'تعديل حساب موظف الشهادات',
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'عرض عدد المعاملات المنجزة من قبل كل موظف',
+                'عرض تفاصيل احصائية بالبريد الخارجي',
+                'عرض تفاصيل احصائية بالبريد الداخلي',
+                'عرض المعاملات المنجزة لهذا الاسبوع',
+                'الموافقة على البريد الداخلي',
+                'رفض البريد الداخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Head of Exam Officer
-        $headExam = Role::where('name', 'Head of Exam Officer')->first();
-        $headExam->syncPermissions([
-            'manage applicants files',
-            'record exam results',
-            'assign students to rooms',
-            'manage question bank',
-            'add exam question',
-            'edit exam question',
-            'delete exam question',
-            'encrypt exam questions',
-            'create exam schedule',
-            'generate exam statistics',
-            'notify exam schedule',
-            'manage used questions',
-            'face recognition login',
-            'exam start notifications',
-            'manage exam staff permissions',
-            'auto archive exam data',
-        ]);
+        // موظف الشهادات
+        $cert = Role::where('name', 'موظف الشهادات')->first();
+        if ($cert) {
+            $cert->syncPermissions([
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'ارسال المعاملة للدائرة التالية',
+                'انشاء بريد داخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'رفض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Exam Officer
-        $exam = Role::where('name', 'Exam Officer')->first();
-        $exam->syncPermissions([
-            'record exam results',
-            'assign students to rooms',
-            'face recognition login',
-        ]);
+        // رئيس الامتحانات
+        $headExam = Role::where('name', 'رئيس الامتحانات')->first();
+        if ($headExam) {
+            $headExam->syncPermissions([
+                'إدارة ملفات المتقدمين',
+                'تسجيل نتائج الامتحانات',
+                'توزيع الطلاب على القاعات',
+                'إدارة بنك الأسئلة',
+                'إضافة سؤال امتحاني',
+                'تعديل سؤال امتحاني',
+                'حذف سؤال امتحاني',
+                'تشفير الأسئلة الامتحانية',
+                'إنشاء جدول الامتحانات',
+                'توليد إحصائيات الامتحانات',
+                'إشعار بجدول الامتحانات',
+                'إدارة الأسئلة المستخدمة',
+                'تسجيل الدخول بالتعرف على الوجه',
+                'إشعارات بدء الامتحان',
+                'إدارة صلاحيات موظفي الامتحانات',
+                'أرشفة بيانات الامتحانات تلقائيًا',
+            ]);
+        }
 
-        // ✅ Head of Residency Officer
-        $headResidency = Role::where('name', 'Head of Residency Officer')->first();
-        $headResidency->syncPermissions([
-            'receive residency requests',
-            'review residency data',
-            'accept residency request',
-            'reject residency request',
-            'archive residency transactions',
-            'import old residency records',
-            'notify residency inbox',
-            'manage residency staff',
-        ]);
+        // موظف الامتحانات
+        $exam = Role::where('name', 'موظف الامتحانات')->first();
+        if ($exam) {
+            $exam->syncPermissions([
+                'تسجيل نتائج الامتحانات',
+                'توزيع الطلاب على القاعات',
+                'تسجيل الدخول بالتعرف على الوجه',
+            ]);
+        }
 
-        // ✅ Residency Officer
-        $residency = Role::where('name', 'Residency Officer')->first();
-        $residency->syncPermissions([
-            'review residency data',
-            'accept residency request',
-            'reject residency request',
-        ]);
+        // رئيس الإقامة
+        $headResidency = Role::where('name', 'رئيس الإقامة')->first();
+        if ($headResidency) {
+            $headResidency->syncPermissions([
+                'انشاء حساب موظف الإقامة',
+                'تعديل حساب موظف الإقامة',
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'عرض عدد المعاملات المنجزة من قبل كل موظف',
+                'عرض تفاصيل احصائية بالبريد الخارجي',
+                'عرض تفاصيل احصائية بالبريد الداخلي',
+                'عرض المعاملات المنجزة لهذا الاسبوع',
+                'الموافقة على البريد الداخلي',
+                'رفض البريد الداخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Head of Selection & Admission Officer
-        $headSelection = Role::where('name', 'Head of Selection & Admission Officer')->first();
-        $headSelection->syncPermissions([
-            'create new selection round',
-            'define selection criteria',
-            'review selection application',
-            'archive selection transactions',
-            'announce selection results',
-            'notify selection round',
-            'manage selection staff',
-            'enter historical selections',
-        ]);
+        // موظف الإقامة
+        $residency = Role::where('name', 'موظف الإقامة')->first();
+        if ($residency) {
+            $residency->syncPermissions([
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'ارسال المعاملة للدائرة التالية',
+                'انشاء بريد داخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'رفض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Selection & Admission Officer
-        $selection = Role::where('name', 'Selection & Admission Officer')->first();
-        $selection->syncPermissions([
-            'review selection application',
-            'archive selection transactions',
-        ]);
+        // رئيس المفاضلة
+        $headSelection = Role::where('name', 'رئيس المفاضلة')->first();
+        if ($headSelection) {
+            $headSelection->syncPermissions([
+                'انشاء حساب موظف المفاضلة',
+                'تعديل حساب موظف المفاضلة',
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'عرض البريد الداخلي',
+                'عرض عدد المعاملات المنجزة من قبل كل موظف',
+                'عرض تفاصيل احصائية بالبريد الخارجي',
+                'عرض تفاصيل احصائية بالبريد الداخلي',
+                'عرض المعاملات المنجزة لهذا الاسبوع',
+                'الموافقة على البريد الداخلي',
+                'رفض البريد الداخلي',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
 
-        // ✅ Doctor
-        $doctor = Role::where('name', 'Doctor')->first();
-        $doctor->syncPermissions([
-            'register on platform',
-            'upload personal documents',
-            'apply for services',
-            'track application status',
-            'view exam results',
-            'download certificates',
-            'edit personal information',
-            'submit inquiry or complaint',
-            'take online exams',
-            'auto exam correction',
-            'face login',
-        ]);
+        // موظف المفاضلة
+        $selection = Role::where('name', 'موظف المفاضلة')->first();
+        if ($selection) {
+            $selection->syncPermissions([
+                'عرض البريد الداخلي الوارد',
+                'عرض البريد الداخلي الصادر',
+                'عرض البريد الخارجي الصادر',
+                'عرض البريد الخارجي الوارد',
+                'انشاء بريد داخلي',
+                'عرض البريد الداخلي',
+                'ارسال المعاملة للدائرة التالية',
+                'بحث عن معاملة',
+                'عرض المعاملة',
+                'رفض المعاملة',
+                'عرض الارشيف',
+                'الاشعارات',
+            ]);
+        }
+
+        // الطبيب
+        $doctor = Role::where('name', 'الطبيب')->first();
+        if ($doctor) {
+            $doctor->syncPermissions([
+                'التسجيل في المنصة',
+                'رفع المستندات الشخصية',
+                'التقدم للحصول على خدمات',
+                'متابعة حالة الطلب',
+                'عرض نتائج الامتحانات',
+                'تحميل الشهادات',
+                'تعديل المعلومات الشخصية',
+                'تقديم استفسار أو شكوى',
+                'أداء الامتحانات الإلكترونية',
+                'تصحيح الامتحانات تلقائيًا',
+                'تسجيل الدخول بالتعرف على الوجه',
+            ]);
+        }
     }
 }

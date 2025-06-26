@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Enums\FormStatus;
 
 return new class extends Migration
 {
@@ -14,7 +15,8 @@ return new class extends Migration
         Schema::create('forms', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', array_column(FormStatus::cases(), 'value'))->default(FormStatus::UNDER_REVIEW->value);
+            $table->float('cost')->unsigned();
             $table->timestamps();
         });
     }
