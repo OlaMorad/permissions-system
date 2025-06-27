@@ -25,6 +25,19 @@ class InternalMailService
         return ['manager' => $manager, 'role' => $role];
     }
 
+
+ private function getUserPathId($userRole)
+    {
+        if (is_string($userRole)) {
+            $role = DB::table('roles')->where('name', $userRole)->first();
+        } else {
+            $role = $userRole;
+        }
+
+        return $role?->path_id ?? null;
+    }
+
+
     public function create_internal_mail($request)
     {
 
@@ -42,17 +55,23 @@ class InternalMailService
 
             $userRole = DB::table('roles')
                 ->where('id', $currentEmployee->role_id)
-                ->value('name');
+               -> first();
         }
 
         if (!$userRole) {
             return response()->json(['message' => 'لا يمكن تحديد دور المستخدم.'], 403);
         }
+
+        $pathId = $this->getUserPathId($userRole);
+        if (!$pathId) {
+            return response()->json(['message' => 'لم يتم العثور على المسار الخاص بالمستخدم.'], 404);
+        }
+
         // استخراج اسم الدائرة من الرول
-        $senderPathName = $this->filter_office_name($userRole);
+        $senderPathName=DB::table('paths')->where('id',$pathId)->first();
         // إيجاد القسم المقابل في جدول paths
-        $senderPath = Path::where('name', $senderPathName)->first();
-        if (!$senderPath) {
+
+        if (!$senderPathName) {
             return response()->json(['message' => 'لم يتم العثور على قسم المستخدم.'], 404);
         }
 
@@ -60,11 +79,11 @@ class InternalMailService
 
         // إذا لم يتم تحديد أقسام، نرسل لجميع الأقسام عدا قسم المُرسل
         if (empty($pathIds)) {
-            $pathIds = Path::where('id', '!=', $senderPath->id)->pluck('id')->all();
+            $pathIds = Path::where('id', '!=', $senderPathName->id)->pluck('id')->all();
         }
 
         // تحديد حالة البريد
-        $status = in_array($userRole, ['admin', 'Sub Admin'])
+        $status = in_array($userRole, ['المدير', 'نائب المدير'])
             ? StatusInternalMail::APPROVED
             : StatusInternalMail::PENDING;
 
@@ -77,17 +96,11 @@ class InternalMailService
 
         // نضيف المسار لجدول الكسر
         $mail->paths()->attach($pathIds);
+        return $mail;
     }
 
-    public function show_internal_mails_by_status($status)
+    public function show_internal_mails_export()
     {
-        try {
-            //نحول الحالة المدخلة الى نوع enum
-            $statusEnum = StatusInternalMail::from($status);
-        } catch (\ValueError) {
-            return response()->json(['message' => 'الحالة غير صحيحة.'], 422);
-        }
-
         $data = $this->getCurrentManagerWithRole();
         if (!$data) {
             return response()->json(['message' => 'أنت لست مديراً.'], 403);
@@ -97,23 +110,26 @@ class InternalMailService
 
         $mails = InternalMail::with(['fromUser:id,name', 'paths:id,name']) // أضفنا paths هنا
             ->whereIn('from_user_id', $employeeIds)
-            ->where('status', $statusEnum->value)
-            ->select('id', 'subject', 'updated_at', 'from_user_id')
+            ->select('id', 'subject', 'created_at','updated_at', 'from_user_id','status')
             ->get();
 
-        $dataFormatted = $mails->map(function ($mail) {
-            return [
-                'id' => $mail->id,
-                'subject' => $mail->subject,
-                'sender_at' => $mail->updated_at->toDateTimeString(),
-                'to' => $mail->paths->pluck('name'), // نرجع الدوائر يلي المفروض ينرسل لها البريد
-            ];
-        });
+               $dataFormatted = $mails->map(function ($mail) {
+        $sendDate = $mail->status === StatusInternalMail::APPROVED
+            ? $mail->updated_at->toDateTimeString()
+            : null;
+               return [
+            'id' => $mail->id,
+            'subject' => $mail->subject,
+            'sender_at' => $sendDate,
+            'Received at'=>$mail->created_at,
+            'status'=>$mail->status,
+            'to' => $mail->paths->pluck('name'),
+        ];
+    });
 
-        return response()->json([
-            'status' => $statusEnum->value,
-            'mails' => $dataFormatted,
-        ]);
+          return response()->json([
+        'mails' => $dataFormatted,
+    ]);
     }
 
 
@@ -234,7 +250,7 @@ class InternalMailService
 
         $currentUser = Auth::user();
         $userRole = $currentUser->getRoleNames()->first();
-        $adminRoles = ['admin', 'Sub Admin'];
+        $adminRoles = ['المدير', 'نائب المدير'];
         if (in_array($userRole, $adminRoles))
             return true;
     }
@@ -302,6 +318,6 @@ class InternalMailService
 
     public function filter_office_name($roleName)
     {
-        return str_replace([' User', ' Officer', 'Head of'], '', $roleName);
+        return str_replace([' موظف', ' رئيس'], '', $roleName);
     }
 }
