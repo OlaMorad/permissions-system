@@ -36,13 +36,15 @@ Route::middleware(['throttle:10,1'])->group(
 
 
         Route::middleware(['auth:api', 'Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
-
+        Route::middleware(['auth:api', 'Verify.Session'])->post('/edit_employee_information',[employeeController::class,'edit_employee_information']);
+        Route::middleware(['auth:api', 'Verify.Session'])->get('/show_employees',[employeeController::class,'show_employees']);
+        Route::middleware(['auth:api', 'Verify.Session'])->get('/convert_employee_status',[employeeController::class,'convert_employee_status']);
 
 
 
         Route::controller(ManagerController::class)->group(function () {
             Route::get('Manager_Roles', 'ManagerRoles');
-            Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:sub_admin', 'auth:api', 'Verify.Session']);
+            Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير', 'auth:api', 'Verify.Session']);
             Route::get('show_my_employees', 'show_my_employees')->middleware('auth:api', 'Verify.Session');
             Route::get('show_all_managers', 'show_all_managers');
         });
@@ -62,7 +64,7 @@ Route::middleware(['throttle:10,1'])->group(
 
         Route::controller(InternalMailController::class)->group(function () {
             Route::post('create_internal_mail', 'create_internal_mail')->middleware('Verify.Session');
-            Route::get('show_internal_mails_by_status/{status}', 'show_internal_mails_by_status')->middleware('Verify.Session');
+            Route::get('show_internal_mails_export', 'show_internal_mails_export')->middleware('Verify.Session');
             ROute::post('edit_status_internal_mails', 'edit_status_internal_mails')->middleware('Verify.Session');
             Route::get('show_import_internal_mails', 'show_import_internal_mails')->middleware('Verify.Session');
             Route::get('show_export_internal_mail_details', 'show_export_internal_mail_details')->middleware('Verify.Session');

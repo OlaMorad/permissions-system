@@ -41,4 +41,18 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function withRole(string $roleName, ?string $department = null): static
+{
+    return $this->state(function (array $attributes) use ($roleName, $department) {
+        return [
+            'name' => $roleName,
+            'email' => Str::slug($roleName, '_') . '@gmail.com',
+            'phone' => '09' . fake()->numberBetween(500000000, 599999999),
+            'address' => fake('ar_SA')->city,
+            'avatar' => 'default.png',
+        ];
+    });
+}
+
 }

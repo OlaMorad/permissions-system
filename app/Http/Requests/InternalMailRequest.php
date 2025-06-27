@@ -24,12 +24,9 @@ class InternalMailRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'from_user_id' => 'required|exists:users,id',
-            // 'to_user_id'   => 'required|exists:users,id',
             'subject'      => 'required|string|max:255',
             'body'         => 'required|string',
-            'to_path_ids'=>'nullable|array'
-            // 'status'       => ['required', new Enum(StatusInternalMail::class)],
+            'to_path_ids'  => 'nullable|array'
         ];
     }
 }
