@@ -18,9 +18,7 @@ class VerifySingleSession
      */
     public function handle($request, Closure $next)
     {
-        if (!auth()->user()->is_active) {
-    abort(403, 'حسابك غير مفعل حالياً.');
-}
+
 
          if ($request->is('api/refresh')) {
         return $next($request);
@@ -43,6 +41,7 @@ class VerifySingleSession
                 return response()->json(['message' => 'مشكلة في المستخدم أو تاريخ الدخول'], 401);
             }
 
+            if(!$user->is_active){ abort(403, 'حسابك غير مفعل حالياً.');}
             // الحصول على وقت آخر تسجيل دخول من قاعدة البيانات
             $dbLoginTime = $user->last_login_at ? Carbon::parse($user->last_login_at)->timestamp : null;
 
