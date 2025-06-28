@@ -16,15 +16,13 @@ class InternalMailController extends Controller
 
     public function create_internal_mail(InternalMailRequest $request){
 
-        //انشاء البريد الداخلي من قب الموظف او الادمن او السب ادمن
+        //انشاء البريد الداخلي من قبل الموظف او الادمن او السب ادمن
     return  $response=  $this->InternalMailService->create_internal_mail($request);
-    //   return new successResource([]);
     }
 
-
-//عرض البريد الصادر حسب  الحالة
-    public function show_internal_mails_by_status($status){
-        return  $response=  $this->InternalMailService->show_internal_mails_by_status($status);
+//عرض البريد الصادر للموظف و المدير
+    public function show_internal_mails_export(){
+        return  $response=  $this->InternalMailService->show_internal_mails_export();
        return new successResource([$response]);
     }
 

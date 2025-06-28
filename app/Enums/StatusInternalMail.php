@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum StatusInternalMail: string
 {
-    case PENDING   = 'معلقة';
-    case APPROVED  = 'موافقة';
+    case PENDING   = 'قيد الدراسة';
+    case APPROVED  = 'مرسلة';
     case REJECTED  = 'مرفوضة';
 }
