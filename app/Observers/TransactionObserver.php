@@ -22,42 +22,63 @@ class TransactionObserver
      */
     public function updated(Transaction $transaction): void
     {
-        if ($this->isCompleted($transaction)) {
+
+        if (!$transaction->wasChanged('status_to')) {
+            return;
+        }
+
+        if ($transaction->status_to === TransactionStatus::REJECTED) {
+
+            Transaction::where('id', $transaction->id)->update([
+                'from' => $transaction->to,
+                'to' => null,
+                'status_from' => TransactionStatus::REJECTED->value,
+                'status_to' => null,
+                'sent_at' => now(),
+            ]);
+            return;
+        }
+
+        if ($transaction->status_to === TransactionStatus::FORWARDED) {
             $this->moveToNextStep($transaction);
+            return;
         }
     }
-    // اذا تغيرت حالة المعاملة بالمسار الحالي لمكتملة 
-    private function isCompleted(Transaction $transaction): bool
-    {
-        return $transaction->wasChanged('status_to')
-            && $transaction->status_to === TransactionStatus::COMPLETED;
-    }
-    // جبلي المسار التالي تبع المعاملة 
+
+    /**
+     * جبلي المسار التالي تبع المعاملة
+     */
     private function moveToNextStep(Transaction $transaction): void
     {
-        $current = $transaction->to;
+
+            $current = $transaction->to;
         $form = $transaction->content->form;
 
         $steps = $form->paths()->pluck('path_id')->toArray();
         $index = array_search($current, $steps);
 
         $next = $steps[$index + 1] ?? null;
-
         if ($next) {
-            $this->update_transaction($transaction, $current, $next);
+            $this->updateTransaction($transaction, $current, $next);
         }
     }
-    // عدل معلومات المعاملة وحالتها عند كل مسار 
-    private function update_transaction(Transaction $transaction, $current, $next): void
+
+    /**
+     * عدل معلومات المعاملة وحالتها عند كل مسار
+     */
+    private function updateTransaction(Transaction $transaction, $current, $next): void
     {
+
         Transaction::where('id', $transaction->id)->update([
             'from' => $current,
             'to' => $next,
             'sent_at' => now(),
-            'status_from' => TransactionStatus::COMPLETED->value,
+            'status_from' => TransactionStatus::FORWARDED->value,
             'status_to' => TransactionStatus::PENDING->value,
         ]);
     }
+
+
     /**
      * Handle the Transaction "deleted" event.
      */

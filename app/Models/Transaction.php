@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 class Transaction extends Model
 {
     protected $fillable = [
+        'uuid',
         'form_content_id',
         'from',
         'to',

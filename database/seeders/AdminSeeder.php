@@ -89,7 +89,7 @@ class AdminSeeder extends Seeder
                 ['email' => $email],
                 [
                     'name' => $roleName,
-                    'password' => '33333333`',
+                    'password' => Hash::make('33333333'),
                     'phone' => '09' . $faker->numberBetween(500000000, 599999999),
                     'address' => $faker->city,
                     'avatar' => 'default.png',
