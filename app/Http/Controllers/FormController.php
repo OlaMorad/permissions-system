@@ -66,14 +66,8 @@ class FormController extends Controller
     {
         return $this->formService->changeUnderReviewToActive((int)$id);
     }
-
-    public function setActiveToInactive($id)
+    public function toggleStatus($id)
     {
-        return $this->formService->changeActiveToInactive((int)$id);
-    }
-
-    public function setInactiveToActive($id)
-    {
-        return $this->formService->changeInactiveToActive((int)$id);
+        return $this->formService->toggleActiveStatus((int)$id);
     }
 }

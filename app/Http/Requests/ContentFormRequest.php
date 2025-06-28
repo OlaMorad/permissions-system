@@ -9,9 +9,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ContentFormRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -21,19 +18,10 @@ class ContentFormRequest extends FormRequest
     {
         return [
             'form_id' => ['required', 'exists:forms,id'],
-
             'elements' => ['required', 'array'],
-            'elements.*.form_element_id' => [
-                'required',
-                Rule::exists('form_elements', 'id')->where(function ($query) {
-                    $query->where('form_id', $this->input('form_id'));
-                }),
-            ],
-            'elements.*.value' => ['nullable'],
-
-            'media' => ['nullable', 'array'],
-            'media.*.file_path' => ['nullable', 'string'],
-            'media.*.image_path' => ['nullable', 'string'],
+            'media.receipt' => ['required', 'file', 'mimes:jpg,jpeg,png'],
+            'media.*.file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
+            'media.*.image' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
         ];
     }
 
@@ -41,60 +29,86 @@ class ContentFormRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $formId = $this->input('form_id');
-            $inputElements = collect($this->input('elements') ?? []);
+            $elementsInput = $this->input('elements') ?? [];
 
-            // اجلب العناصر المطلوبة للنموذج
+            // تأكد من أن form_id صالح لتفادي الأخطاء
+            if (!$formId || !is_numeric($formId)) return;
+
             $requiredElements = FormElement::where('form_id', $formId)->get();
 
             foreach ($requiredElements as $element) {
-                $match = $inputElements->firstWhere('form_element_id', $element->id);
-
-                if (!$match) {
-                    $validator->errors()->add(
-                        'elements',
-                        "العنصر ذو التسمية '{$element->label}' مفقود ويجب تعبئته."
-                    );
-                    continue;
-                }
-
-                // القيمة المدخلة من المستخدم
-                $value = $match['value'] ?? null;
-
-                // إن كان CHECKBOX
-                if ($element->type === Element_Type::CHECKBOX->value) {
-                    if (!is_string($value) || empty($value)) {
-                        $validator->errors()->add(
-                            'elements',
-                            "العنصر '{$element->label}' من نوع checkbox ويجب اختيار خيار واحد."
-                        );
-                        continue;
-                    }
-
-                    // استخرج القيم المسموحة
-                    $rawOptions = explode('☐', $element->label);
-                    $allowedOptions = collect($rawOptions)
-                        ->map(fn($item) => trim($item))
-                        ->filter()
-                        ->values()
-                        ->all();
-
-                    // تحقق إذا القيمة المدخلة من القيم المسموحة
-                    if (!in_array($value, $allowedOptions)) {
-                        $validator->errors()->add(
-                            'elements',
-                            "القيمة المختارة '{$value}' غير مسموحة لحقل '{$element->label}'. القيم المسموحة هي: [" . implode(', ', $allowedOptions) . "]"
-                        );
-                    }
-                } else {
-                    // تحقق من وجود قيمة للعناصر غير الـ checkbox
-                    if (is_null($value) || $value === '') {
-                        $validator->errors()->add(
-                            'elements',
-                            "يجب إدخال قيمة للعنصر '{$element->label}'."
-                        );
-                    }
-                }
+                $this->validateElement($validator, $element, $elementsInput);
             }
         });
+    }
+
+    /**
+     * التحقق من عنصر فردي بناءً على نوعه.
+     */
+    protected function validateElement($validator, FormElement $element, array $inputElements): void
+    {
+        $label = $element->label;
+        $type = $element->type instanceof Element_Type
+            ? $element->type->value
+            : (int) $element->type;
+
+        // تجاوز التحقق لعناصر الملفات/الصور
+        if (in_array($type, [
+            Element_Type::ATTACHED_FILE->value,
+            Element_Type::ATTACHED_IMAGE->value,
+        ])) {
+            return;
+        }
+
+        // تحقق من وجود العنصر
+        if (!array_key_exists($label, $inputElements)) {
+            $validator->errors()->add(
+                'elements',
+                "العنصر ذو التسمية '{$label}' مفقود ويجب تعبئته."
+            );
+            return;
+        }
+
+        $value = $inputElements[$label];
+
+        // تحقق من نوع CHECKBOX
+        if ($type === Element_Type::CHECKBOX->value) {
+            $this->validateCheckbox($validator, $label, $value);
+        } else {
+            $this->validateStandardInput($validator, $label, $value);
+        }
+    }
+
+    /**
+     * التحقق من صحة بيانات checkbox.
+     */
+    protected function validateCheckbox($validator, string $label, $value): void
+    {
+        $rawOptions = explode('☐', $label);
+        $allowedOptions = collect($rawOptions)
+            ->map(fn($v) => trim($v))
+            ->filter()
+            ->values()
+            ->all();
+
+        if (!in_array($value, $allowedOptions)) {
+            $validator->errors()->add(
+                'elements',
+                "القيمة المختارة '{$value}' غير مسموحة لحقل '{$label}'. القيم المسموحة: [" . implode(', ', $allowedOptions) . "]"
+            );
+        }
+    }
+
+    /**
+     * التحقق من القيم النصية العادية.
+     */
+    protected function validateStandardInput($validator, string $label, $value): void
+    {
+        if (is_null($value) || $value === '') {
+            $validator->errors()->add(
+                'elements',
+                "يجب إدخال قيمة للعنصر '{$label}'."
+            );
+        }
     }
 }
