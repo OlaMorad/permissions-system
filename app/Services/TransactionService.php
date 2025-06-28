@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\TransactionStatus;
 use App\Http\Resources\successResource;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
@@ -25,14 +26,37 @@ class TransactionService
 
         return in_array($roleName, ['موظف المالية', 'رئيس المالية']);
     }
+    private function isSectionHead(string $roleName): bool
+    {
+        return str_starts_with($roleName, 'رئيس');
+    }
+
     // عرض المعاملة و هي معباية
     public function getFormContent(string $transactionUuid): array
     {
+        $user = Auth::user();
+        $userRole = $user->getRoleNames()->first();
+        $pathId = $this->getUserPathId();
+
         $transaction = Transaction::with([
             'content.form.elements',
             'content.elementValues.formElement',
             'content.media'
         ])->where('uuid', $transactionUuid)->firstOrFail();
+
+        //  إذا الطبيب، تأكد إنو المعاملة إله
+        if ($userRole === 'الطبيب') {
+            if ($transaction->content->doctor_id !== $user->doctor->id) {
+                abort(403, 'لا تملك صلاحية عرض هذه المعاملة.');
+            }
+        }
+
+        //  إذا موظف القسم ومو رئيس، غير الحالة لقيد الدراسة
+        if ($transaction->to === $pathId && !$this->isSectionHead($userRole) && $userRole !== 'الطبيب') {
+            $transaction->update([
+                'status_to' => TransactionStatus::UNDER_REVIEW->value,
+            ]);
+        }
 
         $content = $transaction->content;
 
@@ -53,11 +77,17 @@ class TransactionService
     public function import_for_financial()
     {
         $pathId = $this->getUserPathId();
+        $role = Auth::user()->getRoleNames()->first();
 
-        $transactions = Transaction::where('to', $pathId)
-            ->whereNull('from')
-            ->with(['content.form', 'content.doctor.user'])
-            ->get();
+        $query = Transaction::where('to', $pathId)
+            ->whereNull('from');
+
+        // إذا المستخدم ليس رئيس القسم، لا تعرض "قيد الدراسة"
+        if (!str_starts_with($role, 'رئيس')) {
+            $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
+        }
+
+        $transactions = $query->with(['content.form', 'content.doctor.user'])->get();
 
         return $transactions->map(function ($transaction) {
             return [
@@ -87,6 +117,7 @@ class TransactionService
                 'receipt_number' => $transaction->receipt_number,
                 'form_name' => $transaction->content->form->name,
                 'form_cost' => $transaction->content->form->cost,
+                'status' => $transaction->status_from,
                 'submitted_at' => $transaction->created_at,
                 'sent_at' => $transaction->sent_at,
             ];
@@ -96,8 +127,16 @@ class TransactionService
     public function import_transactions()
     {
         $userPathId = $this->getUserPathId();
+        $role = Auth::user()->getRoleNames()->first();
 
-        $transactions = Transaction::where('to', $userPathId)
+        $query = Transaction::where('to', $userPathId);
+
+        // إذا الموظف مو رئيس القسم، خبي المعاملات قيد الدراسة
+        if (!str_starts_with($role, 'رئيس')) {
+            $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
+        }
+
+        $transactions = $query
             ->with(['content.form:id,name', 'content.doctor.user:id,name', 'toPath', 'fromPath'])
             ->get();
 
@@ -141,6 +180,7 @@ class TransactionService
                 'doctor_phone' => $transaction->content->doctor->user->phone ?? '',
                 'form_name' => $transaction->content->form->name ?? '',
                 'to_path' => optional($transaction->toPath)->name ?? null,
+                'status' => $transaction->status_from,
                 'submitted_at' => $transaction->created_at,
                 'sent_at' => $transaction->sent_at,
             ];

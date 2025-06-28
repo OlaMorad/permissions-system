@@ -94,9 +94,11 @@ Route::middleware(['throttle:10,1'])->group(
             Route::prefix('transaction')->group(function () {
                 Route::get('/import', 'Import_Transaction')->middleware('auth:api');
                 Route::get('/export', 'Export_Transaction')->middleware('auth:api');
-                Route::get('/show/{id}', 'showFormContent');
-                Route::put('/update/{id}', 'Update_Status_to_Complete')->middleware('auth:api');
+                Route::get('/show/{id}', 'showFormContent')->middleware('auth:api');
+                Route::patch('/forward/{uuid}', 'forwardTransaction')->middleware('auth:api');
+                Route::patch('/reject/{uuid}', 'rejectTransaction')->middleware('auth:api');
                 Route::patch('/approve_receipt/{uuid}', 'approveReceipt')->middleware('auth:api', 'role:موظف المالية');
+                Route::patch('/reject_receipt/{uuid}', 'rejectReceipt')->middleware('auth:api', 'role:موظف المالية');
             });
         });
         Route::controller(FormContentController::class)->group(function () {

@@ -5,8 +5,9 @@ namespace App\Enums;
 enum TransactionStatus: string
 {
     case PENDING = 'انتظار';
+    case FORWARDED = 'محول';
+    case REJECTED = 'مرفوض';
     case LATE = 'متأخرة';
     case COMPLETED = 'منجزة';
-    case CANCELED = 'ملغاة';
-    case UNDER_REVIEW = 'تحت الدراسة';
+    case UNDER_REVIEW = 'قيد الدراسة';
 }

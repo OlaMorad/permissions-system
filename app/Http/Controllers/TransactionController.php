@@ -43,16 +43,23 @@ class TransactionController extends Controller
 
         return new successResource($data);
     }
-    public function Update_Status_to_Complete($id)
+    public function forwardTransaction($id)
     {
-        return $this->transactionStatusService->completeTransaction($id);
+        return $this->transactionStatusService->forward_transaction($id);
+    }
+    public function rejectTransaction(string $uuid)
+    {
+        return $this->transactionStatusService->reject_transaction($uuid);
     }
 
-    // الدالة الجديدة لتحديث حالة الإيصال والحالة المعاملة
     public function approveReceipt($uuid)
     {
         $data = $this->transactionStatusService->approve_receipt($uuid);
 
         return new successResource($data);
+    }
+    public function rejectReceipt(string $uuid)
+    {
+        return $this->transactionStatusService->reject_receipt($uuid);
     }
 }
