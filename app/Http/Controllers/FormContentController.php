@@ -14,7 +14,7 @@ class FormContentController extends Controller
     public function create_form_content(ContentFormRequest $request)
     {
         $validated = $request->validated();
-        $formContent = $this->FormContentService->create_form_content($validated);
-        return new successResource([$formContent]);
+       $this->FormContentService->createFormContent($validated);
+        return new successResource(['تمت تعبئة الفورم بنجاح']);
     }
 }

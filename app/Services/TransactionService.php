@@ -6,7 +6,6 @@ use App\Http\Resources\successResource;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
-use App\Enums\TransactionStatus;
 
 class TransactionService
 {
@@ -20,45 +19,80 @@ class TransactionService
         return $role?->path_id;
     }
 
-    // تحديث حالة المعاملة لمكتملة
-    public function completeTransaction($id)
+    public function isFinancial(): bool
     {
-        $pathId = $this->getUserPathId();
-        $transaction = Transaction::where('to', $pathId)->findOrFail($id);
+        $roleName = Auth::user()->getRoleNames()->first();
 
-        $transaction->status_to = TransactionStatus::COMPLETED->value;
-        $transaction->save();
-
-        return new successResource(['message' => 'تم تحديث حالة المعاملة إلى مكتملة']);
+        return in_array($roleName, ['موظف المالية', 'رئيس المالية']);
     }
-
-    // جلب محتوى النموذج المرتبط بالمعاملة
-    public function getFormContent(int $transactionId)
+    // عرض المعاملة و هي معباية
+    public function getFormContent(string $transactionUuid): array
     {
         $transaction = Transaction::with([
             'content.form.elements',
             'content.elementValues.formElement',
-            'content.media',
-            'content.doctor.user'
-        ])->findOrFail($transactionId);
+            'content.media'
+        ])->where('uuid', $transactionUuid)->firstOrFail();
 
         $content = $transaction->content;
 
         return [
             'form_name' => $content->form->name,
-            'doctor_name' => $content->doctor->user->name,
             'elements' => $content->elementValues->map(fn($ev) => [
                 'label' => $ev->formElement->label,
                 'value' => $ev->value,
             ])->values(),
             'media' => $content->media->map(fn($m) => [
-                'file' => $m->file_path,
-                'image' => $m->image_path,
+                'file' => $m->file ? asset('storage/' . $m->file) : null,
+                'image' => $m->image ? asset('storage/' . $m->image) : null,
+                'receipt' => asset('storage/' . $m->receipt),
             ])->values(),
         ];
     }
 
-    // استيراد المعاملات المرتبطة بمسار المستخدم (to)
+    public function import_for_financial()
+    {
+        $pathId = $this->getUserPathId();
+
+        $transactions = Transaction::where('to', $pathId)
+            ->whereNull('from')
+            ->with(['content.form', 'content.doctor.user'])
+            ->get();
+
+        return $transactions->map(function ($transaction) {
+            return [
+                'uuid' => $transaction->uuid,
+                'doctor_name' => $transaction->content->doctor->user->name ?? '',
+                'receipt_number' => $transaction->receipt_number,
+                'form_name' => $transaction->content->form->name,
+                'form_cost' => $transaction->content->form->cost,
+                'submitted_at' => $transaction->created_at,
+                'received_at' => $transaction->created_at,
+            ];
+        })->values();
+    }
+
+    public function export_for_financial()
+    {
+        $pathId = $this->getUserPathId();
+
+        $transactions = Transaction::where('from', $pathId)
+            ->with(['content.form', 'content.doctor.user'])
+            ->get();
+
+        return $transactions->map(function ($transaction) {
+            return [
+                'uuid' => $transaction->uuid,
+                'doctor_name' => $transaction->content->doctor->user->name ?? '',
+                'receipt_number' => $transaction->receipt_number,
+                'form_name' => $transaction->content->form->name,
+                'form_cost' => $transaction->content->form->cost,
+                'submitted_at' => $transaction->created_at,
+                'sent_at' => $transaction->sent_at,
+            ];
+        })->values();
+    }
+
     public function import_transactions()
     {
         $userPathId = $this->getUserPathId();
@@ -70,7 +104,6 @@ class TransactionService
         return $this->mapImport($transactions);
     }
 
-    // تصدير المعاملات المرتبطة بمسار المستخدم (from)
     public function export_transaction()
     {
         $userPathId = $this->getUserPathId();
@@ -82,34 +115,34 @@ class TransactionService
         return $this->mapExport($transactions);
     }
 
-    // تابع ماب الاستيراد
     private function mapImport($transactions)
     {
         return $transactions->map(function ($transaction) {
             return [
-                'id' => $transaction->id,
-                'form_name' => $transaction->content->form->name ?? '',
+                'uuid' => $transaction->uuid,
+                'doctor_image' => $transaction->content->doctor->user->avatar ?? null,
                 'doctor_name' => $transaction->content->doctor->user->name ?? '',
+                'doctor_phone' => $transaction->content->doctor->user->phone ?? '',
+                'form_name' => $transaction->content->form->name ?? '',
                 'from_path' => optional($transaction->fromPath)->name ?? null,
-                'to_path' => $transaction->toPath->name,
+                'submitted_at' => $transaction->created_at,
                 'received_at' => $transaction->received_at,
-                'created_at' => $transaction->created_at,
             ];
         })->values();
     }
 
-    // تابع ماب التصدير
     private function mapExport($transactions)
     {
         return $transactions->map(function ($transaction) {
             return [
-                'id' => $transaction->id,
-                'form_name' => $transaction->content->form->name ?? '',
+                'uuid' => $transaction->uuid,
+                'doctor_image' => $transaction->content->doctor->user->avatar ?? null,
                 'doctor_name' => $transaction->content->doctor->user->name ?? '',
-                'from_path' => optional($transaction->fromPath)->name ?? null,
-                'to_path' => $transaction->toPath->name,
+                'doctor_phone' => $transaction->content->doctor->user->phone ?? '',
+                'form_name' => $transaction->content->form->name ?? '',
+                'to_path' => optional($transaction->toPath)->name ?? null,
+                'submitted_at' => $transaction->created_at,
                 'sent_at' => $transaction->sent_at,
-                'created_at' => $transaction->created_at,
             ];
         })->values();
     }
