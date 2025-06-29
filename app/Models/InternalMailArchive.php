@@ -14,4 +14,10 @@ class InternalMailArchive extends Model
         'to_phones',
         'received_at'
     ];
+
+    protected $casts = [
+    'to' => 'array',
+    'to_phones' => 'array',
+];
+
 }
