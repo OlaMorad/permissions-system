@@ -10,11 +10,9 @@ use App\Http\Controllers\employeeController;
 use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\permissionController;
 use App\Http\Controllers\InternalMailController;
-use App\Http\Controllers\Head_of_Front_Desk_Controller;
-use App\Http\Controllers\InternalMailArchiveController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\TransactionController;
-use App\Models\InternalMailArchive;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -74,27 +72,34 @@ Route::middleware(['throttle:10,1'])->group(
         });
 
 
-        Route::controller(FormController::class)->group(
-            function () {
-                Route::prefix('form')->group(function () { //  تحميل نموذج من ملف Word
-                    Route::post('/upload-word', 'storeFromWord'); //  إنشاء نموذج يدوي
+        Route::controller(FormController::class)->group(function () {
+            Route::prefix('form')->group(function () {
+
+                // مسارات خاصة برئيس الديوان
+                Route::middleware(['auth:api', 'role:رئيس الديوان'])->group(function () {
+                    Route::post('/upload-word', 'storeFromWord');
                     Route::post('/manual', 'storeManually');
-                    Route::get('/show_all', 'index');//->middleware('auth:api', 'role:رئيس الديوان');
-                    Route::get('/active', 'activeForms');
-                    Route::get('/under-review', 'underReviewForms');
-                    Route::get('/{id}', 'show_Form');
-                    Route::patch('/under-review-to-active/{id}','setUnderReviewToActive');
-                    Route::patch('/active-to-inactive/{id}','setActiveToInactive');
-                    Route::patch('/inactive-to-active/{id}','setInactiveToActive');
+                    Route::get('/show_all', 'index');
+                    Route::patch('/toggle-status/{id}', 'toggleStatus');
                 });
-            }
-        );
+
+                // باقي المسارات
+                Route::get('/active', 'activeForms');
+                Route::get('/under-review', 'underReviewForms');
+                Route::get('/{id}', 'show_Form');
+                Route::patch('/under-review-to-active/{id}', 'setUnderReviewToActive');
+            });
+        });
+
         Route::controller(TransactionController::class)->group(function () {
             Route::prefix('transaction')->group(function () {
                 Route::get('/import', 'Import_Transaction')->middleware('auth:api');
                 Route::get('/export', 'Export_Transaction')->middleware('auth:api');
-                Route::get('/show/{id}', 'showFormContent');
-                Route::put('/update/{id}', 'Update_Status_to_Complete')->middleware('auth:api');
+                Route::get('/show/{id}', 'showFormContent')->middleware('auth:api');
+                Route::patch('/forward/{uuid}', 'forwardTransaction')->middleware('auth:api');
+                Route::patch('/reject/{uuid}', 'rejectTransaction')->middleware('auth:api');
+                Route::patch('/approve_receipt/{uuid}', 'approveReceipt')->middleware('auth:api', 'role:موظف المالية');
+                Route::patch('/reject_receipt/{uuid}', 'rejectReceipt')->middleware('auth:api', 'role:موظف المالية');
             });
         });
         Route::controller(FormContentController::class)->group(function () {

@@ -20,13 +20,21 @@ class FormContentObserver
             ->value('path_id');
 
         if ($firstPathId) {
+            // نحسب رقم الإيصال التالي
+            $lastReceiptNumber = DB::table('transactions')->max('receipt_number');
+            $nextReceiptNumber = $lastReceiptNumber ? ((int)$lastReceiptNumber + 1) : 1;
+
+            // تنسيق الرقم ليكون 6 خانات مثل: 000001
+            $formattedReceiptNumber = str_pad($nextReceiptNumber, 6, '0', STR_PAD_LEFT);
             Transaction::create([
                 'form_content_id' => $formContent->id,
                 'from' => null,
                 'to' => $firstPathId,
-                'status_from' => TransactionStatus::PENDING,  
-                'status_to' => TransactionStatus::PENDING,   
+                'status_from' => TransactionStatus::PENDING,
+                'status_to' => TransactionStatus::PENDING,
                 'received_at' => now(),
+                'receipt_number' => $formattedReceiptNumber,
+
             ]);
         }
     }
