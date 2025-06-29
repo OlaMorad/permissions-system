@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\successResource;
-use App\Services\StatisticsService;
 use Illuminate\Http\Request;
+use App\Services\StatisticsService;
+use App\Http\Resources\failResource;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\successResource;
 
 class StatisticsController extends Controller
 {
@@ -22,5 +24,15 @@ class StatisticsController extends Controller
     {
         $data = $this->Service->employeeStatistics();
        return new successResource($data);
+    }
+
+    public function InternalStatisticsSummary(){
+
+        $data = $this->Service->InternalStatistics();
+           // إذا كانت القيمة String، نعيد FailResource
+    if (is_string($data)) {
+        return new failResource($data);
+    }
+         return new successResource($data);
     }
 }
