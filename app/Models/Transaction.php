@@ -49,4 +49,8 @@ class Transaction extends Model
     {
         return $this->belongsTo(Path::class,'to');
     }
+    public function movements()
+    {
+        return $this->hasMany(TransactionMovement::class);
+    }
 }

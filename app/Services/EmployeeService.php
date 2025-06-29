@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\TransactionStatus;
 use App\Models\Manager;
 use App\Models\Employee;
+use App\Models\TransactionMovement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -84,39 +86,71 @@ class EmployeeService
     }
 
 
-  public function show_employees()
-{
-
-    // تأكيد أن المستخدم هو مدير
-    $user = DB::table('users')->where('id', Auth::id())->first();
-    $manager=DB::table('managers')->where('user_id',$user->id)->first();
-    if (!$manager) {
-        return abort( 403, 'انت لست مدير');
+    public function employeeStatistics(): array
+    {
+        // نجيب عدد المعاملات لكل موظف حسب حالة المعاملة (محولة أو مرفوضة فقط)
+        return TransactionMovement::with('changedBy')
+            ->whereIn('status', [
+                TransactionStatus::FORWARDED->value,
+                TransactionStatus::REJECTED->value,
+            ])
+            ->selectRaw('changed_by, COUNT(*) as total')
+            ->groupBy('changed_by')
+            ->get()
+            ->mapWithKeys(function ($movement) {
+                // نستخدم employee_id كـ key والقيمة عدد المعاملات
+                return [
+                    $movement->changed_by => [
+                        'handled_transactions' => $movement->total,
+                        'employee_name' => $movement->changedBy->name ?? 'غير معروف',
+                    ],
+                ];
+            })
+            ->toArray();
     }
 
-    // استعلام لربط جدول employees مع جدول users باستخدام join
-    $employees = DB::table('employees')
-        ->join('users', 'employees.user_id', '=', 'users.id')
-        ->where('employees.manager_id', $manager->id)
-        ->select(
-            'users.id',
-            'users.name',
-            'users.email',
-            'users.phone',
-            'users.avatar',
-            'users.address'
-        )
-        ->get()
-        ->map(function ($employee) {
-            $employee->avatar = $employee->avatar
-                ? asset('storage/' . $employee->avatar)
-                : null;
-            return $employee;
-        });
+    /**
+     * عرض كل الموظفين التابعين للمدير مع إحصائياتهم (عدد المعاملات المنتهية)
+     */
+    public function show_employees()
+    {
+        // تأكيد أن المستخدم هو مدير
+        $user = DB::table('users')->where('id', Auth::id())->first();
+        $manager = DB::table('managers')->where('user_id', $user->id)->first();
+        if (!$manager) {
+            return abort(403, 'انت لست مدير');
+        }
 
-    return response()->json($employees);
-}
+        // نجيب إحصائيات الموظفين مرة وحدة لتجنب استعلامات متكررة
+        $stats = $this->employeeStatistics();
 
+        // استعلام لربط جدول employees مع جدول users باستخدام join
+        $employees = DB::table('employees')
+            ->join('users', 'employees.user_id', '=', 'users.id')
+            ->where('employees.manager_id', $manager->id)
+            ->select(
+                'users.id',
+                'users.name',
+                'users.email',
+                'users.phone',
+                'users.avatar',
+                'users.address'
+            )
+            ->get()
+            ->map(function ($employee) use ($stats) {
+                $employee->avatar = $employee->avatar
+                    ? asset('storage/' . $employee->avatar)
+                    : null;
+
+                // نضيف إحصائيات عدد المعاملات اللي أنهى الموظف (لو موجودة)
+                $employeeStats = $stats[$employee->id]['handled_transactions'] ?? 0;
+                $employee->handled_transactions = $employeeStats;
+
+                return $employee;
+            });
+
+        return response()->json($employees);
+    }
 
 public function convert_employee_status($employeeId)
 {

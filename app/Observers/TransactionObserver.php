@@ -6,6 +6,8 @@ use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use App\Enums\TransactionStatus;
 use Illuminate\Support\Carbon;
+use App\Models\TransactionMovement;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionObserver
 {
@@ -27,6 +29,8 @@ class TransactionObserver
             return;
         }
 
+        $userId = Auth::id(); // المستخدم الذي قام بالفعل
+
         if ($transaction->status_to === TransactionStatus::REJECTED) {
 
             Transaction::where('id', $transaction->id)->update([
@@ -36,11 +40,19 @@ class TransactionObserver
                 'status_to' => null,
                 'sent_at' => now(),
             ]);
+            TransactionMovement::create([
+                'transaction_id' => $transaction->id,
+                'from_path_id' => $transaction->to,
+                'to_path_id' => null,
+                'status' => TransactionStatus::REJECTED->value,
+                'changed_by' => $userId,
+                'changed_at' => now(),
+            ]);
             return;
         }
 
         if ($transaction->status_to === TransactionStatus::FORWARDED) {
-            $this->moveToNextStep($transaction);
+            $this->moveToNextStep($transaction, $userId);
             return;
         }
     }
@@ -48,10 +60,10 @@ class TransactionObserver
     /**
      * جبلي المسار التالي تبع المعاملة
      */
-    private function moveToNextStep(Transaction $transaction): void
+    private function moveToNextStep(Transaction $transaction, $userId): void
     {
 
-            $current = $transaction->to;
+        $current = $transaction->to;
         $form = $transaction->content->form;
 
         $steps = $form->paths()->pluck('path_id')->toArray();
@@ -59,6 +71,15 @@ class TransactionObserver
 
         $next = $steps[$index + 1] ?? null;
         if ($next) {
+            // احفظ الحركة قبل التحديث
+            TransactionMovement::create([
+                'transaction_id' => $transaction->id,
+                'from_path_id' => $current,
+                'to_path_id' => $next,
+                'status' => TransactionStatus::FORWARDED->value,
+                'changed_by' => $userId,
+                'changed_at' => now(),
+            ]);
             $this->updateTransaction($transaction, $current, $next);
         }
     }
