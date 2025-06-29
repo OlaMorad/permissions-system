@@ -9,9 +9,11 @@ use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
 use App\Http\Controllers\permissionController;
 use App\Http\Controllers\FormContentController;
-use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\InternalMailController;
+use App\Http\Controllers\InternalMailArchiveController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -105,7 +107,14 @@ Route::middleware(['throttle:10,1'])->group(
             Route::post('create_form_content', 'create_form_content')->middleware(['Verify.Session']);
         });
 
+
+        Route::prefix('statistics')->middleware(['auth:api'])->group(function () {
+            Route::get('/section', [StatisticsController::class, 'ExternalStatisticsSummary']);
+            Route::get('/employees', [StatisticsController::class, 'employeePerformance']);
+        });
+
         Route::get('all_paths',[PathController::class,'index']);
+        Route::get('/add_to_archive', [InternalMailArchiveController::class, 'add_to_archive']);
     }
 
 );
