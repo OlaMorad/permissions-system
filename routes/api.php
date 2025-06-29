@@ -12,6 +12,8 @@ use App\Http\Controllers\permissionController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\StatisticsController;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -35,9 +37,9 @@ Route::middleware(['throttle:10,1'])->group(
 
 
         Route::middleware(['auth:api', 'Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
-        Route::middleware(['auth:api', 'Verify.Session'])->post('/edit_employee_information',[employeeController::class,'edit_employee_information']);
-        Route::middleware(['auth:api', 'Verify.Session'])->get('/show_employees',[employeeController::class,'show_employees']);
-        Route::middleware(['auth:api', 'Verify.Session'])->get('/convert_employee_status',[employeeController::class,'convert_employee_status']);
+        Route::middleware(['auth:api', 'Verify.Session'])->post('/edit_employee_information', [employeeController::class, 'edit_employee_information']);
+        Route::middleware(['auth:api', 'Verify.Session'])->get('/show_employees', [employeeController::class, 'show_employees']);
+        Route::middleware(['auth:api', 'Verify.Session'])->get('/convert_employee_status', [employeeController::class, 'convert_employee_status']);
 
 
 
@@ -67,7 +69,7 @@ Route::middleware(['throttle:10,1'])->group(
             ROute::post('edit_status_internal_mails', 'edit_status_internal_mails')->middleware('Verify.Session');
             Route::get('show_import_internal_mails', 'show_import_internal_mails')->middleware('Verify.Session');
             Route::get('show_export_internal_mail_details', 'show_export_internal_mail_details')->middleware('Verify.Session');
-            Route::get('show_import_internal_mail_details','show_import_internal_mail_details')->middleware('Verify.Session');
+            Route::get('show_import_internal_mail_details', 'show_import_internal_mail_details')->middleware('Verify.Session');
         });
 
 
@@ -105,6 +107,12 @@ Route::middleware(['throttle:10,1'])->group(
             Route::post('create_form_content', 'create_form_content')->middleware(['Verify.Session']);
         });
 
-        Route::get('all_paths',[PathController::class,'index']);
+
+        Route::prefix('statistics')->middleware(['auth:api'])->group(function () {
+            Route::get('/section', [StatisticsController::class, 'ExternalStatisticsSummary']);
+            Route::get('/employees', [StatisticsController::class, 'employeePerformance']);
+        });
+
+        Route::get('all_paths', [PathController::class, 'index']);
     }
 );

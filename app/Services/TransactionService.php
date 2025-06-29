@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\TransactionStatus;
 use App\Http\Resources\successResource;
 use App\Models\Transaction;
+use App\Models\TransactionMovement;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
@@ -56,6 +57,15 @@ class TransactionService
             $transaction->update([
                 'status_to' => TransactionStatus::UNDER_REVIEW->value,
             ]);
+            // سجل الحركة في جدول transaction_movements
+            TransactionMovement::create([
+                'transaction_id' => $transaction->id,
+                'from_path_id' => $transaction->from,
+                'to_path_id' => $transaction->to,
+                'status' => TransactionStatus::UNDER_REVIEW->value,
+                'changed_by' => Auth::id(),
+                'changed_at' => now(),
+            ]);
         }
 
         $content = $transaction->content;
@@ -87,7 +97,7 @@ class TransactionService
             $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
         }
 
-        $transactions = $query->with(['content.form', 'content.doctor.user'])->get();
+        $transactions = $query->with(['content.form', 'content.doctor.user'])->orderBy('received_at')->get();
 
         return $transactions->map(function ($transaction) {
             return [
@@ -108,6 +118,7 @@ class TransactionService
 
         $transactions = Transaction::where('from', $pathId)
             ->with(['content.form', 'content.doctor.user'])
+            ->orderBy('sent_at')
             ->get();
 
         return $transactions->map(function ($transaction) {
@@ -138,6 +149,7 @@ class TransactionService
 
         $transactions = $query
             ->with(['content.form:id,name', 'content.doctor.user:id,name', 'toPath', 'fromPath'])
+            ->orderBy('received_at')
             ->get();
 
         return $this->mapImport($transactions);
@@ -149,6 +161,7 @@ class TransactionService
 
         $transactions = Transaction::where('from', $userPathId)
             ->with(['content.form:id,name', 'content.doctor.user:id,name', 'toPath', 'fromPath'])
+            ->orderBy('sent_at')
             ->get();
 
         return $this->mapExport($transactions);
