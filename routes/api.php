@@ -4,14 +4,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
-use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\permissionController;
-use App\Http\Controllers\InternalMailController;
-use App\Http\Controllers\PathController;
+use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\InternalMailController;
+use App\Http\Controllers\InternalMailArchiveController;
 
 
 Route::get('/user', function (Request $request) {
