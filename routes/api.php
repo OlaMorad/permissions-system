@@ -4,14 +4,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
-use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\permissionController;
-use App\Http\Controllers\InternalMailController;
-use App\Http\Controllers\PathController;
+use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\InternalMailController;
+use App\Http\Controllers\InternalMailArchiveController;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -106,5 +108,9 @@ Route::middleware(['throttle:10,1'])->group(
         });
 
         Route::get('all_paths',[PathController::class,'index']);
+
+            Route::get('/add_to_archive',[InternalMailArchiveController::class,'add_to_archive']);
+
     }
+
 );

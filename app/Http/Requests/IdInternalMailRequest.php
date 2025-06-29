@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -14,10 +15,9 @@ class IdInternalMailRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => [
+            'uuid' => [
                 'required',
-                'integer',
-                Rule::exists('internal_mails', 'id'),
+                Rule::exists('internal_mails','uuid'),
             ],
         ];
     }
@@ -25,9 +25,8 @@ class IdInternalMailRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'id.required' => 'رقم البريد مطلوب.',
-            'id.integer' => 'رقم البريد يجب أن يكون رقماً.',
-            'id.exists' => 'البريد غير موجود.',
+            'uuid.required' => 'رقم البريد مطلوب.',
+            'uuid.exists' => 'البريد غير موجود.',
         ];
     }
 }

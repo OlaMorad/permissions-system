@@ -102,33 +102,45 @@ class InternalMailService
 
 public function show_internal_mails_export()
 {
-    // التحقق من أن المستخدم الحالي مدير
-    $managerData = $this->getCurrentManagerWithRole();
-    $isManager = true;
+    $currentUser = Auth::user();
+    $userRole = $currentUser->getRoleNames()->first();
+    $adminRoles = ['المدير', 'نائب المدير'];
+    $isAdmin = in_array($userRole, $adminRoles);
+    $isManager = false;
+    $employeeIds = collect(); // استخدام Collection لسهولة المعالجة
 
-    if (!$managerData) {
-        $isManager = false;
-        $employee = DB::table('employees')->where('user_id', Auth::id())->first();
-        if (!$employee) {
-            return response()->json(['message' => 'أنت لست مديراً ولا موظفاً.'], 403);
-        }
-        $managerData = ['manager' => (object)['id' => $employee->manager_id]];
+    // محاولة الحصول على بيانات المدير المباشر
+    if ($managerData = $this->getCurrentManagerWithRole()) {
+        $isManager = true;
+        $employeeIds = Employee::where('manager_id', $managerData['manager']->id)->pluck('user_id');
+    }
+    // إذا لم يكن مديرًا، تحقق إن كان موظفًا
+    elseif ($employee = Employee::where('user_id', $currentUser->id)->first()) {
+        $employeeIds = Employee::where('manager_id', $employee->manager_id)->pluck('user_id');
     }
 
-    // جلب معرفات الموظفين التابعين لهذا المدير
-    $employeeIds = Employee::where('manager_id', $managerData['manager']->id)->pluck('user_id');
-
-    // تحميل الرسائل
+    // تحميل الرسائل الصادرة فقط من الموظفين التابعين أو من المدير الأعلى نفسه (في حال كان Admin)
     $mails = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
-        ->whereIn('from_user_id', $employeeIds)
-        ->select('id', 'subject', 'created_at', 'updated_at', 'from_user_id', 'status')
+        ->where(function ($query) use ($employeeIds, $currentUser, $isAdmin) {
+            $query->whereIn('from_user_id', $employeeIds);
+
+            if ($isAdmin) {
+                $query->orWhere('from_user_id', $currentUser->id);
+            }
+        })
+        ->whereIn('status', [
+            StatusInternalMail::APPROVED->value,
+            StatusInternalMail::REJECTED->value,
+        ])
+        ->select('id','uuid', 'subject', 'created_at', 'updated_at', 'from_user_id', 'status')
         ->get();
 
-    // رؤساء الأقسام
+    // الرتب المستهدفة بالهاتف
     $headRoles = [
-        'المدير', 'نائب المدير', 'رئيس الديوان', 'رئيس المالية',
-        'رئيس مجالس علمية', 'رئيس الشهادات', 'رئيس الامتحانات',
-        'رئيس الإقامة', 'رئيس المفاضلة'
+        'المدير', 'نائب المدير',
+        'رئيس الديوان', 'رئيس المالية',
+        'رئيس مجالس علمية', 'رئيس الشهادات',
+        'رئيس الامتحانات', 'رئيس الإقامة', 'رئيس المفاضلة',
     ];
 
     // تنسيق النتائج
@@ -150,9 +162,8 @@ public function show_internal_mails_export()
 
         $phones = User::whereIn('id', $userIds)->pluck('phone');
 
-        // تجهيز الداتا حسب نوع المستخدم
         $result = [
-            'id' => $mail->id,
+            'uuid' => $mail->uuid,
             'subject' => $mail->subject,
             'sender_at' => $sendDate,
             'status' => $mail->status,
@@ -160,7 +171,6 @@ public function show_internal_mails_export()
             'to_phones' => $phones,
         ];
 
-        // فقط إذا كان مديرًا نضيف received_at
         if ($isManager) {
             $result['received_at'] = $mail->created_at;
         }
@@ -172,6 +182,7 @@ public function show_internal_mails_export()
         'mails' => $dataFormatted,
     ]);
 }
+
 
 
 
@@ -205,7 +216,7 @@ public function show_internal_mails_export()
 
         return response()->json([
             'message' => 'تم تحديث حالة البريد بنجاح.',
-            'mail' => $mail,
+            'mail' => collect($mail)->except('id'),
         ]);
     }
 
@@ -223,7 +234,7 @@ public function show_internal_mails_export()
     // تحميل الرسائل الموافق عليها
     $approvedMails = InternalMail::with(['fromUser:id,name,phone,avatar'])
         ->where('status', StatusInternalMail::APPROVED)
-        ->select('id', 'from_user_id', 'subject', 'updated_at')
+        ->select('id','uuid', 'from_user_id', 'subject', 'updated_at')
         ->get();
 
     // جلب الرسائل المرتبطة بالمسار الحالي
@@ -248,7 +259,7 @@ public function show_internal_mails_export()
         $officeName = DB::table('paths')->where('id', $pathId)->value('name');
 
         return [
-            'id' => $mail->id,
+            'uuid' => $mail->uuid,
             'from_name' => $user->name,
             'from_phone' => $user->phone,
             'from_avatar' => $user->avatar ? asset($user->avatar) : null,
@@ -261,42 +272,76 @@ public function show_internal_mails_export()
 
 
 
+public function show_export_internal_mail_details($uuid)
+{
+    $manager = $this->getCurrentManagerWithRole();
+    $is_admin = $this->is_admin();
+    $authUserId = Auth::id();
 
-    public function show_export_internal_mail_details($id)
-    {
+    // جلب البريد باستخدام UUID مع تحميل العلاقات الأساسية
+    $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
+        ->where('uuid', $uuid)
+        ->first();
 
-        $manager = $this->getCurrentManagerWithRole();
-        $is_admin = $this->is_admin();
-
-        if (!$manager && !$is_admin) {
-            return response()->json(['message' => 'أنت لست مديراً.'], 403);
-        }
-
-        if ($manager) {
-            $employeeIds = Employee::where('manager_id', $manager['manager']->id)->pluck('user_id');
-            $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
-                ->whereIn('from_user_id', $employeeIds)
-                ->find($id->id);
-
-            if (!$mail) {
-                return response()->json(['message' => 'هذا البريد لا يخص موظفيك.'], 403);
-            }
-        }
-
-        if ($is_admin) {
-            $mail = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
-                ->whereIn('from_user_id', [Auth::id()])->find($id->id);
-        }
-        return response()->json([
-            'id' => $mail->id,
-            'subject' => $mail->subject,
-            'body' => $mail->body,
-            'sender' => $mail->fromUser->name ?? null,
-            'status' => $mail->status,
-            'sent_at' => $mail->updated_at->toDateTimeString(),
-            'to' => $mail->paths->pluck('name'),
-        ]);
+    if (!$mail) {
+        return response()->json(['message' => 'البريد غير موجود.'], 404);
     }
+
+    $is_same_user = $authUserId === $mail->from_user_id;
+
+    // التحقق من الصلاحيات: إذا لم يكن مديرًا ولا أدمنًا ولا نفس المرسل، امنع الدخول
+    if (!$manager && !$is_admin && !$is_same_user) {
+        return response()->json(['message' => 'لا تملك صلاحية عرض هذا البريد.'], 403);
+    }
+
+    // إذا كان مديرًا، تأكد أن الموظف من ضمن موظفيه
+    if ($manager && !$is_same_user) {
+        $employeeIds = Employee::where('manager_id', $manager['manager']->id)->pluck('user_id')->toArray();
+        if (!in_array($mail->from_user_id, $employeeIds)) {
+            return response()->json(['message' => 'هذا البريد لا يخص موظفيك.'], 403);
+        }
+    }
+
+        // التحقق من صلاحية المسؤول (admin)
+    if ($is_admin && $mail->from_user_id !== $authUserId) {
+        return response()->json(['message' => 'هذا البريد لا يخصك.'], 403);
+    }
+
+    // الرتب التي تستهدف أرقام هواتفها (كما في التابع السابق)
+    $headRoles = [
+        'المدير', 'نائب المدير',
+        'رئيس الديوان', 'رئيس المالية',
+        'رئيس مجالس علمية', 'رئيس الشهادات',
+        'رئيس الامتحانات', 'رئيس الإقامة', 'رئيس المفاضلة',
+    ];
+
+    // جلب معرفات الدوائر (paths)
+    $pathIds = $mail->paths->pluck('id');
+
+    // جلب معرفات الرتب
+    $roleIds = Role::whereIn('path_id', $pathIds)
+        ->whereIn('name', $headRoles)
+        ->pluck('id');
+
+    // المستخدمون المرتبطون بهذه الرتب
+    $userIds = DB::table('model_has_roles')
+        ->whereIn('role_id', $roleIds)
+        ->where('model_type', \App\Models\User::class)
+        ->pluck('model_id');
+
+    $phones = User::whereIn('id', $userIds)->pluck('phone');
+
+    return response()->json([
+        'uuid' => $mail->uuid,
+        'subject' => $mail->subject,
+        'body' => $mail->body,
+        'sender' => $mail->fromUser->name ?? null,
+        'status' => $mail->status,
+        'sent_at' => $mail->updated_at->toDateTimeString(),
+        'to' => $mail->paths->pluck('name'),
+        'to_phones' => $phones,
+    ]);
+}
 
     //التحقق اذا كان المستخدم الحالي ادمن او سب ادمن
     public function is_admin()
@@ -309,47 +354,57 @@ public function show_internal_mails_export()
             return true;
     }
 
-    public function show_import_internal_mail_details($request)
-    {
-
-        $pathData = $this->get_path_name();
-        if (!$pathData['path_name']) {
-            return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
-        }
-        if (!$pathData['path_id']) {
-            return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
-        }
-        $mailId = $request->id;
-
-        // تأكد أن البريد موجود ومساره يحتوي على path_id للمستخدم
-        $isPathLinked = DB::table('internal_mail_paths')
-            ->where('internal_mail_id', $mailId)
-            ->where('path_id', $pathData['path_id'])
-            ->exists();
-        if (!$isPathLinked) {
-            return response()->json(['message' => 'لا تملك صلاحية لرؤية هذا البريد.'], 403);
-        }
-
-        $mail = InternalMail::with('fromUser:id,name')
-            ->where('id', $mailId)
-            ->where('status', StatusInternalMail::APPROVED)
-            ->first();
-
-        if (!$mail) {
-            return response()->json(['message' => 'البريد غير موجود أو لم يتمت الموافقة عليه.'], 404);
-        }
-
-        $user = $mail->fromUser;
-        $senderRole = $user->getRoleNames()->first() ?? 'غير معروف';
-        $officeName = $this->filter_office_name($senderRole);
-        return response()->json([
-            'id' => $mail->id,
-            'from_office' => $officeName,
-            'subject' => $mail->subject,
-            'body' => $mail->body,
-            'received_at' => $mail->updated_at->toDateTimeString(),
-        ]);
+public function show_import_internal_mail_details($uuid)
+{
+    $pathData = $this->get_path_name();
+    if (!$pathData['path_name']) {
+        return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
     }
+    if (!$pathData['path_id']) {
+        return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
+    }
+
+    // جلب معرف البريد بناءً على الـ UUID
+    $mail = InternalMail::where('uuid', $uuid)->first();
+    if (!$mail) {
+        return response()->json(['message' => 'البريد غير موجود.'], 404);
+    }
+
+    // تأكد أن البريد مرتبط بمسار المستخدم
+    $isPathLinked = DB::table('internal_mail_paths')
+        ->where('internal_mail_id', $mail->id)
+        ->where('path_id', $pathData['path_id'])
+        ->exists();
+    if (!$isPathLinked) {
+        return response()->json(['message' => 'لا تملك صلاحية لرؤية هذا البريد.'], 403);
+    }
+
+    // جلب البريد مع المرسل
+    $mail = InternalMail::with('fromUser:id,name,avatar,phone')
+        ->where('uuid', $uuid)
+        ->where('status', StatusInternalMail::APPROVED)
+        ->first();
+
+    if (!$mail) {
+        return response()->json(['message' => 'البريد غير موجود أو لم يتم الموافقة عليه.'], 404);
+    }
+
+    $user = $mail->fromUser;
+    $senderRole = $user->getRoleNames()->first() ?? 'غير معروف';
+    $officeName = $this->filter_office_name($senderRole);
+
+    return response()->json([
+        'uuid' => $mail->uuid,
+        'from_office' => $officeName,
+         'from_name' => $user->name,
+         'from_phone'=>$user->phone,
+         'from_avatar'=> asset($user->avatar),
+        'subject' => $mail->subject,
+        'body' => $mail->body,
+        'received_at' => $mail->updated_at->toDateTimeString(),
+    ]);
+}
+
 
 
     public function get_path_name()

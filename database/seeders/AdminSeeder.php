@@ -16,53 +16,54 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-          $faker = Faker::create('ar_SA');
+        $faker = Faker::create('ar_SA');
 
-        //  Admin
+        // 1. Admin
         $admin = User::firstOrCreate(
             ['email' => 'admin@gmail.com'],
             [
                 'name' => 'Admin',
                 'password' => Hash::make('admin@123'),
-                'phone'=>'0956883161',
-                'address'=>'دمشق',
-                'avatar'=>'...'
+                'phone' => '0956883161',
+                'address' => 'دمشق',
+                'avatar' => '...',
             ]
         );
-
         $admin->assignRole('المدير');
 
-        //  Sub Admin
+        // 2. Sub Admin
         $subAdmin = User::firstOrCreate(
             ['email' => 'subadmin@gmail.com'],
             [
                 'name' => 'Sub Admin',
                 'password' => Hash::make('sub_admin'),
-                 'phone'=>'0950883161',
-                'address'=>'دمشق',
-                'avatar'=>'...'
+                'phone' => '0950883161',
+                'address' => 'دمشق',
+                'avatar' => '...',
             ]
         );
-
         $subAdmin->assignRole('نائب المدير');
 
-        $doctor = User::firstOrCreate([
-            'name' => 'heba',
-            'email' => 'heba@gmail.com',
-            'password' => Hash::make('heba2007'),
-             'phone'=>'0956823161',
-                'address'=>'دمشق',
-                'avatar'=>'...'
-        ]);
+        // 3. Doctor
+        $doctor = User::firstOrCreate(
+            ['email' => 'heba@gmail.com'],
+            [
+                'name' => 'heba',
+                'password' => Hash::make('heba2007'),
+                'phone' => '0956823161',
+                'address' => 'دمشق',
+                'avatar' => '...',
+            ]
+        );
         $doctor->assignRole('الطبيب');
-        Doctor::create([
-            'user_id' =>  $doctor->id,
+
+        Doctor::firstOrCreate([
+            'user_id' => $doctor->id,
         ]);
 
         /**
-         * 2. الرولات الباقية يتم توليدها ببيانات وهمية
+         * 4. باقي الرتب
          */
-
         $rolesWithPaths = [
             'رئيس الديوان' => 'الديوان',
             'موظف الديوان' => 'الديوان',
@@ -96,6 +97,7 @@ class AdminSeeder extends Seeder
                 ]
             );
 
+            // assignRole لضمان إدخال model_type بشكل صحيح
             $user->assignRole($roleName);
 
             $role = Role::where('name', $roleName)->firstOrFail();
@@ -124,8 +126,5 @@ class AdminSeeder extends Seeder
                 }
             }
         }
-
     }
-
-
 }
