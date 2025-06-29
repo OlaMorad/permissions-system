@@ -38,16 +38,16 @@ public function show_import_internal_mails(){
      return $response=  $this->InternalMailService->show_import_internal_mails();
 }
 
-//عرض تفاصيل البريد الصادر
-public function show_export_internal_mail_details(IdInternalMailRequest $id){
+//عرض تفاصيل البريد الصادر للادمن و السب و المانجر  و الموظف
+public function show_export_internal_mail_details(IdInternalMailRequest $request){
 
-return $this->InternalMailService->show_export_internal_mail_details($id);
+return $this->InternalMailService->show_export_internal_mail_details($request->uuid);
 
 }
 
-public function show_import_internal_mail_details(IdInternalMailRequest $id){
+public function show_import_internal_mail_details(IdInternalMailRequest $request){
 
-return $this->InternalMailService->show_import_internal_mail_details($id);
+return $this->InternalMailService->show_import_internal_mail_details($request->uuid);
 
 }
 
