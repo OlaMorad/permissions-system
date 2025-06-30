@@ -112,6 +112,8 @@ Route::middleware(['throttle:10,1'])->group(
         Route::prefix('statistics')->middleware(['auth:api'])->group(function () {
             Route::get('/section', [StatisticsController::class, 'ExternalStatisticsSummary']);
             Route::get('/employees', [StatisticsController::class, 'employeePerformance']);
+            Route::get('/weekly-done', [StatisticsController::class, 'weeklyDone']);
+            Route::get('/InternalStatisticsSummary', [StatisticsController::class, 'InternalStatisticsSummary'])->middleware('Verify.Session');
         });
 
         Route::get('all_paths',[PathController::class,'index']);

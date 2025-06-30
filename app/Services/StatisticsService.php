@@ -11,7 +11,6 @@ use App\Enums\TransactionStatus;
 use App\Enums\StatusInternalMail;
 use Spatie\Permission\Models\Role;
 use App\Models\TransactionMovement;
-use App\Enums\TransactionStatus;
 use Illuminate\Support\Facades\Auth;
 
 class StatisticsService
