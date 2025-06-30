@@ -20,6 +20,12 @@ class StatisticsController extends Controller
         return new successResource($data);
     }
 
+    public function weeklyDone()
+    {
+        $data = $this->Service->weeklyDoneStatistics();
+        return new successResource($data);
+    }
+
     public function employeePerformance()
     {
         $data = $this->Service->employeeStatistics();

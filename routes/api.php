@@ -96,6 +96,7 @@ Route::middleware(['throttle:10,1'])->group(
             Route::prefix('transaction')->group(function () {
                 Route::get('/import', 'Import_Transaction')->middleware('auth:api');
                 Route::get('/export', 'Export_Transaction')->middleware('auth:api');
+                Route::get('/archived-export','archivedExportedTransactions')->middleware('auth:api');
                 Route::get('/show/{id}', 'showFormContent')->middleware('auth:api');
                 Route::patch('/forward/{uuid}', 'forwardTransaction')->middleware('auth:api');
                 Route::patch('/reject/{uuid}', 'rejectTransaction')->middleware('auth:api');
@@ -111,8 +112,8 @@ Route::middleware(['throttle:10,1'])->group(
         Route::prefix('statistics')->middleware(['auth:api'])->group(function () {
             Route::get('/section', [StatisticsController::class, 'ExternalStatisticsSummary']);
             Route::get('/employees', [StatisticsController::class, 'employeePerformance']);
+            Route::get('/weekly-done', [StatisticsController::class, 'weeklyDone']);
             Route::get('/InternalStatisticsSummary', [StatisticsController::class, 'InternalStatisticsSummary'])->middleware('Verify.Session');
-
         });
 
         Route::get('all_paths',[PathController::class,'index']);

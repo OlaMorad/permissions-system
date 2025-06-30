@@ -11,7 +11,6 @@ use App\Enums\TransactionStatus;
 use App\Enums\StatusInternalMail;
 use Spatie\Permission\Models\Role;
 use App\Models\TransactionMovement;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class StatisticsService
@@ -63,6 +62,43 @@ class StatisticsService
             'rejected' => $rejected,
             'under_review' => $underReview,
         ];
+    }
+
+    public function weeklyDoneStatistics(): array
+    {
+        $pathId = $this->getUserPathId();
+
+        if (!$pathId) {
+            return [];
+        }
+
+        $doneMovements = TransactionMovement::whereIn('status', [
+            TransactionStatus::FORWARDED->value,
+            TransactionStatus::REJECTED->value,
+        ])
+            ->where('from_path_id', $pathId)
+            ->whereBetween('changed_at', [
+                Carbon::now()->startOfWeek(),
+                Carbon::now()->endOfWeek(),
+            ])
+            ->selectRaw("DAYOFWEEK(changed_at) as day_of_week, COUNT(*) as total")
+            ->groupBy('day_of_week')
+            ->pluck('total', 'day_of_week');
+
+        $daysMap = collect([
+            1 => 'الأحد',
+            2 => 'الإثنين',
+            3 => 'الثلاثاء',
+            4 => 'الأربعاء',
+            5 => 'الخميس',
+            6 => 'الجمعة',
+            7 => 'السبت',
+        ]);
+
+        return $daysMap->map(fn($dayName, $dayNumber) => [
+            'day' => $dayName,
+            'total_done' => $doneMovements[$dayNumber] ?? 0,
+        ])->values()->toArray();
     }
 
     public function employeeStatistics(): array
