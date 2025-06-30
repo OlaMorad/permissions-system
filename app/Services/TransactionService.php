@@ -199,4 +199,53 @@ class TransactionService
             ];
         })->values();
     }
+
+    public function archiveExportedTransactions(): array
+    {
+        $user = Auth::user();
+        $role = $user->getRoleNames()->first();
+
+        // يجب أن يكون رئيس قسم
+        if (!str_starts_with($role, 'رئيس')) {
+            return [];
+        }
+
+        $pathId = $this->getUserPathId();
+
+        $transactionIds = TransactionMovement::whereIn('status', [
+            TransactionStatus::FORWARDED->value,
+            TransactionStatus::REJECTED->value,
+        ])
+            ->where('from_path_id', $pathId)
+            ->where('changed_at', '<=', now()->subHours(48))
+            ->pluck('transaction_id');
+
+        $transactions = Transaction::whereIn('id', $transactionIds)
+            ->with([
+                'content.form:id,name,cost',
+                'content.doctor.user:id,name,phone,avatar',
+                'toPath',
+                'fromPath'
+            ])
+            ->get()->sortBy('sent_at');
+
+        // لو المستخدم من المالية نرجع export خاص
+        if ($this->isFinancial()) {
+            return $transactions->map(function ($transaction) {
+                return [
+                    'uuid' => $transaction->uuid,
+                    'doctor_name' => $transaction->content->doctor->user->name ?? '',
+                    'receipt_number' => $transaction->receipt_number,
+                    'form_name' => $transaction->content->form->name ?? '',
+                    'form_cost' => $transaction->content->form->cost ?? 0,
+                    'status' => $transaction->status_from,
+                    'submitted_at' => $transaction->created_at,
+                    'sent_at' => $transaction->sent_at,
+                ];
+            })->values()->toArray();
+        }
+
+        // غير المالية → نستخدم export العادي
+        return $this->mapExport($transactions);
+    }
 }

@@ -43,6 +43,12 @@ class TransactionController extends Controller
 
         return new successResource($data);
     }
+
+    public function archivedExportedTransactions()
+    {
+        $data = $this->transactionService->archiveExportedTransactions();
+        return new successResource($data);
+    }
     public function forwardTransaction($id)
     {
         return $this->transactionStatusService->forward_transaction($id);
