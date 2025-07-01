@@ -11,9 +11,11 @@ use App\Models\InternalMail;
 use App\Enums\StatusInternalMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\LoggerTrait;
 
 class InternalMailService
 {
+      use LoggerTrait;
     // دالة مساعدة لجلب المدير الحالي مع دوره
     private function getCurrentManagerWithRole()
     {
@@ -36,6 +38,14 @@ class InternalMailService
 
         return $role?->path_id ?? null;
     }
+
+    private array $headRoles = [
+    'المدير', 'نائب المدير',
+    'رئيس الديوان', 'رئيس المالية',
+    'رئيس مجالس علمية', 'رئيس الشهادات',
+    'رئيس الامتحانات', 'رئيس الإقامة', 'رئيس المفاضلة',
+];
+
 
 
     public function create_internal_mail($request)
@@ -96,7 +106,8 @@ class InternalMailService
 
         // نضيف المسار لجدول الكسر
         $mail->paths()->attach($pathIds);
-        return $mail;
+         $this->logInfo(' إنشاء بريد داخلي', ['from_user_id' => $currentUser->id]);
+        return collect($mail)->except('id');
     }
 
 
@@ -136,12 +147,8 @@ public function show_internal_mails_export()
         ->get();
 
     // الرتب المستهدفة بالهاتف
-    $headRoles = [
-        'المدير', 'نائب المدير',
-        'رئيس الديوان', 'رئيس المالية',
-        'رئيس مجالس علمية', 'رئيس الشهادات',
-        'رئيس الامتحانات', 'رئيس الإقامة', 'رئيس المفاضلة',
-    ];
+    $headRoles =$this->headRoles;
+
 
     // تنسيق النتائج
     $dataFormatted = $mails->map(function ($mail) use ($headRoles, $isManager) {
@@ -214,6 +221,7 @@ public function show_internal_mails_export()
         $mail->status = $request->status;
         $mail->save(); // هذا سيحدث updated_at تلقائيًا
 
+         $this->logInfo(' تعديل بريد داخلي', ['managers_id' => $manager->id]);
         return response()->json([
             'message' => 'تم تحديث حالة البريد بنجاح.',
             'mail' => collect($mail)->except('id'),
@@ -308,12 +316,7 @@ public function show_export_internal_mail_details($uuid)
     }
 
     // الرتب التي تستهدف أرقام هواتفها (كما في التابع السابق)
-    $headRoles = [
-        'المدير', 'نائب المدير',
-        'رئيس الديوان', 'رئيس المالية',
-        'رئيس مجالس علمية', 'رئيس الشهادات',
-        'رئيس الامتحانات', 'رئيس الإقامة', 'رئيس المفاضلة',
-    ];
+    $headRoles =$this->headRoles;
 
     // جلب معرفات الدوائر (paths)
     $pathIds = $mail->paths->pluck('id');
