@@ -25,7 +25,7 @@ class FormController extends Controller
     public function storeFromWord(UploadWordRequest $request)
     {
         $this->factory->createFromWord($request);
-        return new successResource(['تمت إضافة المعاملة بنجاح']);
+        return new successResource(['جاري معالجة الملف، سيتم إنشاء النموذج قريباً']);
     }
 
     public function storeManually(ManualFormRequest $request)

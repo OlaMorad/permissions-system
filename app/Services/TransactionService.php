@@ -8,36 +8,20 @@ use App\Models\Transaction;
 use App\Models\TransactionMovement;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use App\Services\UserRoleService;
+use App\Presenters\TransactionPresenter;
 
 class TransactionService
 {
-    // جلب path_id للمستخدم الحالي
-    private function getUserPathId(): ?int
-    {
-        $user = Auth::user();
-        $roleName = $user->getRoleNames()->first();
-        $role = Role::where('name', $roleName)->first();
-
-        return $role?->path_id;
-    }
-
-    public function isFinancial(): bool
-    {
-        $roleName = Auth::user()->getRoleNames()->first();
-
-        return in_array($roleName, ['موظف المالية', 'رئيس المالية']);
-    }
-    private function isSectionHead(string $roleName): bool
-    {
-        return str_starts_with($roleName, 'رئيس');
-    }
+    public function __construct(
+        protected UserRoleService $userRoleService,
+    ) {}
 
     // عرض المعاملة و هي معباية
     public function getFormContent(string $transactionUuid): array
     {
-        $user = Auth::user();
-        $userRole = $user->getRoleNames()->first();
-        $pathId = $this->getUserPathId();
+        $userRole = $this->userRoleService->getUserRoleName();
+        $pathId = $this->userRoleService->getUserPathId();
 
         $transaction = Transaction::with([
             'content.form.elements',
@@ -46,17 +30,14 @@ class TransactionService
         ])->where('uuid', $transactionUuid)->firstOrFail();
 
         //  إذا الطبيب، تأكد إنو المعاملة إله
-        if ($userRole === 'الطبيب') {
-            if ($transaction->content->doctor_id !== $user->doctor->id) {
-                abort(403, 'لا تملك صلاحية عرض هذه المعاملة.');
-            }
+        if ($userRole === 'الطبيب' && $transaction->content->doctor_id !== Auth::user()->doctor->id) {
+            abort(403, 'لا تملك صلاحية عرض هذه المعاملة.');
         }
 
         //  إذا موظف القسم ومو رئيس، غير الحالة لقيد الدراسة
-        if ($transaction->to === $pathId && !$this->isSectionHead($userRole) && $userRole !== 'الطبيب') {
-            $transaction->update([
-                'status_to' => TransactionStatus::UNDER_REVIEW->value,
-            ]);
+        if ($transaction->to === $pathId && !$this->userRoleService->isSectionHead($userRole) && $userRole !== 'الطبيب') {
+            $transaction->update(['status_to' => TransactionStatus::UNDER_REVIEW->value]);
+
             // سجل الحركة في جدول transaction_movements
             TransactionMovement::create([
                 'transaction_id' => $transaction->id,
@@ -86,64 +67,43 @@ class TransactionService
 
     public function import_for_financial()
     {
-        $pathId = $this->getUserPathId();
-        $role = Auth::user()->getRoleNames()->first();
+        $pathId = $this->userRoleService->getUserPathId();
+        $role = $this->userRoleService->getUserRoleName();
 
         $query = Transaction::where('to', $pathId)
             ->whereNull('from');
 
         // إذا المستخدم ليس رئيس القسم، لا تعرض "قيد الدراسة"
-        if (!str_starts_with($role, 'رئيس')) {
+        if (!$this->userRoleService->isSectionHead($role)) {
             $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
         }
 
         $transactions = $query->with(['content.form', 'content.doctor.user'])->orderBy('received_at')->get();
 
-        return $transactions->map(function ($transaction) {
-            return [
-                'uuid' => $transaction->uuid,
-                'doctor_name' => $transaction->content->doctor->user->name ?? '',
-                'receipt_number' => $transaction->receipt_number,
-                'form_name' => $transaction->content->form->name,
-                'form_cost' => $transaction->content->form->cost,
-                'submitted_at' => $transaction->created_at,
-                'received_at' => $transaction->created_at,
-            ];
-        })->values();
+        return $transactions->map(fn($t) => TransactionPresenter::FinanceImport($t))->values();
     }
 
     public function export_for_financial()
     {
-        $pathId = $this->getUserPathId();
+        $pathId = $this->userRoleService->getUserPathId();
 
         $transactions = Transaction::where('from', $pathId)
+            ->where('sent_at', '>=', now()->subHours(48))
             ->with(['content.form', 'content.doctor.user'])
             ->orderBy('sent_at')
             ->get();
-
-        return $transactions->map(function ($transaction) {
-            return [
-                'uuid' => $transaction->uuid,
-                'doctor_name' => $transaction->content->doctor->user->name ?? '',
-                'receipt_number' => $transaction->receipt_number,
-                'form_name' => $transaction->content->form->name,
-                'form_cost' => $transaction->content->form->cost,
-                'status' => $transaction->status_from,
-                'submitted_at' => $transaction->created_at,
-                'sent_at' => $transaction->sent_at,
-            ];
-        })->values();
+        return $transactions->map(fn($t) => TransactionPresenter::FinanceExport($t))->values();
     }
 
     public function import_transactions()
     {
-        $userPathId = $this->getUserPathId();
-        $role = Auth::user()->getRoleNames()->first();
+        $userPathId = $this->userRoleService->getUserPathId();
+        $role = $this->userRoleService->getUserRoleName();
 
         $query = Transaction::where('to', $userPathId);
 
         // إذا الموظف مو رئيس القسم، خبي المعاملات قيد الدراسة
-        if (!str_starts_with($role, 'رئيس')) {
+        if (!$this->userRoleService->isSectionHead($role)) {
             $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
         }
 
@@ -152,65 +112,30 @@ class TransactionService
             ->orderBy('received_at')
             ->get();
 
-        return $this->mapImport($transactions);
+        return $transactions->map(fn($t) => TransactionPresenter::forImport($t))->values();
     }
 
     public function export_transaction()
     {
-        $userPathId = $this->getUserPathId();
+        $userPathId = $this->userRoleService->getUserPathId();
 
         $transactions = Transaction::where('from', $userPathId)
+            ->where('sent_at', '>=', now()->subHours(48))
             ->with(['content.form:id,name', 'content.doctor.user:id,name', 'toPath', 'fromPath'])
             ->orderBy('sent_at')
             ->get();
 
-        return $this->mapExport($transactions);
-    }
-
-    private function mapImport($transactions)
-    {
-        return $transactions->map(function ($transaction) {
-            return [
-                'uuid' => $transaction->uuid,
-                'doctor_image' => $transaction->content->doctor->user->avatar ?? null,
-                'doctor_name' => $transaction->content->doctor->user->name ?? '',
-                'doctor_phone' => $transaction->content->doctor->user->phone ?? '',
-                'form_name' => $transaction->content->form->name ?? '',
-                'from_path' => optional($transaction->fromPath)->name ?? null,
-                'submitted_at' => $transaction->created_at,
-                'received_at' => $transaction->received_at,
-            ];
-        })->values();
-    }
-
-    private function mapExport($transactions)
-    {
-        return $transactions->map(function ($transaction) {
-            return [
-                'uuid' => $transaction->uuid,
-                'doctor_image' => $transaction->content->doctor->user->avatar ?? null,
-                'doctor_name' => $transaction->content->doctor->user->name ?? '',
-                'doctor_phone' => $transaction->content->doctor->user->phone ?? '',
-                'form_name' => $transaction->content->form->name ?? '',
-                'to_path' => optional($transaction->toPath)->name ?? null,
-                'status' => $transaction->status_from,
-                'submitted_at' => $transaction->created_at,
-                'sent_at' => $transaction->sent_at,
-            ];
-        })->values();
+        return $transactions->map(fn($t) => TransactionPresenter::forExport($t))->values();
     }
 
     public function archiveExportedTransactions(): array
     {
-        $user = Auth::user();
-        $role = $user->getRoleNames()->first();
+        $role = $this->userRoleService->getUserRoleName();
 
-        // يجب أن يكون رئيس قسم
-        if (!str_starts_with($role, 'رئيس')) {
-            return [];
+        if (!$this->userRoleService->isSectionHead($role)) {
+            abort(403, 'لا تمتلك صلاحيات الوصول للأرشيف');
         }
-
-        $pathId = $this->getUserPathId();
+        $pathId = $this->userRoleService->getUserPathId();
 
         $transactionIds = TransactionMovement::whereIn('status', [
             TransactionStatus::FORWARDED->value,
@@ -229,23 +154,11 @@ class TransactionService
             ])
             ->get()->sortBy('sent_at');
 
-        // لو المستخدم من المالية نرجع export خاص
-        if ($this->isFinancial()) {
-            return $transactions->map(function ($transaction) {
-                return [
-                    'uuid' => $transaction->uuid,
-                    'doctor_name' => $transaction->content->doctor->user->name ?? '',
-                    'receipt_number' => $transaction->receipt_number,
-                    'form_name' => $transaction->content->form->name ?? '',
-                    'form_cost' => $transaction->content->form->cost ?? 0,
-                    'status' => $transaction->status_from,
-                    'submitted_at' => $transaction->created_at,
-                    'sent_at' => $transaction->sent_at,
-                ];
-            })->values()->toArray();
+        if ($this->userRoleService->isFinancial()) {
+            return $transactions->map(fn($t) => TransactionPresenter::FinanceExport($t))->values()->toArray();
         }
 
         // غير المالية → نستخدم export العادي
-        return $this->mapExport($transactions);
+        return $transactions->map(fn($t) => TransactionPresenter::forExport($t))->values();
     }
 }
