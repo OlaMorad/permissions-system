@@ -6,18 +6,20 @@ use App\Http\Resources\successResource;
 use App\Services\TransactionService;
 use Illuminate\Http\Request;
 use App\Services\TransactionStatusService;
+use App\Services\UserRoleService;
 
 class TransactionController extends Controller
 {
     public function __construct(
         protected TransactionService $transactionService,
-        protected TransactionStatusService $transactionStatusService
+        protected TransactionStatusService $transactionStatusService,
+        protected UserRoleService $userRoleService
     ) {}
 
 
     public function Import_Transaction()
     {
-        if ($this->transactionService->isFinancial()) {
+        if ($this->userRoleService->isFinancial()) {
             $transactions = $this->transactionService->import_for_financial();
         } else {
             $transactions = $this->transactionService->import_transactions();
@@ -28,7 +30,7 @@ class TransactionController extends Controller
 
     public function Export_Transaction()
     {
-        if ($this->transactionService->isFinancial()) {
+        if ($this->userRoleService->isFinancial()) {
             $transactions = $this->transactionService->export_for_financial();
         } else {
             $transactions = $this->transactionService->export_transaction();

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ProcessWordFormJob;
 use Illuminate\Http\Request;
 use App\Services\FormCreationService;
 use App\Services\ManualFormInputService;
@@ -12,16 +13,19 @@ class FormFactoryService
 {
     public function __construct(protected FormCreationService $creator) {}
 
-    public function createFromWord(Request $request): Form
+    public function createFromWord(Request $request): void
     {
         $file = $request->file('file');
-        $inputService = new WordFormInputService($file->getRealPath());
+        $filename = $file->getClientOriginalName();
+        $storedPath = "files/{$filename}";
 
-        return $this->creator->create_Form(
-            $inputService,
+        $file->move(storage_path('app/files'), $filename);
+
+        ProcessWordFormJob::dispatch(
+            $storedPath,
             $file->getClientOriginalName(),
             (float) $request->input('cost'),
-            $request->input('path_ids')
+            $request->input('path_ids', [])
         );
     }
 

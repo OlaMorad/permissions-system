@@ -11,18 +11,13 @@ use Spatie\Permission\Models\Role;
 
 class TransactionStatusService
 {
-    private function getUserPathId(): ?int
-    {
-        $user = Auth::user();
-        $roleName = $user->getRoleNames()->first();
-        $role = Role::where('name', $roleName)->first();
-
-        return $role?->path_id;
-    }
+    public function __construct(
+        protected UserRoleService $userRoleService,
+    ) {}
 
     private function getAuthorizedTransaction(string $uuid): Transaction
     {
-        $pathId = $this->getUserPathId();
+        $pathId = $this->userRoleService->getUserPathId();
 
         $transaction = Transaction::where('uuid', $uuid)->firstOrFail();
 
@@ -74,7 +69,7 @@ class TransactionStatusService
         $transaction->status_to = TransactionStatus::REJECTED->value;
         $transaction->receipt_status = StatusInternalMail::REJECTED->value;
         $transaction->save();
-        
+
         return new successResource(['message' => 'تم رفض الإيصال وتحديث حالة المعاملة إلى مرفوضة']);
     }
 }
