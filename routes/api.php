@@ -21,7 +21,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::middleware(['throttle:10,1'])->group(
+Route::middleware(['throttle:10,1','working.hours'])->group(
     function () {
 
         Route::controller(AuthController::class)->group(function () {
@@ -59,7 +59,7 @@ Route::middleware(['throttle:10,1'])->group(
             Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
         });
 
-        Route::middleware(['auth:api', 'role:admin'])->group(function () {
+        Route::middleware(['auth:api', 'role:المدير'])->group(function () {
             Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
         });
 

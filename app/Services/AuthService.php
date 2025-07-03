@@ -19,9 +19,10 @@ class AuthService
 
         $user = Auth::user();
         $userData = [
-            'id' => $user->id,
+            // 'id' => $user->id,
             'name' => $user->name,
-            'email' => $user->email
+            'avatar'=>asset( $user->avatar)
+            // 'email' => $user->email
         ];
         $user->last_login_at = now();
                 $user->save();
@@ -34,7 +35,7 @@ class AuthService
             'access_token' => $token,
             'user' => $userData,
             'roles' => $user->getRoleNames(),
-            'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+            // 'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
         ]);
 
     }

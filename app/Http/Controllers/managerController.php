@@ -25,7 +25,7 @@ class ManagerController extends Controller
 
     public function ManagerRoles()
     {
-        $roles = Role::where('name', 'like', 'Head of%')->get(['id', 'name']);
+        $roles = Role::where('name', 'like', 'رئيس %')->get(['id', 'name']);
         return response()->json([
             'roles' => $roles
         ]);
@@ -42,6 +42,6 @@ class ManagerController extends Controller
 
     public function show_all_managers(){
         $managers_id=dB::table("managers")->pluck('user_id');
-        return DB::table('users')->whereIn('id',$managers_id)->select('name','email')->get();
+        return DB::table('users')->whereIn('id',$managers_id)->select('name','avatar','phone')->get();
     }
 }

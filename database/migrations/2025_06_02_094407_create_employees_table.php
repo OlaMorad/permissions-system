@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained(); // لحساب الموظف
-            $table->foreignId('role_id')->constrained(); // Many to One عندي رول اسمو موظف بالقسم كذا و هاد الرول بينعطى لأكتر من موظف 
-            $table->foreignId('manager_id')->constrained('managers'); // Many to One
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate(); // لحساب الموظف
+            $table->foreignId('role_id')->constrained(); // Many to One عندي رول اسمو موظف بالقسم كذا و هاد الرول بينعطى لأكتر من موظف
+            $table->foreignId('manager_id')->constrained('managers')->cascadeOnDelete(); // Many to One
             $table->timestamps();
         });
     }

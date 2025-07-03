@@ -131,10 +131,8 @@ class EmployeeService
             ->select(
                 'users.id',
                 'users.name',
-                'users.email',
                 'users.phone',
                 'users.avatar',
-                'users.address'
             )
             ->get()
             ->map(function ($employee) use ($stats) {

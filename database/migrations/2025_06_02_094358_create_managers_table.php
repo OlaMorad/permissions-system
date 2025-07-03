@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('managers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained(); // لربطه مع حسابات رؤساء الاقسام في جدول اليوزر
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate(); // لربطه مع حسابات رؤساء الاقسام في جدول اليوزر
             $table->foreignId('role_id')->unique()->constrained(); // One to One يوجد رئيس واحد لكل قسم لذلك الرول اي دي لا يتكرر
             $table->timestamps();
         });
