@@ -9,24 +9,24 @@ use App\Models\Transaction;
 use App\Models\internalMail;
 use App\Enums\TransactionStatus;
 use App\Enums\StatusInternalMail;
+use App\Models\ArchiveTransaction;
 use Spatie\Permission\Models\Role;
 use App\Models\TransactionMovement;
 use Illuminate\Support\Facades\Auth;
 
 class StatisticsService
 {
-    private function getUserPathId(): ?int
-    {
-        $user = Auth::user();
-        $roleName = $user->getRoleNames()->first();
-        $role = Role::where('name', $roleName)->first();
-
-        return $role?->path_id;
-    }
+    public function __construct(
+        protected UserRoleService $userRoleService
+    ) {}
 
     public function ExternalStatistics(): array
     {
-        $pathId = $this->getUserPathId();
+        $role = $this->userRoleService->getUserRoleName();
+        if (!$this->userRoleService->isSectionHead($role)) {
+            abort(403, 'غير مصرح لك بعرض هذه الإحصائيات.');
+        }
+        $pathId = $this->userRoleService->getUserPathId();
 
         // عدد المعاملات بحالة PENDING
         $pending = Transaction::where('to', $pathId)
@@ -38,23 +38,44 @@ class StatisticsService
             ->where('status_to', TransactionStatus::UNDER_REVIEW->value)
             ->count();
 
-        // عدد المعاملات التي مرت على الدائرة
-        $moved = TransactionMovement::where('to_path_id', $pathId)->count();
+        // جلب معاملات الأرشيف المتعلقة بالمسار pathId
+        $archiveTransactions = ArchiveTransaction::all();
 
-        // عدد المعاملات المحولة
-        $forwarded = TransactionMovement::where('from_path_id', $pathId)
-            ->where('status', TransactionStatus::FORWARDED->value)
-            ->count();
+        // احصاء المحولة (FORWARDED) حسب status_history و to_path_id
+        $forwarded = $archiveTransactions->filter(function ($transaction) use ($pathId) {
+            if (!is_array($transaction->status_history)) return false;
 
-        // عدد المعاملات المرفوضة
-        $rejected = TransactionMovement::where('from_path_id', $pathId)
-            ->where('status', TransactionStatus::REJECTED->value)
-            ->count();
+            foreach ($transaction->status_history as $entry) {
+                if (
+                    isset($entry['to_path_id'], $entry['status']) &&
+                    (int)$entry['to_path_id'] === $pathId &&
+                    $entry['status'] === TransactionStatus::FORWARDED->value
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        })->count();
+
+        // احصاء المرفوضة (REJECTED) بنفس الطريقة
+        $rejected = $archiveTransactions->filter(function ($transaction) use ($pathId) {
+            if (!is_array($transaction->status_history)) return false;
+
+            foreach ($transaction->status_history as $entry) {
+                if (
+                    isset($entry['to_path_id'], $entry['status']) &&
+                    (int)$entry['to_path_id'] === $pathId &&
+                    $entry['status'] === TransactionStatus::REJECTED->value
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        })->count();
 
         // المنتهية = محولة + مرفوضة
         $done = $forwarded + $rejected;
-
-        $total = $moved + $pending + $underReview;
+        $total = $done + $pending + $underReview ;
 
         return [
             'total' => $total,
@@ -66,11 +87,12 @@ class StatisticsService
 
     public function weeklyDoneStatistics(): array
     {
-        $pathId = $this->getUserPathId();
-
-        if (!$pathId) {
-            return [];
+        $role = $this->userRoleService->getUserRoleName();
+        if (!$this->userRoleService->isSectionHead($role)) {
+            abort(403, 'غير مصرح لك بعرض هذه الإحصائيات.');
         }
+
+        $pathId = $this->userRoleService->getUserPathId();
 
         $doneMovements = TransactionMovement::whereIn('status', [
             TransactionStatus::FORWARDED->value,
@@ -99,25 +121,6 @@ class StatisticsService
             'day' => $dayName,
             'total_done' => $doneMovements[$dayNumber] ?? 0,
         ])->values()->toArray();
-    }
-
-    public function employeeStatistics(): array
-    {
-        return TransactionMovement::with('changedBy')
-            ->whereIn('status', [
-                TransactionStatus::FORWARDED->value,
-                TransactionStatus::REJECTED->value
-            ])
-            ->selectRaw('changed_by, COUNT(*) as total')
-            ->groupBy('changed_by')
-            ->get()
-            ->map(function ($movement) {
-                return [
-                    'employee_id' => $movement->changed_by,
-                    'employee_name' => $movement->changedBy->name ?? 'غير معروف',
-                    'handled_transactions' => $movement->total,
-                ];
-            })->toArray();
     }
 
     public function InternalStatistics(){

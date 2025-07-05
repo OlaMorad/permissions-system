@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('status_to')->nullable()->default(TransactionStatus::PENDING->value);
             $table->string('receipt_number',6)->unique();
             $table->string('receipt_status')->default(StatusInternalMail::PENDING->value);
+            $table->foreignId('changed_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

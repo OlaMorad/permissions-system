@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Enums\TransactionStatus;
 use App\Http\Resources\successResource;
+use App\Models\ArchiveTransaction;
 use App\Models\Transaction;
 use App\Models\TransactionMovement;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use App\Services\UserRoleService;
 use App\Presenters\TransactionPresenter;
+use Carbon\Carbon;
 
 class TransactionService
 {
@@ -35,17 +37,11 @@ class TransactionService
         }
 
         //  إذا موظف القسم ومو رئيس، غير الحالة لقيد الدراسة
-        if ($transaction->to === $pathId && !$this->userRoleService->isSectionHead($userRole) && $userRole !== 'الطبيب') {
-            $transaction->update(['status_to' => TransactionStatus::UNDER_REVIEW->value]);
-
-            // سجل الحركة في جدول transaction_movements
-            TransactionMovement::create([
-                'transaction_id' => $transaction->id,
-                'from_path_id' => $transaction->from,
-                'to_path_id' => $transaction->to,
-                'status' => TransactionStatus::UNDER_REVIEW->value,
+        if ($transaction->to === $pathId && !$this->userRoleService->isSectionHead($userRole) && $userRole !== 'الطبيب' &&
+            $transaction->status_to !== TransactionStatus::UNDER_REVIEW->value) {
+            $transaction->update([
+                'status_to' => TransactionStatus::UNDER_REVIEW->value,
                 'changed_by' => Auth::id(),
-                'changed_at' => now(),
             ]);
         }
 
@@ -135,30 +131,37 @@ class TransactionService
         if (!$this->userRoleService->isSectionHead($role)) {
             abort(403, 'لا تمتلك صلاحيات الوصول للأرشيف');
         }
+
         $pathId = $this->userRoleService->getUserPathId();
 
-        $transactionIds = TransactionMovement::whereIn('status', [
-            TransactionStatus::FORWARDED->value,
-            TransactionStatus::REJECTED->value,
-        ])
-            ->where('from_path_id', $pathId)
-            ->where('changed_at', '<=', now()->subHours(48))
-            ->pluck('transaction_id');
 
-        $transactions = Transaction::whereIn('id', $transactionIds)
-            ->with([
-                'content.form:id,name,cost',
-                'content.doctor.user:id,name,phone,avatar',
-                'toPath',
-                'fromPath'
-            ])
-            ->get()->sortBy('sent_at');
+        $transactions = ArchiveTransaction::get()->filter(function ($transaction) use ($pathId) {
+            $history = $transaction->status_history;
 
+            if (!is_array($history)) return false;
+
+            foreach ($history as $entry) {
+                if (
+                    isset($entry['to_path_id'], $entry['status'], $entry['changed_at']) &&
+                    (int)$entry['to_path_id'] === (int)$pathId &&
+                    in_array($entry['status'], [
+                        TransactionStatus::FORWARDED->value,
+                        TransactionStatus::REJECTED->value
+                    ])
+                ) {
+                    $changedAt = Carbon::parse($entry['changed_at']);
+                        if ($changedAt->diffInHours(now()) >= 48){
+                            return true;
+                    }
+                }
+            }
+
+            return false;
+        })->values();
         if ($this->userRoleService->isFinancial()) {
-            return $transactions->map(fn($t) => TransactionPresenter::FinanceExport($t))->values()->toArray();
+            return $transactions->map(fn($t) => TransactionPresenter::ArchiveFinanceExport($t, $pathId))->values()->toArray();
         }
 
-        // غير المالية → نستخدم export العادي
-        return $transactions->map(fn($t) => TransactionPresenter::forExport($t))->values();
+        return $transactions->map(fn($t) => TransactionPresenter::ArchiveForExport($t, $pathId))->values();
     }
 }

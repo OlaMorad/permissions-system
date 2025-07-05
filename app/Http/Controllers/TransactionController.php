@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionStatus;
+use App\Http\Requests\ReceiptStatusRequest;
+use App\Http\Requests\TransactionStatusRequest;
 use App\Http\Resources\successResource;
+use App\Models\ArchiveTransaction;
 use App\Services\TransactionService;
 use Illuminate\Http\Request;
 use App\Services\TransactionStatusService;
 use App\Services\UserRoleService;
+use Illuminate\Validation\Rules\Enum;
 
 class TransactionController extends Controller
 {
@@ -51,23 +56,17 @@ class TransactionController extends Controller
         $data = $this->transactionService->archiveExportedTransactions();
         return new successResource($data);
     }
-    public function forwardTransaction($id)
+    public function updateTransactionStatus(TransactionStatusRequest $request, string $uuid)
     {
-        return $this->transactionStatusService->forward_transaction($id);
-    }
-    public function rejectTransaction(string $uuid)
-    {
-        return $this->transactionStatusService->reject_transaction($uuid);
+        return $this->transactionStatusService->updateTransactionStatus($uuid,$request->status());
     }
 
-    public function approveReceipt($uuid)
+    public function updateReceiptStatus(ReceiptStatusRequest $request)
     {
-        $data = $this->transactionStatusService->approve_receipt($uuid);
-
-        return new successResource($data);
+        return $this->transactionStatusService->updateReceiptStatus($request);
     }
-    public function rejectReceipt(string $uuid)
+    public function show_archive()
     {
-        return $this->transactionStatusService->reject_receipt($uuid);
+        return new successResource(ArchiveTransaction::all());
     }
 }

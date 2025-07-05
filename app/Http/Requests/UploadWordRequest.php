@@ -24,7 +24,7 @@ class UploadWordRequest extends FormRequest
         return [
             'file' => ['required', 'file', 'mimes:docx'],
             'cost' => ['required', 'numeric', 'min:0'],
-            'path_ids' => ['required', 'array'],
+            'path_ids' => ['nullable', 'array'],
             'path_ids.*' => ['exists:paths,id'],
         ];
     }
@@ -36,7 +36,6 @@ class UploadWordRequest extends FormRequest
             'file.mimes'    => 'يجب أن يكون الملف بصيغة docx',
             'cost.required' => 'يرجى تحديد كلفة المعاملة.',
             'cost.min'      => 'لا يمكن أن تكون الكلفة سالبة.',
-            'path_ids.required' => 'يجب اختيار مسارات للنموذج.',
             'path_ids.array' => 'يجب إرسال المسارات كمصفوفة.',
             'path_ids.*.exists' => 'أحد المسارات غير موجود في قاعدة البيانات.',
         ];

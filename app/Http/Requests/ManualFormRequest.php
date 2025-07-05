@@ -27,7 +27,7 @@ class ManualFormRequest extends FormRequest
             'elements' => ['required', 'array'],
             'elements.*.label' => ['required', 'string'],
             'elements.*.type' => ['required', 'integer'],
-            'path_ids' => ['required', 'array'],
+            'path_ids' => ['nullable', 'array'],
             'path_ids.*' => ['exists:paths,id'],
         ];
     }
@@ -47,7 +47,6 @@ class ManualFormRequest extends FormRequest
             'elements.*.label.required' => 'كل عنصر يجب أن يحتوي على تسمية.',
             'elements.*.type.required' => 'كل عنصر يجب أن يحتوي على نوع.',
             'elements.*.type.integer' => 'نوع الحقل يجب أن يكون رقماً صحيحاً.',
-            'path_ids.required' => 'يجب اختيار مسار واحد على الأقل للنموذج.',
             'path_ids.array' => 'المسارات يجب أن تكون في شكل مصفوفة.',
             'path_ids.*.exists' => 'المسار المحدد غير موجود في قاعدة البيانات.',
         ];

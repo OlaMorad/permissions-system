@@ -7,4 +7,5 @@ enum FormStatus: string
     case Active = 'فعالة';
     case Inactive = 'غير فعالة';
     case UNDER_REVIEW = 'قيد الدراسة';
+    case REJECTED = 'مرفوضة'; 
 }

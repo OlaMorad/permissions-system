@@ -14,8 +14,7 @@ class FormContentObserver
      */
     public function created(FormContent $formContent)
     {
-        $firstPathId = DB::table('form_path')
-            ->where('form_id', $formContent->form_id)
+        $firstPathId = DB::table('form_path')->where('form_id', $formContent->form_id)
             ->orderBy('id')
             ->value('path_id');
 
@@ -25,16 +24,16 @@ class FormContentObserver
             $nextReceiptNumber = $lastReceiptNumber ? ((int)$lastReceiptNumber + 1) : 1;
 
             // تنسيق الرقم ليكون 6 خانات مثل: 000001
-            $formattedReceiptNumber = str_pad($nextReceiptNumber, 6, '0', STR_PAD_LEFT);
+            $ReceiptNumber = str_pad($nextReceiptNumber, 6, '0', STR_PAD_LEFT);
             Transaction::create([
                 'form_content_id' => $formContent->id,
                 'from' => null,
                 'to' => $firstPathId,
-                'status_from' => TransactionStatus::PENDING,
+                'status_from' => TransactionStatus::FORWARDED,
                 'status_to' => TransactionStatus::PENDING,
                 'received_at' => now(),
-                'receipt_number' => $formattedReceiptNumber,
-
+                'receipt_number' => $ReceiptNumber,
+                'changed_by' => null,
             ]);
         }
     }

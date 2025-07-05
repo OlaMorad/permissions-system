@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\FormStatus;
+use App\Http\Requests\FormStatusRequest;
 use App\Http\Requests\ManualFormRequest;
 use App\Http\Requests\UploadWordRequest;
 use App\Http\Resources\successResource;
@@ -36,7 +37,7 @@ class FormController extends Controller
 
     public function index()
     {
-        $data = Form::all()->makeHidden(['updated_at']);
+        $data = Form::all()->makeHidden(['updated_at','cost']);
         return new successResource([$data]);
     }
 
@@ -62,9 +63,9 @@ class FormController extends Controller
     }
 
 
-    public function setUnderReviewToActive($id)
+    public function formReviewDecision($id, FormStatusRequest $request)
     {
-        return $this->formService->changeUnderReviewToActive((int)$id);
+        return $this->formService->changeUnderReviewStatus((int)$id,$request->status());
     }
     public function toggleStatus($id)
     {

@@ -24,7 +24,7 @@ class AuthController extends Controller
     {
         $credentials = $request->only('name', 'password');
 
-        return  $response = $this->authService->login($credentials);
+        return  $this->authService->login($credentials);
     }
 
     //  تسجيل الخروج
@@ -43,15 +43,4 @@ class AuthController extends Controller
         return response()->json($token);
     }
 
-
-    public function ResetPassword(ResetPasswordRequest $request, $user_id)
-    {
-
-
-        return $this->service->resetPassword(
-            (int) $user_id,
-            $request->input('old_password'),
-            $request->input('new_password')
-        );
-    }
 }
