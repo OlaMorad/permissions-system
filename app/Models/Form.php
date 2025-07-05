@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\FormStatus;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Form extends Model
 {
+    use HasFactory; 
     protected $fillable = ['name', 'status', 'cost'];
 
     protected $casts = [
