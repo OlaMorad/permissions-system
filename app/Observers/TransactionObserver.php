@@ -2,11 +2,9 @@
 
 namespace App\Observers;
 
-use App\Models\Transaction;
-use Illuminate\Support\Facades\DB;
 use App\Enums\TransactionStatus;
-use Illuminate\Support\Carbon;
-use App\Models\TransactionMovement;
+use App\Models\ArchiveTransaction;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionObserver
@@ -24,45 +22,52 @@ class TransactionObserver
      */
     public function updated(Transaction $transaction): void
     {
-
         if (!$transaction->wasChanged('status_to')) {
             return;
         }
 
-        $userId = Auth::id(); // المستخدم الذي قام بالفعل
+        $userId = Auth::id();
+        $newStatus = $transaction->status_to;
 
-        if ($transaction->status_to === TransactionStatus::REJECTED) {
-
+        // إذا كانت الحالة مرفوضة
+        if ($newStatus === TransactionStatus::REJECTED) {
             Transaction::where('id', $transaction->id)->update([
                 'from' => $transaction->to,
                 'to' => null,
                 'status_from' => TransactionStatus::REJECTED->value,
                 'status_to' => null,
                 'sent_at' => now(),
-            ]);
-            TransactionMovement::create([
-                'transaction_id' => $transaction->id,
-                'from_path_id' => $transaction->to,
-                'to_path_id' => null,
-                'status' => TransactionStatus::REJECTED->value,
                 'changed_by' => $userId,
-                'changed_at' => now(),
             ]);
+            $this->archiveOrUpdate($transaction, $userId);
             return;
         }
 
-        if ($transaction->status_to === TransactionStatus::FORWARDED) {
+        // إذا كانت الحالة محولة
+        if ($newStatus === TransactionStatus::FORWARDED) {
             $this->moveToNextStep($transaction, $userId);
+            $this->archiveOrUpdate($transaction, $userId);
+            return;
+        }
+
+        // إذا الحالة منجزة
+        if ($newStatus === TransactionStatus::COMPLETED) {
+            Transaction::where('id', $transaction->id)->update([
+                'from' => $transaction->to,
+                'to' => null,
+                'sent_at' => now(),
+                'changed_by' => $userId,
+            ]);
+            $this->archiveOrUpdate($transaction, $userId);
             return;
         }
     }
 
     /**
-     * جبلي المسار التالي تبع المعاملة
+     * جبلي المسار التالي للمعاملة
      */
     private function moveToNextStep(Transaction $transaction, $userId): void
     {
-
         $current = $transaction->to;
         $form = $transaction->content->form;
 
@@ -70,35 +75,114 @@ class TransactionObserver
         $index = array_search($current, $steps);
 
         $next = $steps[$index + 1] ?? null;
+
         if ($next) {
-            // احفظ الحركة قبل التحديث
-            TransactionMovement::create([
-                'transaction_id' => $transaction->id,
-                'from_path_id' => $current,
-                'to_path_id' => $next,
-                'status' => TransactionStatus::FORWARDED->value,
+            $this->updateTransaction($transaction, $current, $next, $userId);
+        } else {
+            // لا يوجد مسار تالي => تعيين حالة المنجزة
+            $transaction->update([
+                'status_to' => TransactionStatus::COMPLETED->value,
+                'status_from' => TransactionStatus::FORWARDED->value,
                 'changed_by' => $userId,
-                'changed_at' => now(),
             ]);
-            $this->updateTransaction($transaction, $current, $next);
         }
     }
 
     /**
-     * عدل معلومات المعاملة وحالتها عند كل مسار
+     * تحديث معلومات المعاملة ومسارها
      */
-    private function updateTransaction(Transaction $transaction, $current, $next): void
+    private function updateTransaction(Transaction $transaction, $current, $next, $userId): void
     {
-
         Transaction::where('id', $transaction->id)->update([
             'from' => $current,
             'to' => $next,
             'sent_at' => now(),
             'status_from' => TransactionStatus::FORWARDED->value,
             'status_to' => TransactionStatus::PENDING->value,
+            'changed_by' => $userId,
         ]);
     }
 
+    /**
+     * حفظ أو تحديث سجل الأرشيف حسب حالة المعاملة
+     */
+    private function archiveOrUpdate(Transaction $transaction, $userId): void
+    {
+        $changeData = [
+            'from_path_id' => $transaction->from,
+            'to_path_id' => $transaction->to,
+            'status' => $transaction->status_to,
+            'changed_by' => $userId,
+            'changed_at' => now(),
+        ];
+
+        $archived = ArchiveTransaction::where('uuid', $transaction->uuid)->first();
+
+        if (!$archived) {
+            ArchiveTransaction::create([
+                'uuid' => $transaction->uuid,
+                'receipt_number' => $transaction->receipt_number,
+                'status_history' => [$changeData],
+             //   'final_status' => $this->isFinalStatus($transaction->status_to->value) ? $transaction->status_to : null,
+                'transaction_content' => $this->TransactionContent($transaction),
+            ]);
+        } else {
+            $history = $archived->status_history ?? [];
+            $history[] = $changeData;
+
+            $archivedUpdate = [
+                'status_history' => $history,
+              //  'final_status' => $this->isFinalStatus($transaction->status_to->value) ? $transaction->status_to : $archived->final_status,
+            ];
+
+            if ($this->isFinalStatus($transaction->status_to->value)) {
+                $archivedUpdate['updated_at'] = now();
+            }
+
+            $archived->update($archivedUpdate);
+        }
+    }
+
+    /**
+     * هل الحالة نهائية (مرفوضة أو منجزة) اذا غير هيك بتكون نل
+     */
+    private function isFinalStatus(?string $status): bool
+    {
+        return in_array($status, [
+            TransactionStatus::REJECTED->value,
+            TransactionStatus::COMPLETED->value,
+        ]);
+    }
+
+    /**
+     * تجهيز محتوى المعاملة للاحتفاظ به في الأرشيف
+     */
+    private function TransactionContent(Transaction $transaction): array
+    {
+        $content = $transaction->content->loadMissing([
+            'form.elements',
+            'elementValues.formElement',
+            'media',
+            'doctor.user',
+        ]);
+
+        return [
+            'form_name' => $content->form->name,
+            'form_cost' => $content->form->cost,
+            'doctor_name' => $content->doctor->user->name ?? '',
+            'doctor_phone' => $content->doctor->user->phone ?? '',
+            'doctor_image' => $content->doctor->user->avatar ?? null,
+            'elements' => $content->elementValues->map(fn($ev) => [
+                'label' => $ev->formElement->label,
+                'value' => $ev->value,
+            ])->values()->all(),
+            'media' => $content->media->map(fn($m) => [
+                'file' => $m->file,
+                'image' => $m->image,
+                'receipt' => $m->receipt,
+            ])->values()->all(),
+        ];
+    }
 
     /**
      * Handle the Transaction "deleted" event.
