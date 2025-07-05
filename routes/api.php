@@ -67,9 +67,9 @@ Route::middleware(['throttle:10,1','working.hours'])->group(
             Route::post('create_internal_mail', 'create_internal_mail')->middleware('Verify.Session');
             Route::get('show_internal_mails_export', 'show_internal_mails_export')->middleware('Verify.Session');
             ROute::post('edit_status_internal_mails', 'edit_status_internal_mails')->middleware('Verify.Session');
-            Route::get('show_import_internal_mails', 'show_import_internal_mails')->middleware('Verify.Session');
+            Route::get('show_internal_mail_details', 'show_internal_mail_details')->middleware('Verify.Session');
             Route::get('show_export_internal_mail_details', 'show_export_internal_mail_details')->middleware('Verify.Session');
-            Route::get('show_import_internal_mail_details', 'show_import_internal_mail_details')->middleware('Verify.Session');
+            Route::get('show_import_internal_mails', 'show_import_internal_mails')->middleware('Verify.Session');
         });
 
 

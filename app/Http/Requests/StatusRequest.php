@@ -24,7 +24,7 @@ class StatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id'=>'required|exists:internal_mails,id',
+            'uuid'=>'required|exists:internal_mails,uuid',
             'status'=>['required',new Enum(StatusInternalMail::class)]
         ];
     }

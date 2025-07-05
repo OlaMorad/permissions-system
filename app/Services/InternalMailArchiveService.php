@@ -28,7 +28,7 @@ if ($hasEmployeeRole) {
         'message' => 'لا يحق لك رؤية الارشيف'
     ]);
 }
-    $dateThreshold = Carbon::now()->subMinute(1);
+    $dateThreshold = Carbon::now()->subHours(48);
 
     // الرتب المستهدفة بالهاتف كما في دالة show_internal_mails_export
     $headRoles = [
