@@ -178,6 +178,7 @@ class TransactionObserver
         ]);
 
         return [
+            'form_id' => $content->form->id,
             'form_name' => $content->form->name,
             'form_cost' => $content->form->cost,
             'doctor_name' => $content->doctor->user->name ?? '',

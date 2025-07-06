@@ -12,6 +12,7 @@ use Spatie\Permission\Models\Role;
 use App\Services\UserRoleService;
 use App\Presenters\TransactionPresenter;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class TransactionService
 {
@@ -37,8 +38,10 @@ class TransactionService
         }
 
         //  إذا موظف القسم ومو رئيس، غير الحالة لقيد الدراسة
-        if ($transaction->to === $pathId && !$this->userRoleService->isSectionHead($userRole) && $userRole !== 'الطبيب' &&
-            $transaction->status_to !== TransactionStatus::UNDER_REVIEW->value) {
+        if (
+            $transaction->to === $pathId && !$this->userRoleService->isSectionHead($userRole) && $userRole !== 'الطبيب' &&
+            $transaction->status_to !== TransactionStatus::UNDER_REVIEW->value
+        ) {
             $transaction->update([
                 'status_to' => TransactionStatus::UNDER_REVIEW->value,
                 'changed_by' => Auth::id(),
@@ -60,7 +63,17 @@ class TransactionService
             ])->values(),
         ];
     }
+    public function show_transaction_content($uuid)
+    {
+        $transaction = ArchiveTransaction::where('uuid', $uuid)->first();
 
+        if (!$transaction) {
+            return response()->json([
+                'message' => 'لم يتم العثور على المعاملة',
+            ], 404);
+        }
+        return new successResource($transaction->transaction_content);
+    }
     public function import_for_financial()
     {
         $pathId = $this->userRoleService->getUserPathId();
@@ -77,18 +90,6 @@ class TransactionService
         $transactions = $query->with(['content.form', 'content.doctor.user'])->orderBy('received_at')->get();
 
         return $transactions->map(fn($t) => TransactionPresenter::FinanceImport($t))->values();
-    }
-
-    public function export_for_financial()
-    {
-        $pathId = $this->userRoleService->getUserPathId();
-
-        $transactions = Transaction::where('from', $pathId)
-            ->where('sent_at', '>=', now()->subHours(48))
-            ->with(['content.form', 'content.doctor.user'])
-            ->orderBy('sent_at')
-            ->get();
-        return $transactions->map(fn($t) => TransactionPresenter::FinanceExport($t))->values();
     }
 
     public function import_transactions()
@@ -111,17 +112,20 @@ class TransactionService
         return $transactions->map(fn($t) => TransactionPresenter::forImport($t))->values();
     }
 
-    public function export_transaction()
+    public function export_transactions(): array
     {
-        $userPathId = $this->userRoleService->getUserPathId();
+        $pathId = $this->userRoleService->getUserPathId();
+        $isFinance = $this->userRoleService->isFinancial();
 
-        $transactions = Transaction::where('from', $userPathId)
-            ->where('sent_at', '>=', now()->subHours(48))
-            ->with(['content.form:id,name', 'content.doctor.user:id,name', 'toPath', 'fromPath'])
-            ->orderBy('sent_at')
-            ->get();
+        $transactions = $this->getExternalTransactions($pathId, true); //  خلال آخر 48 ساعة
 
-        return $transactions->map(fn($t) => TransactionPresenter::forExport($t))->values();
+        return $transactions
+            ->map(fn($t) =>
+                $isFinance
+                    ? TransactionPresenter::ArchiveFinanceExport($t, $pathId)
+                    : TransactionPresenter::ArchiveForExport($t, $pathId)
+            )
+            ->values()->toArray();
     }
 
     public function archiveExportedTransactions(): array
@@ -133,9 +137,22 @@ class TransactionService
         }
 
         $pathId = $this->userRoleService->getUserPathId();
+        $isFinance = $this->userRoleService->isFinancial();
 
+        $transactions = $this->getExternalTransactions($pathId, false); //  أقدم من 48 ساعة
 
-        $transactions = ArchiveTransaction::get()->filter(function ($transaction) use ($pathId) {
+        return $transactions
+            ->map(fn($t) =>
+                $isFinance
+                    ? TransactionPresenter::ArchiveFinanceExport($t, $pathId)
+                    : TransactionPresenter::ArchiveForExport($t, $pathId)
+            )
+            ->values()->toArray();
+    }
+
+    public function getExternalTransactions(int $pathId, bool $isRecent): Collection
+    {
+        return ArchiveTransaction::get()->filter(function ($transaction) use ($pathId, $isRecent) {
             $history = $transaction->status_history;
 
             if (!is_array($history)) return false;
@@ -143,25 +160,19 @@ class TransactionService
             foreach ($history as $entry) {
                 if (
                     isset($entry['to_path_id'], $entry['status'], $entry['changed_at']) &&
-                    (int)$entry['to_path_id'] === (int)$pathId &&
+                    (int)$entry['to_path_id'] === $pathId &&
                     in_array($entry['status'], [
                         TransactionStatus::FORWARDED->value,
-                        TransactionStatus::REJECTED->value
+                        TransactionStatus::REJECTED->value,
                     ])
                 ) {
-                    $changedAt = Carbon::parse($entry['changed_at']);
-                        if ($changedAt->diffInHours(now()) >= 48){
-                            return true;
-                    }
+                    $changed_at = Carbon::parse($entry['changed_at']);
+                    $hours_change = $changed_at->diffInHours(now());
+
+                    return $isRecent ? $hours_change < 48 : $hours_change >= 48;
                 }
             }
-
             return false;
         })->values();
-        if ($this->userRoleService->isFinancial()) {
-            return $transactions->map(fn($t) => TransactionPresenter::ArchiveFinanceExport($t, $pathId))->values()->toArray();
-        }
-
-        return $transactions->map(fn($t) => TransactionPresenter::ArchiveForExport($t, $pathId))->values();
     }
 }

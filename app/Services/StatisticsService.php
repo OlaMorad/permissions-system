@@ -28,12 +28,12 @@ class StatisticsService
         }
         $pathId = $this->userRoleService->getUserPathId();
 
-        // عدد المعاملات بحالة PENDING
+        // عدد المعاملات بحالة الانتظار
         $pending = Transaction::where('to', $pathId)
             ->where('status_to', TransactionStatus::PENDING->value)
             ->count();
 
-        // عدد المعاملات بحالة UNDER_REVIEW
+        // عدد المعاملات بحالة قيد الدراسة
         $underReview = Transaction::where('to', $pathId)
             ->where('status_to', TransactionStatus::UNDER_REVIEW->value)
             ->count();
@@ -41,7 +41,7 @@ class StatisticsService
         // جلب معاملات الأرشيف المتعلقة بالمسار pathId
         $archiveTransactions = ArchiveTransaction::all();
 
-        // احصاء المحولة (FORWARDED) حسب status_history و to_path_id
+        // عدد المعاملات المحولة من دائرة معينة
         $forwarded = $archiveTransactions->filter(function ($transaction) use ($pathId) {
             if (!is_array($transaction->status_history)) return false;
 
@@ -57,7 +57,7 @@ class StatisticsService
             return false;
         })->count();
 
-        // احصاء المرفوضة (REJECTED) بنفس الطريقة
+        // عدد المعاملات المرفوضة في دائرة معينة
         $rejected = $archiveTransactions->filter(function ($transaction) use ($pathId) {
             if (!is_array($transaction->status_history)) return false;
 
@@ -88,24 +88,43 @@ class StatisticsService
     public function weeklyDoneStatistics(): array
     {
         $role = $this->userRoleService->getUserRoleName();
+
         if (!$this->userRoleService->isSectionHead($role)) {
             abort(403, 'غير مصرح لك بعرض هذه الإحصائيات.');
         }
 
         $pathId = $this->userRoleService->getUserPathId();
 
-        $doneMovements = TransactionMovement::whereIn('status', [
-            TransactionStatus::FORWARDED->value,
-            TransactionStatus::REJECTED->value,
-        ])
-            ->where('from_path_id', $pathId)
-            ->whereBetween('changed_at', [
-                Carbon::now()->startOfWeek(),
-                Carbon::now()->endOfWeek(),
-            ])
-            ->selectRaw("DAYOFWEEK(changed_at) as day_of_week, COUNT(*) as total")
-            ->groupBy('day_of_week')
-            ->pluck('total', 'day_of_week');
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $endOfWeek = Carbon::now()->endOfWeek();
+
+        // استرجاع كل المعاملات من الأرشيف
+        $transactions = ArchiveTransaction::get();
+
+        // نحضّر مصفوفة إحصائية
+        $daysStats = array_fill(1, 7, 0);
+
+        foreach ($transactions as $transaction) {
+            if (!is_array($transaction->status_history)) continue;
+
+            foreach ($transaction->status_history as $entry) {
+                if (
+                    isset($entry['to_path_id'], $entry['status'], $entry['changed_at']) &&
+                    (int)$entry['to_path_id'] === $pathId &&
+                    in_array($entry['status'], [
+                        TransactionStatus::FORWARDED->value,
+                        TransactionStatus::REJECTED->value
+                    ])
+                ) {
+                    $changedAt = Carbon::parse($entry['changed_at']);
+                    if ($changedAt->between($startOfWeek, $endOfWeek)) {
+                        $dayOfWeek = $changedAt->dayOfWeekIso;
+                        $dayOfWeek = $dayOfWeek === 7 ? 1 : $dayOfWeek + 1; // نجعله يبدأ من الأحد = 1
+                        $daysStats[$dayOfWeek]++;
+                    }
+                }
+            }
+        }
 
         $daysMap = collect([
             1 => 'الأحد',
@@ -119,7 +138,7 @@ class StatisticsService
 
         return $daysMap->map(fn($dayName, $dayNumber) => [
             'day' => $dayName,
-            'total_done' => $doneMovements[$dayNumber] ?? 0,
+            'total_done' => $daysStats[$dayNumber] ?? 0,
         ])->values()->toArray();
     }
 

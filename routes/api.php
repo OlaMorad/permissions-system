@@ -21,8 +21,13 @@ Route::get('/user', function (Request $request) {
 
 
 
+<<<<<<< Updated upstream
 Route::middleware(['throttle:10,1'])->group(
     function () {
+=======
+// Route::middleware(['throttle:10,1','working.hours'])->group(
+//     function () {
+>>>>>>> Stashed changes
 
         Route::controller(AuthController::class)->group(function () {
             Route::post('/login', 'login');
@@ -98,7 +103,8 @@ Route::middleware(['throttle:10,1'])->group(
                 Route::get('/export', 'Export_Transaction')->middleware('auth:api');
                 Route::get('/archived-export','archivedExportedTransactions')->middleware('auth:api');
                 Route::get('archive', 'show_archive');//->middleware('auth:api','role:المدير');
-                Route::get('/show/{id}', 'showFormContent')->middleware('auth:api');
+                Route::get('/show/{uuid}', 'showFormContent')->middleware('auth:api');
+                Route::get('content/{uuid}', 'ShowTransactionContent');
                 Route::post('/status/{uuid}', 'updateTransactionStatus')->middleware('auth:api');
                 Route::post('/receipt_status', 'updateReceiptStatus')->middleware('auth:api', 'role:موظف المالية');
             });
@@ -109,7 +115,7 @@ Route::middleware(['throttle:10,1'])->group(
 
 
         Route::prefix('statistics')->middleware(['auth:api'])->group(function () {
-            Route::get('/section', [StatisticsController::class, 'ExternalStatisticsSummary']);
+            Route::get('/external', [StatisticsController::class, 'ExternalStatisticsSummary']);
             Route::get('/employees', [StatisticsController::class, 'employeePerformance']);
             Route::get('/weekly-done', [StatisticsController::class, 'weeklyDone']);
             Route::get('/InternalStatisticsSummary', [StatisticsController::class, 'InternalStatisticsSummary'])->middleware('Verify.Session');
@@ -117,6 +123,5 @@ Route::middleware(['throttle:10,1'])->group(
 
         Route::get('all_paths',[PathController::class,'index']);
         Route::get('/archive', [InternalMailArchiveController::class, 'add_to_archive'])->middleware(['Verify.Session']);
-    }
-
-);
+//     }
+// );
