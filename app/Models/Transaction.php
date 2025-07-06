@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Transaction extends Model
 {
-    use HasFactory; 
+    use HasFactory;
     protected $fillable = [
         'uuid',
         'form_content_id',
@@ -51,5 +51,10 @@ class Transaction extends Model
     {
         return $this->belongsTo(Path::class,'to');
     }
-  
+
+    public function archive()
+{
+    return $this->hasOne(ArchiveTransaction::class, 'uuid', 'uuid');
+}
+
 }

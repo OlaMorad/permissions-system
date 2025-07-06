@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('backup:run')->dailyAt('20:00');
+Schedule::command('transactions:archive-rejected')->hourly();

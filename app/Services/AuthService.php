@@ -21,7 +21,7 @@ class AuthService
         $userData = [
             // 'id' => $user->id,
             'name' => $user->name,
-            'avatar'=>asset( $user->avatar)
+            'avatar'=>asset( 'storage/' .$user->avatar)
             // 'email' => $user->email
         ];
         $user->last_login_at = now();
