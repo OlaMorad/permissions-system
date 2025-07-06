@@ -21,7 +21,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::middleware(['throttle:10,1','working.hours'])->group(
+Route::middleware(['throttle:10,1'])->group(
     function () {
 
         Route::controller(AuthController::class)->group(function () {

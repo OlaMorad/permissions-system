@@ -2,9 +2,10 @@
 
 namespace App\Observers;
 
+use Carbon\Carbon;
+use App\Models\Transaction;
 use App\Enums\TransactionStatus;
 use App\Models\ArchiveTransaction;
-use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionObserver
@@ -118,30 +119,40 @@ class TransactionObserver
 
         $archived = ArchiveTransaction::where('uuid', $transaction->uuid)->first();
 
+        $isCompleted = $archived && $transaction->status_to === TransactionStatus::COMPLETED;
+
         if (!$archived) {
-            ArchiveTransaction::create([
+            $data = [
                 'uuid' => $transaction->uuid,
                 'receipt_number' => $transaction->receipt_number,
                 'status_history' => [$changeData],
-             //   'final_status' => $this->isFinalStatus($transaction->status_to->value) ? $transaction->status_to : null,
                 'transaction_content' => $this->TransactionContent($transaction),
-            ]);
-        } else {
-            $history = $archived->status_history ?? [];
-            $history[] = $changeData;
-
-            $archivedUpdate = [
-                'status_history' => $history,
-              //  'final_status' => $this->isFinalStatus($transaction->status_to->value) ? $transaction->status_to : $archived->final_status,
             ];
 
+            ArchiveTransaction::create($data);
+        } else {
+            $history = $archived->status_history;
+            $history[] = $changeData;
+
+            $updateData = [
+                'status_history' => $history,
+            ];
+
+            // إذا الحالة الحالية نهائية يتم تحديث وقت التعديل
             if ($this->isFinalStatus($transaction->status_to->value)) {
-                $archivedUpdate['updated_at'] = now();
+                $updateData['updated_at'] = now();
+            }
+            // إذا اكتملت
+            if ($isCompleted) {
+                $updateData['final_status'] = TransactionStatus::COMPLETED;
             }
 
-            $archived->update($archivedUpdate);
+            $archived->update($updateData);
         }
     }
+
+
+
 
     /**
      * هل الحالة نهائية (مرفوضة أو منجزة) اذا غير هيك بتكون نل

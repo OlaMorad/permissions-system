@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
-use App\Enums\TransactionStatus;
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Manager;
 use App\Models\Employee;
-use App\Models\TransactionMovement;
+use App\Enums\TransactionStatus;
+use App\Models\ArchiveTransaction;
 use Illuminate\Support\Facades\DB;
+use App\Models\TransactionMovement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -86,28 +89,27 @@ class EmployeeService
     }
 
 
-    public function employeeStatistics(): array
-    {
-        // نجيب عدد المعاملات لكل موظف حسب حالة المعاملة (محولة أو مرفوضة فقط)
-        return TransactionMovement::with('changedBy')
-            ->whereIn('status', [
-                TransactionStatus::FORWARDED->value,
-                TransactionStatus::REJECTED->value,
-            ])
-            ->selectRaw('changed_by, COUNT(*) as total')
-            ->groupBy('changed_by')
-            ->get()
-            ->mapWithKeys(function ($movement) {
-                // نستخدم employee_id كـ key والقيمة عدد المعاملات
-                return [
-                    $movement->changed_by => [
-                        'handled_transactions' => $movement->total,
-                        'employee_name' => $movement->changedBy->name ?? 'غير معروف',
-                    ],
-                ];
-            })
-            ->toArray();
-    }
+public function employeeStatistics(): array
+{
+    $oneMonthAgo = now()->subMonth();
+
+    return ArchiveTransaction::all()
+        ->flatMap(fn($transaction) => collect($transaction->status_history)
+            ->filter(fn($status) =>
+                isset($status['changed_by'], $status['changed_at']) &&
+                Carbon::parse($status['changed_at'])->greaterThanOrEqualTo($oneMonthAgo)
+            )
+        )
+        ->groupBy('changed_by')
+        ->mapWithKeys(fn($items, $userId) => [
+            $userId => [
+                'handled_transactions' => $items->count(),
+                'employee_name' => User::find($userId)?->name ?? 'غير معروف',
+            ],
+        ])
+        ->toArray();
+}
+
 
     /**
      * عرض كل الموظفين التابعين للمدير مع إحصائياتهم (عدد المعاملات المنتهية)

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->foreignId('form_content_id')->references('id')->on('form_contents');
+            $table->foreignId('form_content_id')->references('id')->on('form_contents')->cascadeOnDelete();
             $table->foreignId('from')->nullable()->references('id')->on('paths');
             $table->foreignId('to')->nullable()->references('id')->on('paths');
             $table->timestamp('sent_at')->nullable();
