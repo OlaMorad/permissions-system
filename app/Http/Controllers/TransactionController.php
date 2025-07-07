@@ -21,7 +21,6 @@ class TransactionController extends Controller
         protected UserRoleService $userRoleService
     ) {}
 
-
     public function Import_Transaction()
     {
         if ($this->userRoleService->isFinancial()) {
@@ -32,25 +31,22 @@ class TransactionController extends Controller
 
         return new successResource($transactions);
     }
-
     public function Export_Transaction()
     {
-        if ($this->userRoleService->isFinancial()) {
-            $transactions = $this->transactionService->export_for_financial();
-        } else {
-            $transactions = $this->transactionService->export_transaction();
-        }
-
+        $transactions = $this->transactionService->export_transactions();
         return new successResource($transactions);
     }
 
-    public function showFormContent($id)
+    public function showFormContent($uuid)
     {
-        $data = $this->transactionService->getFormContent($id);
+        $data = $this->transactionService->getFormContent($uuid);
 
         return new successResource($data);
     }
-
+    public function ShowTransactionContent($uuid)
+    {
+       return $this->transactionService->show_transaction_content($uuid);
+    }
     public function archivedExportedTransactions()
     {
         $data = $this->transactionService->archiveExportedTransactions();
@@ -58,7 +54,7 @@ class TransactionController extends Controller
     }
     public function updateTransactionStatus(TransactionStatusRequest $request, string $uuid)
     {
-        return $this->transactionStatusService->updateTransactionStatus($uuid,$request->status());
+        return $this->transactionStatusService->updateTransactionStatus($uuid, $request->status());
     }
 
     public function updateReceiptStatus(ReceiptStatusRequest $request)

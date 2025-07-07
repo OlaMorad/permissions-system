@@ -47,6 +47,13 @@ class FormContentService
         $images = $this->extractFiles($media, 'image');
 
         $max = max(count($files), count($images));
+        if ($receiptPath && $max === 0) {
+            $formContent->media()->create([
+                'receipt' => $receiptPath,
+                'file' => null,
+                'image' => null,
+            ]);
+        }
         for ($i = 0; $i < $max; $i++) {
             $formContent->media()->create([
                 'receipt' => $receiptPath,
