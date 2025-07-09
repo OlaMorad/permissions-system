@@ -43,7 +43,7 @@ class CheckWorkingHours
             }
 
             // ✅ إذا ما كان عنده صلاحية admin نمنعه
-            if (!$user || !$user->hasRole('admin')) {
+            if (!$user || !$user->hasRole('المدير')) {
                 return response()->json([
                     'message' => 'الدخول غير مسموح خارج أوقات الدوام أو يوم العطلة.'
                 ], 403);

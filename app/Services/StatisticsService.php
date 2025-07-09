@@ -130,17 +130,12 @@ class StatisticsService
             return 'ليس من صلاحياتك عرض الاقسام';
         }
         $employeesId=Employee::where('manager_id',$manager->id)->pluck('user_id');
-         // تحديد بداية ونهاية الأسبوع (من 7 أيام حتى اليوم)
-    $startDate = Carbon::now()->subDays(7)->startOfDay();
-    $endDate = Carbon::now()->endOfDay();
-      $APPROVED= internalMail::whereIn('from_user_id',$employeesId)->where('status',StatusInternalMail::APPROVED)
-      ->whereBetween('created_at', [$startDate, $endDate])->count();
+  
+      $APPROVED= internalMail::whereIn('from_user_id',$employeesId)->where('status',StatusInternalMail::APPROVED)->count();
 
-      $PENDING= internalMail::whereIn('from_user_id',$employeesId)->where('status',StatusInternalMail::PENDING)
-      ->whereBetween('created_at', [$startDate, $endDate])->count();
+      $PENDING= internalMail::whereIn('from_user_id',$employeesId)->where('status',StatusInternalMail::PENDING)->count();
 
-      $REJECTED= internalMail::whereIn('from_user_id',$employeesId)->where('status',StatusInternalMail::REJECTED)
-      ->whereBetween('created_at', [$startDate, $endDate])->count();
+      $REJECTED= internalMail::whereIn('from_user_id',$employeesId)->where('status',StatusInternalMail::REJECTED)->count();
     return [
         'approved' => $APPROVED,
         'pending' => $PENDING,
