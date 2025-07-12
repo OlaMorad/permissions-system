@@ -13,6 +13,7 @@ use App\Services\UserRoleService;
 use App\Presenters\TransactionPresenter;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Arr;
 
 class TransactionService
 {
@@ -20,7 +21,7 @@ class TransactionService
         protected UserRoleService $userRoleService,
     ) {}
 
-    // عرض المعاملة و هي معباية
+    // عرض المعاملة و هي معباية في حال كانت بقسم الوارد
     public function getFormContent(string $transactionUuid): array
     {
         $userRole = $this->userRoleService->getUserRoleName();
@@ -54,6 +55,7 @@ class TransactionService
             'form_name' => $content->form->name,
             'elements' => $content->elementValues->map(fn($ev) => [
                 'label' => $ev->formElement->label,
+                'type' => $ev->formElement->type->value,
                 'value' => $ev->value,
             ])->values(),
             'media' => $content->media->map(fn($m) => [
@@ -63,6 +65,7 @@ class TransactionService
             ])->values(),
         ];
     }
+    // عرض محتوى المعاملة اذا كانت بقسم الصادر
     public function show_transaction_content($uuid)
     {
         $transaction = ArchiveTransaction::where('uuid', $uuid)->first();
@@ -72,8 +75,16 @@ class TransactionService
                 'message' => 'لم يتم العثور على المعاملة',
             ], 404);
         }
-        return new successResource($transaction->transaction_content);
+
+        $content = $transaction->transaction_content;
+
+        return new successResource([
+            'form_name' => $content['form_name'] ?? '',
+            'elements' => array_map(fn($e) => Arr::only($e, ['label', 'value', 'type']), $content['elements'] ?? []),
+            'media' => array_map(fn($m) => Arr::only($m, ['file', 'image', 'receipt']), $content['media'] ?? []),
+        ]);
     }
+    // المعاملات الواردة لقسم المالية
     public function import_for_financial()
     {
         $pathId = $this->userRoleService->getUserPathId();
@@ -91,7 +102,7 @@ class TransactionService
 
         return $transactions->map(fn($t) => TransactionPresenter::FinanceImport($t))->values();
     }
-
+    // المعاملات الواردة الى اي قسم
     public function import_transactions()
     {
         $userPathId = $this->userRoleService->getUserPathId();
@@ -105,13 +116,13 @@ class TransactionService
         }
 
         $transactions = $query
-            ->with(['content.form:id,name', 'content.doctor.user:id,name', 'toPath', 'fromPath'])
+            ->with(['content.form:id,name', 'content.doctor.user:id,name,phone,avatar', 'toPath', 'fromPath'])
             ->orderBy('received_at')
             ->get();
 
         return $transactions->map(fn($t) => TransactionPresenter::forImport($t))->values();
     }
-
+    // المعاملات  يلي تم تغيير حالتها لمحولة او مرفوضة في قسم ما
     public function export_transactions(): array
     {
         $pathId = $this->userRoleService->getUserPathId();
@@ -120,14 +131,15 @@ class TransactionService
         $transactions = $this->getExternalTransactions($pathId, true); //  خلال آخر 48 ساعة
 
         return $transactions
-            ->map(fn($t) =>
+            ->map(
+                fn($t) =>
                 $isFinance
                     ? TransactionPresenter::ArchiveFinanceExport($t, $pathId)
                     : TransactionPresenter::ArchiveForExport($t, $pathId)
             )
             ->values()->toArray();
     }
-
+    // المعاملات يلي صرلها محولة او مرفوضة من قسم ما 48 ساعة
     public function archiveExportedTransactions(): array
     {
         $role = $this->userRoleService->getUserRoleName();
@@ -142,7 +154,8 @@ class TransactionService
         $transactions = $this->getExternalTransactions($pathId, false); //  أقدم من 48 ساعة
 
         return $transactions
-            ->map(fn($t) =>
+            ->map(
+                fn($t) =>
                 $isFinance
                     ? TransactionPresenter::ArchiveFinanceExport($t, $pathId)
                     : TransactionPresenter::ArchiveForExport($t, $pathId)

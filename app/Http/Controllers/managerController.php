@@ -44,7 +44,7 @@ class ManagerController extends Controller
         $managers_id = dB::table("managers")->pluck('user_id');
         $users = User::whereIn('id', $managers_id)->select('name', 'avatar', 'phone')->get();
         foreach ($users as $user) {
-            $user->avatar = asset($user->avatar);
+            $user->avatar = asset('storage/' . $user->avatar);
         }
         return $users;
     }
