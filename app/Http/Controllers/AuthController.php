@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\ResetPasswordRequest;
-use App\Http\Resources\successResource;
-use App\Services\AccountsManagementService;
+use Illuminate\Http\Request;
 use App\Services\AuthService;
+use App\Http\Requests\LoginRequest;
+use App\Http\Resources\successResource;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Services\AccountsManagementService;
 
 class AuthController extends Controller
 {
@@ -24,13 +25,13 @@ class AuthController extends Controller
     {
         $credentials = $request->only('name', 'password');
 
-        return  $this->authService->login($credentials);
+        return  $this->authService->login($credentials,$request);
     }
 
     //  تسجيل الخروج
-    public function logout()
+    public function logout(Request $request)
     {
-        $this->authService->logout();
+        $this->authService->logout($request);
 
         return response()->json(['message' => 'تم تسجيل الخروج بنجاح']);
     }
