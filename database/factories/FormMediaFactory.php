@@ -17,9 +17,9 @@ class FormMediaFactory extends Factory
     public function definition(): array
     {
         return [
-            'file' => fake()->filePath(),
+            'file' => 'files/8IyqTFqxGIEcLLlezb45thVZzFQMGBxUEKC1jJDQ.pdf',
             'image' => fake()->imageUrl(),
-            'receipt' => 'FAKE-RECEIPT-' . fake()->unique()->randomNumber(5),
+            'receipt' => 'receipts/VptYbM6OziNq8B0UqHNtvBBci8yF7OtD9NqKxbgN.jpg',
         ];
     }
 }

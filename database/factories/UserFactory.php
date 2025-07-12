@@ -50,7 +50,7 @@ class UserFactory extends Factory
             'email' => Str::slug($roleName, '_') . '@gmail.com',
             'phone' => '09' . fake()->numberBetween(500000000, 599999999),
             'address' => fake('ar_SA')->city,
-            'avatar' => 'default.png',
+            'avatar' =>'avatars\2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg'
         ];
     });
 }

@@ -53,7 +53,7 @@ class FormController extends Controller
     public function activeForms()
     {
         $forms = Form::where('status', FormStatus::Active->value)->select('id','name','cost')->get();
-        return new successResource([$forms]);
+        return new successResource($forms);
     }
 
     public function underReviewForms()

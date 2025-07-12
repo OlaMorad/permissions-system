@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\AuthService;
 use App\Http\Requests\LoginRequest;
-use App\Http\Resources\successResource;
-use App\Http\Requests\ResetPasswordRequest;
+
 use App\Services\AccountsManagementService;
 
 class AuthController extends Controller

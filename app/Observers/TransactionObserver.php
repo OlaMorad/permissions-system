@@ -186,6 +186,7 @@ class TransactionObserver
             'doctor_image' => $content->doctor->user->avatar ?? null,
             'elements' => $content->elementValues->map(fn($ev) => [
                 'label' => $ev->formElement->label,
+                'type' => $ev->formElement->type,
                 'value' => $ev->value,
             ])->values()->all(),
             'media' => $content->media->map(fn($m) => [
