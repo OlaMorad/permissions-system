@@ -36,9 +36,10 @@ class AuthController extends Controller
     }
 
     // رفريش للتوكن
-    public function refresh()
+    public function refresh(Request $request)
     {
-        $token = $this->authService->refresh();
+
+        $token = $this->authService->refresh($request);
 
         return response()->json($token);
     }

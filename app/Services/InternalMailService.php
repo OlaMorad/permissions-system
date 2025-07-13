@@ -160,9 +160,7 @@ class InternalMailService
             return $result;
         });
 
-        return response()->json([
-            'mails' => $dataFormatted,
-        ]);
+          return $dataFormatted;
     }
 
 

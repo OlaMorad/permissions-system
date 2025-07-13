@@ -22,7 +22,7 @@ class InternalMailController extends Controller
 
 //عرض البريد الصادر للموظف و المدير
     public function show_internal_mails_export(){
-        return  $response=  $this->InternalMailService->show_internal_mails_export();
+          $response=  $this->InternalMailService->show_internal_mails_export();
        return new successResource([$response]);
     }
 
@@ -35,7 +35,8 @@ class InternalMailController extends Controller
 
 //عرض البريد الداخلي الوارد للمديراو الادمن او السب ادمن
 public function show_import_internal_mails(){
-     return $response=  $this->InternalMailService->show_import_internal_mails();
+      $response=  $this->InternalMailService->show_import_internal_mails();
+      return new successResource([$response]);
 }
 
 
