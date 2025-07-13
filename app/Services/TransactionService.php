@@ -81,7 +81,13 @@ class TransactionService
         return new successResource([
             'form_name' => $content['form_name'] ?? '',
             'elements' => array_map(fn($e) => Arr::only($e, ['label', 'value', 'type']), $content['elements'] ?? []),
-            'media' => array_map(fn($m) => Arr::only($m, ['file', 'image', 'receipt']), $content['media'] ?? []),
+            'media' => array_map(function ($m) {
+                return [
+                    'file' => !empty($m['file']) ? asset('storage/' . $m['file']) : null,
+                    'image' => !empty($m['image']) ? asset('storage/' . $m['image']) : null,
+                    'receipt' => !empty($m['receipt']) ? asset('storage/' . $m['receipt']) : null,
+                ];
+            }, $content['media'] ?? []),
         ]);
     }
     // المعاملات الواردة لقسم المالية
