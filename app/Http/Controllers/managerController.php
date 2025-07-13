@@ -40,7 +40,7 @@ class ManagerController extends Controller
     }
 
     public function show_all_managers()
-    {
+    { 
         $managers_id = dB::table("managers")->pluck('user_id');
         $users = User::whereIn('id', $managers_id)->select('name', 'avatar', 'phone')->get();
         foreach ($users as $user) {

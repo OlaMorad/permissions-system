@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
 use Illuminate\Http\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -34,8 +35,34 @@ return Application::configure(basePath: dirname(__DIR__))
                 return new JsonResponse(['message' => $message], Response::HTTP_NOT_FOUND);
             }
 
-            // رد نصي عادي لطلبات الويب
             return response($message, Response::HTTP_NOT_FOUND);
         });
+        
+  $exceptions->renderable(function (\Exception $e, $request) {
+
+            $message = strtolower($e->getMessage());
+
+            // قائمة كلمات مفتاحية تدل على انقطاع الاتصال أو مشاكل الشبكة
+            $connectionIssues = [
+                'broken pipe',
+                'connection reset by peer',
+                'connection aborted',
+                'connection refused',
+                'connection timed out',
+                'client disconnected',
+                'stream socket',
+            ];
+
+            foreach ($connectionIssues as $issue) {
+                if (str_contains($message, $issue)) {
+                    return response()->json([
+                        'message' => 'انقطع الاتصال أثناء معالجة الطلب. الرجاء المحاولة مرة أخرى.'
+                    ], 499); // كود 499 مخصص لحالة انقطاع العميل قبل اكتمال الرد
+                }
+            }
+
+        });
+
+
     })
     ->create();

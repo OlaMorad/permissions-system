@@ -62,20 +62,88 @@ public function login(array $credentials,$request)
 }
 
 
-    public function logout( $request)
-    {
-        Auth::guard()->logout();
-           if ($request->header('X-Use-Cookie') === 'true') {
+public function logout(Request $request)
+{
+    try {
+        $useCookie = $request->header('X-Use-Cookie') === 'true';
 
-        return response()->json(['message' => 'تم تسجيل الخروج'])->cookie('jwt_token', '', -1);
-    }
-    return response()->json(['message' => 'تم تسجيل الخروج']);
-    }
+        // جلب التوكن يدويًا
+        $token = $useCookie
+            ? $request->cookie('jwt_token')
+            : $request->bearerToken();
+dd(  JWTAuth::setToken($token)->invalidate());
+        if (!$token) {
+            return response()->json([
+                'message' => 'لا يوجد توكن لتسجيل الخروج'
+            ], 400);
+        }
 
-    public function refresh(): array
-    {
-        return [
-            'access_token' => Auth::refresh(),
-        ];
+        // تمرير التوكن يدويًا لأننا ما عدنا نستخدم auth:api
+        JWTAuth::setToken($token)->invalidate();
+
+        // حذف الكوكي إذا كان مستخدم
+        if ($useCookie) {
+            return response()->json(['message' => 'تم تسجيل الخروج'])
+                ->cookie('jwt_token', '', -1);
+        }
+
+        return response()->json(['message' => 'تم تسجيل الخروج']);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'فشل تسجيل الخروج',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
+
+
+public function refresh( $request)
+{
+    try {
+        $useCookie = $request->header('X-Use-Cookie') === 'true';
+
+        // استخراج التوكن سواء من الكوكي أو الهيدر
+        $token = $useCookie
+            ? $request->cookie('jwt_token')
+            : $request->bearerToken(); // Authorization: Bearer token
+
+        if (!$token) {
+            return response()->json(['message' => 'لا يوجد توكن'], 401);
+        }
+
+        // مررنا التوكن يدويًا إلى JWTAuth
+        $newToken = JWTAuth::setToken($token)->refresh();
+
+
+        if ($useCookie) {
+            return response()->json([
+                'message' => 'refreshed'
+            ])
+            ->cookie(
+                'jwt_token',
+                $newToken,
+                60 * 24,
+                '/',
+                null,
+                false,  // ⚠️ خليها false للتجريب محلياً (لو على localhost)
+                true,
+                false,
+                'Lax'   // بدل Strict لتجريب أسهل
+            );
+        }
+
+        return response()->json([
+            'access_token' => $newToken,
+        ]);
+    }
+  catch (\Exception $e) {
+    return response()->json([
+        'message' => 'انتهت الجلسة أو التوكن غير صالح',
+        'error' => $e->getMessage(), // هذا يكشف لكِ الخطأ الحقيقي
+    ], 401);
+}
+
+}
+
 }
