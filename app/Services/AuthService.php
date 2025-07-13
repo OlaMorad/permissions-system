@@ -71,7 +71,7 @@ public function logout(Request $request)
         $token = $useCookie
             ? $request->cookie('jwt_token')
             : $request->bearerToken();
-dd(  JWTAuth::setToken($token)->invalidate());
+//dd(  JWTAuth::setToken($token)->invalidate());
         if (!$token) {
             return response()->json([
                 'message' => 'لا يوجد توكن لتسجيل الخروج'
