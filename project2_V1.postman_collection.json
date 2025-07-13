@@ -1,0 +1,1391 @@
+{
+	"info": {
+		"_postman_id": "6527c089-0c51-4a9a-8708-476503d47b57",
+		"name": "project2 Copy 5",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "30585419"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Use-Cookie",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/logout"
+					},
+					"response": []
+				},
+				{
+					"name": "refresh_token",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Use-Cookie",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/refresh"
+					},
+					"response": []
+				},
+				{
+					"name": "Manager_Register",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Head of front_desk",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "desk123@gmail.commok",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "front_desk@123",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "khukhi",
+									"type": "text"
+								},
+								{
+									"key": "phone",
+									"value": "3456789",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/C:/Users/new/OneDrive/الصور/لقطات الشاشة/لقطة شاشة 2025-06-20 203636.png"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/register-manager/3"
+					},
+					"response": []
+				},
+				{
+					"name": "Manager_Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://127.0.0.1:8000/api/Manager_Roles"
+					},
+					"response": []
+				},
+				{
+					"name": "working-hours",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"start_time\": \"10:00\",\r\n  \"end_time\": \"16:00\",\r\n  \"day_off\": \"Saturday\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/working-hours"
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let res = pm.response.json();\r",
+									"pm.environment.set(\"token\", res.data.access_token);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Use-Cookie",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "رئيس الديوان",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "33333333",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/login"
+					},
+					"response": []
+				},
+				{
+					"name": "show all manager",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/show_all_managers"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "internal mail",
+			"item": [
+				{
+					"name": "show internal mails export",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/show_internal_mails_export"
+					},
+					"response": []
+				},
+				{
+					"name": "edit status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "id",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "مرفوضة",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/edit_status_internal_mails"
+					},
+					"response": []
+				},
+				{
+					"name": "show import internal mails",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/show_import_internal_mails"
+					},
+					"response": []
+				},
+				{
+					"name": "create internal mail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "تمحيص",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "تىرققببببببببببببمىكلبقرصطنرلىقنةىصنمرىلبقةنملىنمرىنكنللللللللللللللللللللللللللللللللللللللللللللللللللهلرىمبنطخهقىنرطمهخرىلبطلهخب",
+									"type": "text"
+								},
+								{
+									"key": "to_path_ids[]",
+									"value": "1",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "to_path_ids[]",
+									"value": "4",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "to_path_ids[]",
+									"value": "5",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/create_internal_mail"
+					},
+					"response": []
+				},
+				{
+					"name": "show export internal mail details",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/show_export_internal_mail_details?uuid=00d8f945-8d22-4fe0-814e-a0490fc701f7",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"show_export_internal_mail_details"
+							],
+							"query": [
+								{
+									"key": "uuid",
+									"value": "00d8f945-8d22-4fe0-814e-a0490fc701f7"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "show import internal mail details",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMC4wLjAuMDo4MDAwL2FwaS9sb2dpbiIsImlhdCI6MTc1MTMyODIwNSwiZXhwIjoxNzUxMzMxODA1LCJuYmYiOjE3NTEzMjgyMDUsImp0aSI6ImlOS2Jyd3pkZDR0aVBwQ2siLCJzdWIiOiIyIiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyIsImxhc3RfbG9naW5fYXQiOjE3NTEzMjgyMDV9.6TVH-xXaNwkBke9IHt7TNDXaq7kl5S3XSe22u8BNtcw"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/show_import_internal_mail_details?uuid=feb5922d-112d-4fc2-99fc-3c490bcb5297",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"show_import_internal_mail_details"
+							],
+							"query": [
+								{
+									"key": "uuid",
+									"value": "feb5922d-112d-4fc2-99fc-3c490bcb5297"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "permissions",
+			"item": [
+				{
+					"name": "addPermissions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzQ5MDQ1NDk3LCJleHAiOjE3NDkwNDkwOTcsIm5iZiI6MTc0OTA0NTQ5NywianRpIjoiM2dsS2JIc0xDOTlnREEyWCIsInN1YiI6IjIiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.6BjoUhwicnO_WCAPC6_TOgvZXB7L1V36Ty7w23rBigQ"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"permissions\": [\"view dashboard\"]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/addPermissions/5"
+					},
+					"response": []
+				},
+				{
+					"name": "show my permissions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzQ5MDQ1NDk3LCJleHAiOjE3NDkwNDkwOTcsIm5iZiI6MTc0OTA0NTQ5NywianRpIjoiM2dsS2JIc0xDOTlnREEyWCIsInN1YiI6IjIiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.6BjoUhwicnO_WCAPC6_TOgvZXB7L1V36Ty7w23rBigQ"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"permissions\": [\"import old residency records\",\"notify residency inbox\"]\r\n}\r\n"
+						},
+						"url": "http://127.0.0.1:8000/api/show_my_permissions"
+					},
+					"response": []
+				},
+				{
+					"name": "remove permission",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzQ5MDQ1NDk3LCJleHAiOjE3NDkwNDkwOTcsIm5iZiI6MTc0OTA0NTQ5NywianRpIjoiM2dsS2JIc0xDOTlnREEyWCIsInN1YiI6IjIiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.6BjoUhwicnO_WCAPC6_TOgvZXB7L1V36Ty7w23rBigQ"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"permissions\": [\"view dashboard\"]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/remove_permission/5"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "employees",
+			"item": [
+				{
+					"name": "convert employee status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/convert_employee_status?id=8",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"convert_employee_status"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "8"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "show employees",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/show_employees"
+					},
+					"response": []
+				},
+				{
+					"name": "edit employee information",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "employee_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "employee8@gmail.com",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/C:/Users/new/OneDrive/الصور/لقطات الشاشة/لقطة شاشة 2025-06-24 193538.png"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/edit_employee_information"
+					},
+					"response": []
+				},
+				{
+					"name": "Employee_Register",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "employee1",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "employee8@gmail.comض",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "employee1@123",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "khkb",
+									"type": "text"
+								},
+								{
+									"key": "phone",
+									"value": "23456781",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/C:/Users/USER/Pictures/IMG-20250122-WA0016.jpg"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/register-employee"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Archive",
+			"item": [
+				{
+					"name": "internal mails archive",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/archive"
+					},
+					"response": []
+				},
+				{
+					"name": "Export archive",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/transaction/archived-export"
+					},
+					"response": []
+				},
+				{
+					"name": "total archive",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/transaction/archive"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "statistics",
+			"item": [
+				{
+					"name": "Internal mail statistics",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/statistics/InternalStatisticsSummary"
+					},
+					"response": []
+				},
+				{
+					"name": "weekly-done",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/statistics/weekly-done"
+					},
+					"response": []
+				},
+				{
+					"name": "External mail statistics",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/statistics/external"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Forms",
+			"item": [
+				{
+					"name": "get_all_path",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://0.0.0.0:8000/api/all_paths"
+					},
+					"response": []
+				},
+				{
+					"name": "add_form_word",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/USER/Desktop/Form Name.docx"
+								},
+								{
+									"key": "path_ids[]",
+									"value": "5",
+									"type": "text"
+								},
+								{
+									"key": "path_ids[]",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "cost",
+									"value": "150",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://0.0.0.0:8000/api/form/upload-word"
+					},
+					"response": []
+				},
+				{
+					"name": "add_form_manual",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"طلب تقديم امتحان\",\r\n  \"cost\": 500,\r\n  \"path_ids\": [],\r\n  \"elements\": [\r\n    {\r\n      \"label\": \"الاسم الكامل\",\r\n      \"type\": 1\r\n    },\r\n    {\r\n      \"label\": \"البريد الإلكتروني\",\r\n      \"type\": 1\r\n    },\r\n    {\r\n      \"label\": \"رقم الهاتف\",\r\n      \"type\": 2\r\n    },\r\n    {\r\n      \"label\": \"☐ أنثى ☐ ذكر\",\r\n      \"type\": 6\r\n    },\r\n    {\r\n      \"label\": \"سيرة ذاتية PDF\",\r\n      \"type\": 5\r\n    }\r\n  ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/form/manual"
+					},
+					"response": []
+				},
+				{
+					"name": "show_all_Forms",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/form/show_all"
+					},
+					"response": []
+				},
+				{
+					"name": "Form_details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://0.0.0.0:8000/api/form/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Switch status between active and inactive",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/form/toggle-status/3"
+					},
+					"response": []
+				},
+				{
+					"name": "show_active_Forms",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://127.0.0.1:8000/api/form/active"
+					},
+					"response": []
+				},
+				{
+					"name": "show_under-review_forms",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": "http://0.0.0.0:8000/api/form/under-review"
+					},
+					"response": []
+				},
+				{
+					"name": "Review_Form",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "مرفوضة",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/form/review/11"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "create form content",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "form_id",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "elements[الاسم الكامل]",
+									"value": "nada",
+									"type": "text"
+								},
+								{
+									"key": "media[سيرة ذاتية PDF][file]",
+									"value": "",
+									"type": "file"
+								},
+								{
+									"key": "media[receipt]",
+									"type": "file",
+									"src": "/C:/Users/USER/Pictures/7 أبريل 2025، 12_24_17 ص.png"
+								},
+								{
+									"key": "elements[البريد الإلكتروني]",
+									"value": "ola@gmil.com",
+									"type": "text"
+								},
+								{
+									"key": "elements[رقم الهاتف]",
+									"value": "1234567890",
+									"type": "text"
+								},
+								{
+									"key": "elements[☐ أنثى ☐ ذكر]",
+									"value": "أنثى",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://0.0.0.0:8000/api/create_form_content"
+					},
+					"response": []
+				},
+				{
+					"name": "show_Form_Content",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/transaction/show/0b635cd5-9a76-40d9-9afa-e2f6fb3b1283"
+					},
+					"response": []
+				},
+				{
+					"name": "show_transaction_content",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/transaction/content/e157e554-2214-4544-8c6d-4eb4e2d4c2c1"
+					},
+					"response": []
+				},
+				{
+					"name": "show_import_Transactions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/transaction/import"
+					},
+					"response": []
+				},
+				{
+					"name": "show_export_Transactions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "http://127.0.0.1:8000/api/transaction/export"
+					},
+					"response": []
+				},
+				{
+					"name": "update_Receipt_Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "uuid",
+									"value": "e157e554-2214-4544-8c6d-4eb4e2d4c2c1",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "مرسلة",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/transaction/receipt_status"
+					},
+					"response": []
+				},
+				{
+					"name": "update_Transaction_Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{token}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "محول",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://127.0.0.1:8000/api/transaction/status/e157e554-2214-4544-8c6d-4eb4e2d4c2c1"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
