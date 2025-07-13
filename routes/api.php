@@ -21,8 +21,8 @@ Route::get('/user', function (Request $request) {
 
 
 
-// Route::middleware(['throttle:10,1','working.hours'])->group(
-//     function () {
+Route::middleware(['throttle:10,1','working.hours'])->group(
+    function () {
 
         Route::controller(AuthController::class)->group(function () {
             Route::post('/login', 'login');
@@ -113,5 +113,5 @@ Route::controller(TransactionController::class)->group(function () {
 
         Route::get('all_paths', [PathController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الديوان']);
         Route::get('/archive', [InternalMailArchiveController::class, 'add_to_archive'])->middleware(['Verify.Session']);
-//     }
-// );
+    }
+);
