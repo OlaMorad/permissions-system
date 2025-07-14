@@ -26,4 +26,13 @@ class LoginRequest extends FormRequest
             'password' => ['required', 'string', 'min:8'],
         ];
     }
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'يرجى إدخال اسم المستخدم',
+            'name.string' => 'الاسم يجب أن يكون نصاً',
+            'password.required' => 'يرجى إدخال كلمة المرور',
+            'password.min' => 'كلمة المرور يجب أن تكون على الأقل 8 أحرف',
+        ];
+    }
 }
