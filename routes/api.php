@@ -14,6 +14,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\InternalMailArchiveController;
+use App\Http\Controllers\SpecializationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -113,5 +114,12 @@ Route::controller(TransactionController::class)->group(function () {
 
         Route::get('all_paths', [PathController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الديوان']);
         Route::get('/archive', [InternalMailArchiveController::class, 'add_to_archive'])->middleware(['Verify.Session']);
+
+
+
+        Route::prefix('specializations')->group(function () {
+            Route::get('/show_all', [SpecializationController::class, 'index']);
+            Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session','role:رئيس الامتحانات');
+        });
     }
 );
