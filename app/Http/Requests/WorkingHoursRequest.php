@@ -22,15 +22,21 @@ class WorkingHoursRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
-            'day_off' => ['required', 'string', 'in:Saturday,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday'],
+            'start_time' => ['sometimes', 'date_format:H:i'],
+            'end_time' => ['sometimes', 'date_format:H:i', 'after:start_time'],
+            'day_off' => ['sometimes', 'array'],
+            'day_off.*' => ['string', 'in:السبت,الأحد,الاثنين,الثلاثاء,الأربعاء,الخميس,الجمعة'],
         ];
     }
     public function messages(): array
     {
         return [
-            'day_off.in' => 'اليوم غير صالح. يجب أن يكون أحد أيام الأسبوع بالإنجليزية.',
+            'start_time.date_format' => 'HH:MM تنسيق وقت بداية الدوام غير صحيح. يجب أن يكون على الشكل',
+            'end_time.date_format' => 'HH:MM تنسيق وقت نهاية الدوام غير صحيح. يجب أن يكون على الشكل',
+            'end_time.after' => 'وقت نهاية الدوام يجب أن يكون بعد وقت بدء الدوام',
+            'day_off.array' => 'يجب إدخال أيام العطلة في مصفوفة',
+            'day_off.string' => 'يجب أن يكون يوم العطلة نصاً',
+            'day_off.*.in' => 'أحد الأيام المدخلة غير صحيح. يرجى إدخال أيام الأسبوع باللغة العربية',
         ];
     }
 }
