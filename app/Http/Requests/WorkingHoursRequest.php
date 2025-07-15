@@ -23,7 +23,7 @@ class WorkingHoursRequest extends FormRequest
     {
         return [
             'start_time' => ['sometimes', 'date_format:H:i'],
-            'end_time' => ['sometimes', 'date_format:H:i', 'after:start_time'],
+            'end_time' => ['sometimes', 'date_format:H:i'],
             'day_off' => ['sometimes', 'array'],
             'day_off.*' => ['string', 'in:السبت,الأحد,الاثنين,الثلاثاء,الأربعاء,الخميس,الجمعة'],
         ];
@@ -33,7 +33,6 @@ class WorkingHoursRequest extends FormRequest
         return [
             'start_time.date_format' => 'HH:MM تنسيق وقت بداية الدوام غير صحيح. يجب أن يكون على الشكل',
             'end_time.date_format' => 'HH:MM تنسيق وقت نهاية الدوام غير صحيح. يجب أن يكون على الشكل',
-            'end_time.after' => 'وقت نهاية الدوام يجب أن يكون بعد وقت بدء الدوام',
             'day_off.array' => 'يجب إدخال أيام العطلة في مصفوفة',
             'day_off.string' => 'يجب أن يكون يوم العطلة نصاً',
             'day_off.*.in' => 'أحد الأيام المدخلة غير صحيح. يرجى إدخال أيام الأسبوع باللغة العربية',
