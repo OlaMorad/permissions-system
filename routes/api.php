@@ -23,8 +23,8 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::middleware(['throttle:10,1', 'working.hours'])->group(
-    function () {
+// Route::middleware(['throttle:10,1', 'working.hours'])->group(
+//     function () {
 
         Route::controller(AuthController::class)->group(function () {
             Route::post('/login', 'login');
@@ -129,5 +129,5 @@ Route::middleware(['throttle:10,1', 'working.hours'])->group(
         Route::post('/add_question_manual','addManual')->middleware('role:رئيس الامتحانات');
         Route::post('/addExcelQuestions','importFromExcel')->middleware('role:رئيس الامتحانات');
         });
-    }
-);
+//     }
+// );
