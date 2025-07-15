@@ -37,7 +37,7 @@ class FormController extends Controller
 
     public function index()
     {
-        $data = Form::all()->makeHidden(['updated_at','cost']);
+        $data = Form::where('cost', '!=', 0)->get()->makeHidden(['updated_at', 'cost']);
         return new successResource([$data]);
     }
 

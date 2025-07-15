@@ -13,6 +13,9 @@ class CheckWorkingHours
 {
     public function handle(Request $request, Closure $next)
     {
+        if (!$request->bearerToken() && $request->cookie('jwt_token')) {
+            $request->headers->set('Authorization', 'Bearer ' . $request->cookie('jwt_token'));
+        }
         $now = Carbon::now();
 
         $settings = WorkingHour::first() ?? (object)[
@@ -27,22 +30,22 @@ class CheckWorkingHours
         $isWithinWorkingHours = $now->between($startTime, $endTime);
         $isWorkingDay = strtolower($now->englishDayOfWeek) !== strtolower($settings->day_off);
 
-        // 🟡 إذا خارج الوقت أو يوم عطلة، نتحقق إذا هو أدمن
+        //  إذا خارج الوقت أو يوم عطلة، نتحقق إذا هو أدمن
         if (!$isWithinWorkingHours || !$isWorkingDay) {
             $user = null;
 
-            // ⛔ إذا المستخدم مسجل دخول
+            //  إذا المستخدم مسجل دخول
             if (Auth::check()) {
                 $user = Auth::user();
             }
 
-            // ⛔ أو إذا هو يحاول يسجل دخول (login)، نستعلم عن المستخدم من البريد
+            //  أو إذا هو يحاول يسجل دخول (login)، نستعلم عن المستخدم من البريد
             elseif ($request->is('api/login')) {
                 $name = $request->input('name');
                 $user = User::where('name', $name)->first();
             }
 
-            // ✅ إذا ما كان عنده صلاحية admin نمنعه
+            //  إذا ما كان عنده صلاحية admin نمنعه
             if (!$user || !$user->hasRole('المدير')) {
                 return response()->json([
                     'message' => 'الدخول غير مسموح خارج أوقات الدوام أو يوم العطلة.'

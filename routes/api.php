@@ -57,8 +57,9 @@ Route::middleware(['throttle:10,1', 'working.hours'])->group(
             Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
         });
 
-        Route::middleware(['role:المدير'])->group(function () {
+        Route::middleware(['Verify.Session', 'role:المدير'])->group(function () {
             Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
+            Route::get('/working-hours/show', [AdminController::class, 'showWorkingHours']);
         });
 
         Route::controller(InternalMailController::class)->group(function () {
@@ -85,7 +86,7 @@ Route::middleware(['throttle:10,1', 'working.hours'])->group(
                 // باقي المسارات
                 Route::get('/active', 'activeForms')->middleware('Verify.Session', 'role:الطبيب');
                 Route::get('/under-review', 'underReviewForms')->middleware('Verify.Session', 'role:المدير');
-                Route::get('/{id}', 'show_Form')->middleware(['Verify.Session', 'role:رئيس الديوان']);
+                Route::get('/{id}', 'show_Form')->middleware(['Verify.Session','role:رئيس الديوان|المدير|الطبيب']);
                 Route::post('/review/{id}', 'formReviewDecision')->middleware('Verify.Session', 'role:المدير');
             });
         });
