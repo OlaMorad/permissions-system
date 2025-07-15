@@ -29,6 +29,7 @@ class Requests_FormSeeder extends Seeder
             'path_id' => 7,
         ]);
         $elements = [
+            ['label' => 'طلب ترشيح للأمتحان داخل القطر', 'type' => Element_Type::TITLE],
             ['label' => 'الاسم الأول', 'type' => Element_Type::INPUT],
             ['label' => 'اسم الأب', 'type' => Element_Type::INPUT],
             ['label' => 'اسم العائلة', 'type' => Element_Type::INPUT],
@@ -42,8 +43,8 @@ class Requests_FormSeeder extends Seeder
             ['label' => 'مسجل في سجل', 'type' => Element_Type::INPUT],
             ['label' => 'برقم', 'type' => Element_Type::NUMBER],
             ['label' => 'تاريخ', 'type' => Element_Type::DATE],
-            ['label' => 'حاصى على ترخيص', 'type' => Element_Type::INPUT],
-            ['label' => 'رقم', 'type' => Element_Type::NUMBER],
+            ['label' => 'حاصل على ترخيص', 'type' => Element_Type::INPUT],
+            ['label' => 'برقم', 'type' => Element_Type::NUMBER],
             ['label' => 'تاريخ', 'type' => Element_Type::DATE],
             ['label' => 'بصفة', 'type' => Element_Type::INPUT],
             ['label' => 'لدى وزارة التعليم العالي_جامعة', 'type' => Element_Type::INPUT],
@@ -83,6 +84,7 @@ class Requests_FormSeeder extends Seeder
             'path_id' => 7,
         ]);
         $elements2 = [
+            ['label' => 'طلب ترشيح للأمتحان خارج القطر', 'type' => Element_Type::TITLE],
             ['label' => 'الاسم الأول', 'type' => Element_Type::INPUT],
             ['label' => 'اسم الأب', 'type' => Element_Type::INPUT],
             ['label' => 'اسم العائلة', 'type' => Element_Type::INPUT],
@@ -130,6 +132,7 @@ class Requests_FormSeeder extends Seeder
             'path_id' => 7,
         ]);
         $elements3 = [
+            ['label' => 'طلب اعتذار عن الاختبار', 'type' => Element_Type::TITLE],
             ['label' => 'الاسم الأول', 'type' => Element_Type::INPUT],
             ['label' => 'اسم الأب', 'type' => Element_Type::INPUT],
             ['label' => 'اسم العائلة', 'type' => Element_Type::INPUT],

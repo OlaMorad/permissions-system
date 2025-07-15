@@ -2,9 +2,12 @@
 
 namespace App\Observers;
 
-use App\Enums\TransactionStatus;
+use App\Models\ExamRequest;
 use App\Models\FormContent;
 use App\Models\Transaction;
+use Illuminate\Support\Str;
+use App\Enums\TransactionStatus;
+use App\Enums\StatusInternalMail;
 use Illuminate\Support\Facades\DB;
 
 class FormContentObserver
@@ -14,27 +17,37 @@ class FormContentObserver
      */
     public function created(FormContent $formContent)
     {
-        $firstPathId = DB::table('form_path')->where('form_id', $formContent->form_id)
-            ->orderBy('id')
-            ->value('path_id');
-
-        if ($firstPathId) {
-            // نحسب رقم الإيصال التالي
-            $lastReceiptNumber = DB::table('transactions')->max('receipt_number');
-            $nextReceiptNumber = $lastReceiptNumber ? ((int)$lastReceiptNumber + 1) : 1;
-
-            // تنسيق الرقم ليكون 6 خانات مثل: 000001
-            $ReceiptNumber = str_pad($nextReceiptNumber, 6, '0', STR_PAD_LEFT);
-            Transaction::create([
-                'form_content_id' => $formContent->id,
-                'from' => null,
-                'to' => $firstPathId,
-                'status_from' => TransactionStatus::FORWARDED,
-                'status_to' => TransactionStatus::PENDING,
-                'received_at' => now(),
-                'receipt_number' => $ReceiptNumber,
-                'changed_by' => null,
+        $form = $formContent->form;
+        if ($form->cost == 0) {
+            $examRequest = ExamRequest::create([
+                'uuid' =>  Str::uuid()->toString(),
+                'doctor_id' => $formContent->doctor_id,
+                'status' => StatusInternalMail::PENDING->value,
             ]);
+        }
+         else {
+            $firstPathId = DB::table('form_path')->where('form_id', $formContent->form_id)
+                ->orderBy('id')
+                ->value('path_id');
+
+            if ($firstPathId) {
+                // نحسب رقم الإيصال التالي
+                $lastReceiptNumber = DB::table('transactions')->max('receipt_number');
+                $nextReceiptNumber = $lastReceiptNumber ? ((int)$lastReceiptNumber + 1) : 1;
+
+                // تنسيق الرقم ليكون 6 خانات مثل: 000001
+                $ReceiptNumber = str_pad($nextReceiptNumber, 6, '0', STR_PAD_LEFT);
+                Transaction::create([
+                    'form_content_id' => $formContent->id,
+                    'from' => null,
+                    'to' => $firstPathId,
+                    'status_from' => TransactionStatus::FORWARDED,
+                    'status_to' => TransactionStatus::PENDING,
+                    'received_at' => now(),
+                    'receipt_number' => $ReceiptNumber,
+                    'changed_by' => null,
+                ]);
+            }
         }
     }
 

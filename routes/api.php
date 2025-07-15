@@ -8,6 +8,7 @@ use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\employeeController;
+use App\Http\Controllers\ExamRequestController;
 use App\Http\Controllers\permissionController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\FormContentController;
@@ -23,7 +24,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::middleware(['throttle:10,1', 'working.hours'])->group(
+Route::middleware(['throttle:10,1'])->group(
     function () {
 
         Route::controller(AuthController::class)->group(function () {
@@ -126,8 +127,14 @@ Route::middleware(['throttle:10,1', 'working.hours'])->group(
         });
 
         Route::controller(QuestionBankController::class)->group(function(){
-        Route::post('/add_question_manual','addManual')->middleware('role:رئيس الامتحانات');
-        Route::post('/addExcelQuestions','importFromExcel')->middleware('role:رئيس الامتحانات');
+        Route::post('/add_question_manual','addManual')->middleware('Verify.Session','role:رئيس الامتحانات');
+        Route::post('/addExcelQuestions','importFromExcel')->middleware('Verify.Session','role:رئيس الامتحانات');
         });
+
+             Route::controller(ExamRequestController::class)->group(function(){
+                Route::post('create_form_content_exam','create_form_content_exam')->middleware('Verify.Session','role:الطبيب');
+             });
     }
+
+
 );
