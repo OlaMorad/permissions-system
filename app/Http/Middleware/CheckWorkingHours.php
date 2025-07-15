@@ -19,7 +19,7 @@ class CheckWorkingHours
         $now = Carbon::now();
 
         $settings = WorkingHour::first() ?? (object)[
-            'start_time' => '04:00',
+            'start_time' => '09:00',
             'end_time'   => '15:00',
             'day_off'    => 'Friday',
         ];

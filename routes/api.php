@@ -24,8 +24,10 @@ Route::get('/user', function (Request $request) {
 
 
 
+
 Route::middleware(['throttle:10,1'])->group(
     function () {
+
 
         Route::controller(AuthController::class)->group(function () {
             Route::post('/login', 'login');
@@ -130,6 +132,7 @@ Route::middleware(['throttle:10,1'])->group(
         Route::post('/add_question_manual','addManual')->middleware('Verify.Session','role:رئيس الامتحانات');
         Route::post('/addExcelQuestions','importFromExcel')->middleware('Verify.Session','role:رئيس الامتحانات');
         });
+
 
              Route::controller(ExamRequestController::class)->group(function(){
                 Route::post('create_form_content_exam','create_form_content_exam')->middleware('Verify.Session','role:الطبيب');
