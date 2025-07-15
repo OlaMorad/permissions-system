@@ -23,4 +23,8 @@ class Doctor extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function ExamRequest(){
+        return $this->hasMany(ExamRequest::class);
+    }
 }
