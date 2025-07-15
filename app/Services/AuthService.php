@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\failResource;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\successResource;
+use Exception;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 
@@ -61,8 +62,62 @@ public function login(array $credentials,$request)
     ]));
 }
 
+    public function checkSession(Request $request)
+    {
+        try {
+            // هل التوكن موجود في الكوكي أم في الهيدر؟
+            $useCookie = $request->header('X-Use-Cookie') === 'true';
 
-public function logout(Request $request)
+            // جلب التوكن
+            $token = $useCookie
+                ? $request->cookie('jwt_token')
+                : $request->bearerToken();
+
+            // التوكن غير موجود
+            if (!$token) {
+                return response()->json([
+                    'authenticated' => false,
+                    'error' => 'لم يتم إرسال التوكن'
+                ], 401);
+            }
+
+            // محاولة التحقق من التوكن وجلب المستخدم
+            $user = JWTAuth::setToken($token)->authenticate();
+
+            // التوكن غير صالح أو المستخدم غير موجود
+            if (!$user) {
+                return response()->json([
+                    'authenticated' => false,
+                    'error' => 'المستخدم غير موجود أو التوكن غير صالح'
+                ], 401);
+            }
+
+            // تحضير بيانات المستخدم
+            $userData = [
+                'name'   => $user->name,
+                'avatar' => asset('storage/' . $user->avatar),
+                'roles'  => $user->getRoleNames(),
+            ];
+
+            // تم التحقق بنجاح
+            return response()->json([
+                'authenticated' => true,
+                'user' => $userData
+            ], 200);
+        } catch (Exception $e) {
+            // تخصيص رسالة الخطأ إذا كانت بسبب انتهاء صلاحية التوكن
+            $message = str_contains($e->getMessage(), 'expired')
+                ? 'انتهت صلاحية التوكن الخاص بك'
+                : 'حدث خطأ أثناء التحقق من الجلسة';
+
+            return response()->json([
+                'authenticated' => false,
+                'error' => $message
+            ], 401);
+        }
+    }
+
+    public function logout(Request $request)
 {
     try {
         $useCookie = $request->header('X-Use-Cookie') === 'true';

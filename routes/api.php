@@ -22,27 +22,28 @@ Route::get('/user', function (Request $request) {
 
 
 
-Route::middleware(['throttle:10,1','working.hours'])->group(
+Route::middleware(['throttle:10,1', 'working.hours'])->group(
     function () {
 
         Route::controller(AuthController::class)->group(function () {
             Route::post('/login', 'login');
-             Route::post('/refresh', 'refresh');
-               Route::post('/logout', 'logout');
+            Route::post('/refresh', 'refresh');
+            Route::post('/logout', 'logout');
+            Route::get('/check-session', 'checkSession');
         });
 
 
         Route::middleware(['Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
         Route::middleware(['Verify.Session'])->post('/edit_employee_information', [employeeController::class, 'edit_employee_information']);
-        Route::middleware([ 'Verify.Session'])->get('/show_employees', [employeeController::class, 'show_employees']);
+        Route::middleware(['Verify.Session'])->get('/show_employees', [employeeController::class, 'show_employees']);
         Route::middleware(['Verify.Session'])->get('/convert_employee_status', [employeeController::class, 'convert_employee_status']);
 
 
 
         Route::controller(ManagerController::class)->group(function () {
             Route::get('Manager_Roles', 'ManagerRoles');
-            Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير','Verify.Session']);
-            Route::get('show_my_employees', 'show_my_employees')->middleware( 'Verify.Session');
+            Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير', 'Verify.Session']);
+            Route::get('show_my_employees', 'show_my_employees')->middleware('Verify.Session');
             Route::get('show_all_managers', 'show_all_managers');
         });
 
@@ -69,37 +70,37 @@ Route::middleware(['throttle:10,1','working.hours'])->group(
         });
 
 
-Route::controller(FormController::class)->group(function () {
-    Route::prefix('form')->group(function () {
+        Route::controller(FormController::class)->group(function () {
+            Route::prefix('form')->group(function () {
 
-        // مسارات خاصة برئيس الديوان
-        Route::middleware(['Verify.Session', 'role:رئيس الديوان'])->group(function () {
-            Route::post('/upload-word', 'storeFromWord');
-            Route::post('/manual', 'storeManually');
-            Route::get('/show_all', 'index');
-            Route::patch('/toggle-status/{id}', 'toggleStatus');
+                // مسارات خاصة برئيس الديوان
+                Route::middleware(['Verify.Session', 'role:رئيس الديوان'])->group(function () {
+                    Route::post('/upload-word', 'storeFromWord');
+                    Route::post('/manual', 'storeManually');
+                    Route::get('/show_all', 'index');
+                    Route::patch('/toggle-status/{id}', 'toggleStatus');
+                });
+
+                // باقي المسارات
+                Route::get('/active', 'activeForms')->middleware('Verify.Session', 'role:الطبيب');
+                Route::get('/under-review', 'underReviewForms')->middleware('Verify.Session', 'role:المدير');
+                Route::get('/{id}', 'show_Form')->middleware(['Verify.Session', 'role:رئيس الديوان']);
+                Route::post('/review/{id}', 'formReviewDecision')->middleware('Verify.Session', 'role:المدير');
+            });
         });
 
-        // باقي المسارات
-        Route::get('/active', 'activeForms')->middleware('Verify.Session', 'role:الطبيب');
-        Route::get('/under-review', 'underReviewForms')->middleware('Verify.Session', 'role:المدير');
-        Route::get('/{id}', 'show_Form')->middleware(['Verify.Session', 'role:رئيس الديوان']);
-        Route::post('/review/{id}', 'formReviewDecision')->middleware('Verify.Session', 'role:المدير');
-    });
-});
-
-Route::controller(TransactionController::class)->group(function () {
-    Route::prefix('transaction')->group(function () {
-        Route::get('/import', 'Import_Transaction')->middleware('Verify.Session');
-        Route::get('/export', 'Export_Transaction')->middleware('Verify.Session');
-        Route::get('/archived-export', 'archivedExportedTransactions')->middleware('Verify.Session');
-        Route::get('archive', 'show_archive'); //->middleware('Verify.Session','role:المدير');
-        Route::get('/show/{uuid}', 'showFormContent')->middleware('Verify.Session');
-        Route::get('content/{uuid}', 'ShowTransactionContent')->middleware('Verify.Session');
-        Route::post('/status/{uuid}', 'updateTransactionStatus')->middleware('Verify.Session');
-        Route::post('/receipt_status', 'updateReceiptStatus')->middleware('Verify.Session', 'role:موظف المالية');
-    });
-});
+        Route::controller(TransactionController::class)->group(function () {
+            Route::prefix('transaction')->group(function () {
+                Route::get('/import', 'Import_Transaction')->middleware('Verify.Session');
+                Route::get('/export', 'Export_Transaction')->middleware('Verify.Session');
+                Route::get('/archived-export', 'archivedExportedTransactions')->middleware('Verify.Session');
+                Route::get('archive', 'show_archive'); //->middleware('Verify.Session','role:المدير');
+                Route::get('/show/{uuid}', 'showFormContent')->middleware('Verify.Session');
+                Route::get('content/{uuid}', 'ShowTransactionContent')->middleware('Verify.Session');
+                Route::post('/status/{uuid}', 'updateTransactionStatus')->middleware('Verify.Session');
+                Route::post('/receipt_status', 'updateReceiptStatus')->middleware('Verify.Session', 'role:موظف المالية');
+            });
+        });
         Route::controller(FormContentController::class)->group(function () {
             Route::post('create_form_content', 'create_form_content')->middleware(['Verify.Session']);
         });
@@ -119,7 +120,7 @@ Route::controller(TransactionController::class)->group(function () {
 
         Route::prefix('specializations')->group(function () {
             Route::get('/show_all', [SpecializationController::class, 'index']);
-            Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session','role:رئيس الامتحانات');
+            Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         });
     }
 );
