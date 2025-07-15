@@ -24,7 +24,12 @@ class AuthController extends Controller
     {
         $credentials = $request->only('name', 'password');
 
-        return  $this->authService->login($credentials,$request);
+        return  $this->authService->login($credentials, $request);
+    }
+    // التحقق من وجود التوكن في الكوكيز
+    public function checkSession(Request $request)
+    {
+        return $this->authService->checkSession($request);
     }
 
     //  تسجيل الخروج
@@ -43,5 +48,4 @@ class AuthController extends Controller
 
         return response()->json($token);
     }
-
 }
