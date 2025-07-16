@@ -13,7 +13,10 @@ class StatisticsController extends Controller
     public function __construct(
         protected StatisticsService $Service
     ) {}
-
+    public function AllPathsAchievementStatistics()
+    {
+        return new successResource($this->Service->AllPathsAchievementStatistics());
+    }
     public function ExternalStatisticsSummary()
     {
         $data = $this->Service->ExternalStatistics();
@@ -26,10 +29,10 @@ class StatisticsController extends Controller
         return new successResource($data);
     }
 
-    public function employeePerformance()
+    public function weeklyDoneByPath($pathId)
     {
-        $data = $this->Service->employeeStatistics();
-       return new successResource($data);
+        $data = $this->Service->WeeklyStatisticsForPath((int) $pathId);
+        return new successResource($data);
     }
 
     public function InternalStatisticsSummary(){

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Path;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
@@ -24,11 +25,24 @@ class UserRoleService
 
         return in_array($roleName, ['موظف المالية', 'رئيس المالية']);
     }
+    // تحقق حسب اي دي الباث اذا الباث مالية او لا
+    public function isFinancialPath(int $pathId): bool
+    {
+        // إذا كان اسم الباث "المالية"
+        $role = Path::find($pathId);
+        return $role && $role->name === 'المالية';
+    }
+
 
     // تحقق إذا المستخدم هو رئيس قسم
     public function isSectionHead(string $roleName): bool
     {
         return str_starts_with($roleName, 'رئيس');
+    }
+    // تحقق إذا المستخدم هو المدير أو نائب المدير
+    public function isManager(string $roleName): bool
+    {
+        return in_array($roleName, ['المدير', 'نائب المدير']);
     }
 
     // اختياري: جلب اسم الدور الحالي للمستخدم

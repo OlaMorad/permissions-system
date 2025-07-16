@@ -14,5 +14,12 @@ class SpecializationService
         return (new successResource($data))->response()->setStatusCode(201);
     }
 
+    public function update(int $id, array $data)
+    {
+        $specialization = Specialization::findOrFail($id);
 
+        $specialization->update($data);
+
+        return new successResource($specialization);
+    }
 }

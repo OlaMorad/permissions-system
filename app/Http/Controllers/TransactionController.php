@@ -52,6 +52,12 @@ class TransactionController extends Controller
         $data = $this->transactionService->archiveExportedTransactions();
         return new successResource($data);
     }
+    public function archiveByPath($pathId)
+    {
+        $data = $this->transactionService->getArchiveTransactionsByPath((int)$pathId);
+        return new successResource($data);
+    }
+
     public function updateTransactionStatus(TransactionStatusRequest $request, string $uuid)
     {
         return $this->transactionStatusService->updateTransactionStatus($uuid, $request->status());
