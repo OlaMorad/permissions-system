@@ -56,13 +56,6 @@ class FormController extends Controller
         return new successResource($forms);
     }
 
-    public function underReviewForms()
-    {
-        $forms = Form::where('status', FormStatus::UNDER_REVIEW->value)->get()->makeHidden(['updated_at']);
-        return new successResource([$forms]);
-    }
-
-
     public function formReviewDecision($id, FormStatusRequest $request)
     {
         return $this->formService->changeUnderReviewStatus((int)$id,$request->status());

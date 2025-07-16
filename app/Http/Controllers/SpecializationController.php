@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AddSpecializationRequest;
+use App\Http\Requests\UpdateSpecializationRequest;
 use App\Http\Resources\successResource;
 use App\Models\Specialization;
 use App\Services\SpecializationService;
@@ -23,5 +24,10 @@ class SpecializationController extends Controller
     {
         $data = Specialization::all();
         return new successResource($data);
+    }
+    // التعديل على احد الاختصاصات
+    public function update(UpdateSpecializationRequest $request, $id)
+    {
+        return $this->SpecializationService->update($id, $request->validated());
     }
 }
