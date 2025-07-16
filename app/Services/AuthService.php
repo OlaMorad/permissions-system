@@ -16,7 +16,7 @@ class AuthService
 public function login(array $credentials,$request)
 {
     if (!$token = Auth::guard('api')->attempt($credentials)) {
-        return new failResource("بيانات الدخول غير صحيحة");
+        return new failResource("الاسم او كلمة المرور غير صحيحين");
     }
 
     $user = Auth::user();
