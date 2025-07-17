@@ -136,6 +136,7 @@ class EmployeeService
             ->select(
                 'employees.id as id',
                 'users.name',
+                'users.address',
                 'users.phone',
                 'users.avatar',
                 'users.is_active',

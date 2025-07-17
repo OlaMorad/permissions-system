@@ -23,11 +23,11 @@ class ProgramExamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'month' => 'required|string|in:كانون الثاني,شباط,آذار,نيسان,أيار,حزيران,تموز,آب,أيلول,تشرين الأول,تشرين الثاني,كانون الأول',
+            'month' => 'required|string|in:نيسان,تشرين الأول',
             'year' => 'required|integer',
             'exams' => 'required|array|min:1',
             'exams.*.specialization_id' => 'required|exists:specializations,id',
-            'exams.*.day' => 'required|string|in:الأحد,الاثنين,الثلاثاء,الأربعاء,الخميس',
+            'exams.*.day' => 'required|string|in:الجمعة,السبت,الأحد,الاثنين,الثلاثاء,الأربعاء,الخميس',
             'exams.*.date' => 'required|date',
             'exams.*.simple_ratio' => 'required|numeric|min:0|max:100',
             'exams.*.average_ratio' => 'required|numeric|min:0|max:100',
