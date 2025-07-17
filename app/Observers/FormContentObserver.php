@@ -22,6 +22,7 @@ class FormContentObserver
             $examRequest = ExamRequest::create([
                 'uuid' =>  Str::uuid()->toString(),
                 'doctor_id' => $formContent->doctor_id,
+               'form_content_id' => $formContent->id,
                 'status' => StatusInternalMail::PENDING->value,
             ]);
         }

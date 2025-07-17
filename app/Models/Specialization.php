@@ -23,4 +23,9 @@ class Specialization extends Model
     public function QuestionBank(){
         return $this->hasMany(QuestionBank::class);
     }
+
+       public function doctors()
+    {
+        return $this->belongsToMany(Doctor::class, 'doctor_specialization');
+    }
 }
