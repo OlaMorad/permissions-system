@@ -8,6 +8,7 @@ class InternalMailArchive extends Model
 {
     protected $fillable=[
         'uuid',
+        'from_user_id',
         'subject',
         'status',
         'to',
@@ -19,5 +20,10 @@ class InternalMailArchive extends Model
     'to' => 'array',
     'to_phones' => 'array',
 ];
+
+public function fromUser()
+{
+    return $this->belongsTo(\App\Models\User::class, 'id');
+}
 
 }
