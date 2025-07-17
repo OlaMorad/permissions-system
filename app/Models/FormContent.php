@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\ExamRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class FormContent extends Model
 {
     use HasFactory;
@@ -30,6 +32,10 @@ class FormContent extends Model
     public function elementValues()
 {
     return $this->hasMany(form_element_value::class);
+}
+public function examRequest()
+{
+    return $this->hasOne(ExamRequest::class, 'doctor_id', 'doctor_id');
 }
 
 

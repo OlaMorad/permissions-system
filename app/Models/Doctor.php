@@ -27,4 +27,9 @@ class Doctor extends Model
     public function ExamRequest(){
         return $this->hasMany(ExamRequest::class);
     }
+
+        public function specializations()
+    {
+        return $this->belongsToMany(Specialization::class, 'doctor_specialization');
+    }
 }

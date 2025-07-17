@@ -6,10 +6,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ManagerController;
-use App\Http\Controllers\employeeController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExamRequestController;
-use App\Http\Controllers\permissionController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\TransactionController;
@@ -23,60 +24,59 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::middleware(['throttle:10,1'])->group(function () {
 
+    // Auth
+    Route::controller(AuthController::class)->group(function () {
+        Route::post('/login', 'login');
+        Route::post('/refresh', 'refresh');
+        Route::post('/logout', 'logout');
+        Route::get('/check-session', 'checkSession');
+    });
 
+    // Employee
+    Route::middleware('Verify.Session')->group(function () {
+        Route::post('/register-employee', [EmployeeController::class, 'create_employee']);
+        Route::post('/edit_employee_information', [EmployeeController::class, 'edit_employee_information']);
+        Route::get('/show_employees', [EmployeeController::class, 'show_employees']);
+        Route::get('/convert_employee_status', [EmployeeController::class, 'convert_employee_status']);
+    });
 
-Route::middleware(['throttle:10,1'])->group(
-    function () {
+    // Manager
+    Route::controller(ManagerController::class)->group(function () {
+        Route::get('Manager_Roles', 'ManagerRoles');
+        Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير', 'Verify.Session']);
+        Route::get('show_my_employees', 'show_my_employees')->middleware('Verify.Session');
+        Route::get('show_all_managers', 'show_all_managers');
+    });
 
+    // Permissions
+    Route::controller(PermissionController::class)->group(function () {
+        Route::post('addPermissions/{userId}', 'add_permission');
+        Route::get('show_my_permissions', 'show_my_permissions')->middleware('auth:api');
+        Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
+    });
 
-        Route::controller(AuthController::class)->group(function () {
-            Route::post('/login', 'login');
-            Route::post('/refresh', 'refresh');
-            Route::post('/logout', 'logout');
-            Route::get('/check-session', 'checkSession');
+    // Admin
+    Route::middleware(['Verify.Session', 'role:المدير'])->group(function () {
+        Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
+        Route::get('/working-hours/show', [AdminController::class, 'showWorkingHours']);
+    });
+
+    // Internal Mail
+    Route::controller(InternalMailController::class)->group(function () {
+        Route::middleware('Verify.Session')->group(function () {
+            Route::post('create_internal_mail', 'create_internal_mail');
+            Route::get('show_internal_mails_export', 'show_internal_mails_export');
+            Route::post('edit_status_internal_mails', 'edit_status_internal_mails');
+            Route::get('show_internal_mail_details', 'show_internal_mail_details');
+            // Route::get('show_export_internal_mail_details', 'show_export_internal_mail_details');
+            Route::get('show_import_internal_mails', 'show_import_internal_mails');
         });
+    });
 
-
-        Route::middleware(['Verify.Session'])->post('/register-employee', [EmployeeController::class, 'create_employee']);
-        Route::middleware(['Verify.Session'])->post('/edit_employee_information', [employeeController::class, 'edit_employee_information']);
-        Route::middleware(['Verify.Session'])->get('/show_employees', [employeeController::class, 'show_employees']);
-        Route::middleware(['Verify.Session'])->get('/convert_employee_status', [employeeController::class, 'convert_employee_status']);
-
-
-
-        Route::controller(ManagerController::class)->group(function () {
-            Route::get('Manager_Roles', 'ManagerRoles');
-            Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير', 'Verify.Session']);
-            Route::get('show_my_employees', 'show_my_employees')->middleware('Verify.Session');
-            Route::get('show_all_managers', 'show_all_managers');
-        });
-
-
-
-
-        Route::controller(permissionController::class)->group(function () {
-            Route::post('addPermissions/{userId}', 'add_permission');
-            Route::get('show_my_permissions', 'show_my_permissions')->middleware('auth:api');
-            Route::delete('remove_permission/{userId}', 'remove_permission')->middleware('auth:api');
-        });
-
-        Route::middleware(['Verify.Session', 'role:المدير'])->group(function () {
-            Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
-            Route::get('/working-hours/show', [AdminController::class, 'showWorkingHours']);
-        });
-
-        Route::controller(InternalMailController::class)->group(function () {
-            Route::post('create_internal_mail', 'create_internal_mail')->middleware('Verify.Session');
-            Route::get('show_internal_mails_export', 'show_internal_mails_export')->middleware('Verify.Session');
-            Route::post('edit_status_internal_mails', 'edit_status_internal_mails')->middleware('Verify.Session');
-            Route::get('show_internal_mail_details', 'show_internal_mail_details')->middleware('Verify.Session');
-            Route::get('show_export_internal_mail_details', 'show_export_internal_mail_details')->middleware('Verify.Session');
-            Route::get('show_import_internal_mails', 'show_import_internal_mails')->middleware('Verify.Session');
-        });
-
-
-        Route::controller(FormController::class)->group(function () {
+    // Form
+Route::controller(FormController::class)->group(function () {
             Route::prefix('form')->middleware('Verify.Session')->group(function () {
                 Route::post('/upload-word', 'storeFromWord')->middleware('role:رئيس الديوان');
                 Route::post('/manual', 'storeManually')->middleware('role:رئيس الديوان');
@@ -88,9 +88,8 @@ Route::middleware(['throttle:10,1'])->group(
             });
         });
 
-
-
-        Route::controller(TransactionController::class)->group(function () {
+    // Transaction
+Route::controller(TransactionController::class)->group(function () {
             Route::prefix('transaction')->group(function () {
                 Route::get('/import', 'Import_Transaction')->middleware('Verify.Session');
                 Route::get('/export', 'Export_Transaction')->middleware('Verify.Session');
@@ -103,12 +102,12 @@ Route::middleware(['throttle:10,1'])->group(
                 Route::post('/receipt_status', 'updateReceiptStatus')->middleware('Verify.Session', 'role:موظف المالية');
             });
         });
-        Route::controller(FormContentController::class)->group(function () {
-            Route::post('create_form_content', 'create_form_content')->middleware(['Verify.Session']);
-        });
 
+    // Form Content
+    Route::post('create_form_content', [FormContentController::class, 'create_form_content'])->middleware('Verify.Session');
 
-        Route::prefix('statistics')->middleware(['Verify.Session'])->group(function () {
+    // Statistics
+Route::prefix('statistics')->middleware(['Verify.Session'])->group(function () {
             Route::get('paths/achievement', [StatisticsController::class, 'AllPathsAchievementStatistics'])->middleware('role:المدير');
             Route::get('/external', [StatisticsController::class, 'ExternalStatisticsSummary']);
             Route::get('/weekly-done', [StatisticsController::class, 'weeklyDone']);
@@ -116,37 +115,44 @@ Route::middleware(['throttle:10,1'])->group(
             Route::get('/InternalStatisticsSummary', [StatisticsController::class, 'InternalStatisticsSummary']);
         });
 
-        Route::get('all_paths', [PathController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الديوان']);
-        Route::get('/archive', [InternalMailArchiveController::class, 'add_to_archive'])->middleware(['Verify.Session']);
+    // Paths
+    Route::get('all_paths', [PathController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الديوان']);
 
+    // Archive
+    Route::get('/archive', [InternalMailArchiveController::class, 'add_to_archive'])->middleware('Verify.Session');
 
+    // Specializations
+    Route::prefix('specializations')->group(function () {
+        Route::get('/show_all', [SpecializationController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الامتحانات|موظف الامتحانات|المدير|نائب المدير']);
+        Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
+        Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
+    });
 
-        Route::prefix('specializations')->group(function () {
-            Route::get('/show_all', [SpecializationController::class, 'index'])
-                ->middleware(['Verify.Session', 'role:رئيس الامتحانات|موظف الامتحانات|المدير|نائب المدير']);;
-            Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
-            Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
-        });
+    // Exam Requests
+    Route::controller(ExamRequestController::class)->group(function () {
+        Route::post('create_form_content_exam','create_form_content_exam')->middleware('Verify.Session','role:الطبيب');
+        Route::get('show_form_content_exam','show_form_content_exam')->middleware('Verify.Session');
+        Route::post('edit_form_content_exam_status','edit_form_content_exam_status')->middleware('Verify.Session','role:موظف الامتحانات');
+        Route::get('show_all_import_request_exam','show_all_import_request_exam')->middleware('Verify.Session','role:موظف الامتحانات|رئيس الامتحانات');
+        Route::get('show_all_end_request_exam','show_all_end_request_exam')->middleware('Verify.Session','role:موظف الامتحانات|رئيس الامتحانات');
+    });
 
-        Route::controller(ExamRequestController::class)->group(function () {
-            Route::post('create_form_content_exam', 'create_form_content_exam')->middleware('Verify.Session', 'role:الطبيب');
-        });
-    }
-);
+    // Question Bank
+    Route::controller(QuestionBankController::class)->group(function(){
+        Route::post('/add_question_manual','addManual')->middleware('Verify.Session','role:رئيس الامتحانات');
+        Route::post('/addExcelQuestions','importFromExcel')->middleware('Verify.Session','role:رئيس الامتحانات');
+    });
 
-Route::controller(QuestionBankController::class)->group(function () {
-    Route::post('/add_question_manual', 'addManual')->middleware('role:رئيس الامتحانات');
-    Route::post('/addExcelQuestions', 'importFromExcel')->middleware('role:رئيس الامتحانات');
+    // Doctor
+    Route::controller(DoctorController::class)->group(function(){
+        Route::post('add_specialization','add_specialization')->middleware('Verify.Session','role:الطبيب');
+    });
+
+    // Program
+    Route::controller(ProgramController::class)->group(function(){
+        Route::post('/program/add', 'store')->middleware('Verify.Session', 'role:رئيس الامتحانات');
+        Route::get('/program/{id}', 'show_program_details')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
+        Route::get('/programs', 'index')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
+    });
+
 });
-
-
-Route::post('/program/add', [ProgramController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
-Route::get('/program/{id}', [ProgramController::class, 'show_program_details'])
-    ->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');;
-Route::get('/programs', [ProgramController::class, 'index'])
-    ->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');;
-
-
-
-//     }
-// );

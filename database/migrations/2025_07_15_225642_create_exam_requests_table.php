@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignId('doctor_id')->references('id')->on('Doctors');
+             $table->foreignId('form_content_id')->references('id')->on('form_contents');
             $table->string('status')->default(ExamRequestEnum::PENDING->value);
             $table->timestamps();
         });

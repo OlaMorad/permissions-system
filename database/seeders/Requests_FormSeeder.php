@@ -103,7 +103,7 @@ class Requests_FormSeeder extends Seeder
             ['label' => 'تاريخ', 'type' => Element_Type::DATE],
             ['label' => 'بصفة', 'type' => Element_Type::INPUT],
             ['label' => 'لدى مديرية الصحة', 'type' => Element_Type::INPUT],
-            ['label' => 'يرجى الموافقة على دخولي الاختبار النهائي لأختصاص', 'type' => Element_Type::INPUT],
+            ['label' => 'يرجى الموافقة على دخولي الاختبار النهائي لاختصاص', 'type' => Element_Type::INPUT],
             ['label' => 'لدورة شهر', 'type' => Element_Type::TEXT],
             ['label' => 'نيسان', 'type' => Element_Type::CHECKBOX],
             ['label' => 'تشرين الأول', 'type' => Element_Type::CHECKBOX],
