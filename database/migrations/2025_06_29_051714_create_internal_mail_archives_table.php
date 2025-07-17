@@ -15,6 +15,7 @@ return new class extends Migration
         Schema::create('internal_mail_archives', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->index();
+            $table->foreignId('from_user_id')->references('id')->on('users');
             $table->string('subject');
             $table->enum('status', array_column(StatusInternalMail::cases(), 'value'));
             $table->json('to');          // أسماء الدوائر بصيغة JSON

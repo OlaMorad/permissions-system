@@ -19,6 +19,7 @@ use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\SpecializationController;
 use App\Http\Controllers\InternalMailArchiveController;
 use App\Http\Controllers\ProgramController;
+use App\Models\InternalMailArchive;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -119,8 +120,8 @@ Route::prefix('statistics')->middleware(['Verify.Session'])->group(function () {
     Route::get('all_paths', [PathController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الديوان']);
 
     // Archive
-    Route::get('/archive', [InternalMailArchiveController::class, 'add_to_archive'])->middleware('Verify.Session');
-
+    Route::get('/archive/internal/mails', [InternalMailArchiveController::class, 'add_to_archive'])->middleware('Verify.Session');
+    Route::get('/archive/import/internal/mails',[InternalMailArchiveController::class,'show_received_archive'])->middleware('Verify.Session');
     // Specializations
     Route::prefix('specializations')->group(function () {
         Route::get('/show_all', [SpecializationController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الامتحانات|موظف الامتحانات|المدير|نائب المدير']);

@@ -13,4 +13,7 @@ class InternalMailArchiveController extends Controller
     public function add_to_archive(){
     return  $this->archive->add_to_archive();
     }
+    public function show_received_archive(){
+        return $this->archive->show_received_archive();
+    }
 }
