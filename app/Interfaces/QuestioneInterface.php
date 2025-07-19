@@ -6,6 +6,6 @@ use Illuminate\Support\Collection;
 
 interface QuestioneInterface
 {
-    public function addFromForm(Request $request): void;
+    public function addFromForm(Request $request);
     public function addFromExcel(Collection $rows): void;
 }

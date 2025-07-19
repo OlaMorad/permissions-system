@@ -10,17 +10,17 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 
 class QuestionsImport implements ToCollection
 {
-     protected int $specializationId;
+    protected int $specializationId;
 
-         public function __construct(int $specializationId)
+    public function __construct(int $specializationId)
     {
         $this->specializationId = $specializationId;
     }
     /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
+     * @param array $row
+     *
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
     public function model(array $row)
     {
         return new QuestionBank([
@@ -28,9 +28,9 @@ class QuestionsImport implements ToCollection
         ]);
     }
 
-     public function collection(Collection $rows)
+    public function collection(Collection $rows)
     {
-          $imported = 0;  // عداد لعدد الأسطر المستوردة
+        $imported = 0;  // عداد لعدد الأسطر المستوردة
 
         foreach ($rows as $index => $row) {
             // تجاهل أول صف إذا كان عنوان الأعمدة
@@ -47,6 +47,18 @@ class QuestionsImport implements ToCollection
                 continue;
             }
 
+            $plainQuestion = $row[0];
+            $questionHash = hash('sha256', $plainQuestion);
+
+            // التحقق من التكرار قبل الحفظ
+            if (QuestionBank::where('question_hash', $questionHash)->exists()) {
+                Log::info('سؤال مكرر تم تجاهله', [
+                    'row_index' => $index,
+                    'question' => $plainQuestion,
+                ]);
+                continue;
+            }
+
             // إنشاء السؤال
             try {
                 QuestionBank::create([
@@ -58,6 +70,7 @@ class QuestionsImport implements ToCollection
                     'option_d'          => Crypt::encryptString($row[4]),
                     'correct_answer'    => Crypt::encryptString($row[5]),
                     'difficulty_level'  => $row[6],
+                    'question_hash'     => $questionHash,
                 ]);
                 $imported++;
             } catch (\Throwable $e) {
