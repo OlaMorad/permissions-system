@@ -43,4 +43,8 @@ class Exam extends Model
     {
         return $this->belongsTo(Program::class);
     }
+    public function candidates()
+    {
+        return $this->hasMany(Candidate::class);
+    }
 }

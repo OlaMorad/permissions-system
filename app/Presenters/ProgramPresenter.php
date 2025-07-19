@@ -11,6 +11,7 @@ class ProgramPresenter
     {
         return $programs->map(function (Program $program) {
             return [
+                'id' => $program->id,
                 'الشهر' => $program->month,
                 'السنة' => $program->year,
                 'الحالة' => $program->status?->value,
@@ -27,6 +28,7 @@ class ProgramPresenter
     {
         return $exams->map(function ($exam) {
             return [
+                'id' => $exam->id,
                 'الاختصاص' => $exam->specialization->name,
                 'اليوم' => $exam->day,
                 'التاريخ' => $exam->date,

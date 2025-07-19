@@ -44,6 +44,21 @@ class UserRoleService
     {
         return in_array($roleName, ['المدير', 'نائب المدير']);
     }
+    // تحقق إذا المستخدم طبيب
+    public function isDoctor(string $roleName): bool
+    {
+        return $roleName === 'الطبيب';
+    }
+
+    // تحقق إذا المستخدم موظف عادي (ليس مدير، نائب مدير، رئيس قسم، ولا طبيب)
+    public function isEmployee(): bool
+    {
+        $roleName = $this->getUserRoleName();
+
+        return !$this->isManager($roleName)
+            && !$this->isSectionHead($roleName)
+            && !$this->isDoctor($roleName);
+    }
 
     // اختياري: جلب اسم الدور الحالي للمستخدم
     public function getUserRoleName(): ?string

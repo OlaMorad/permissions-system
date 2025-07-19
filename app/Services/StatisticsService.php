@@ -89,7 +89,7 @@ class StatisticsService
         return [
             'total' => $total,
             'done' => $done,
-            'rejected' => $rejected,
+            'pending' => $pending,
             'under_review' => $underReview,
         ];
     }

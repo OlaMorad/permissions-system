@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\TransactionStatus;
 use App\Http\Resources\successResource;
 use App\Models\ArchiveTransaction;
+use App\Models\Path;
 use App\Models\Transaction;
 use App\Models\TransactionMovement;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +26,6 @@ class TransactionService
     public function getFormContent(string $transactionUuid): array
     {
         $userRole = $this->userRoleService->getUserRoleName();
-        $pathId = $this->userRoleService->getUserPathId();
 
         $transaction = Transaction::with([
             'content.form.elements',
@@ -36,19 +36,6 @@ class TransactionService
         if ($userRole === 'الطبيب' && $transaction->content->doctor_id !== Auth::user()->doctor->id) {
             abort(403, 'لا تملك صلاحية عرض هذه المعاملة.');
         }
-
-        if (
-            $transaction->to === $pathId &&
-            !$this->userRoleService->isSectionHead($userRole) &&
-            $userRole !== 'الطبيب' &&
-            $transaction->status_to !== TransactionStatus::UNDER_REVIEW->value
-        ) {
-            $transaction->update([
-                'status_to' => TransactionStatus::UNDER_REVIEW->value,
-                'changed_by' => Auth::id(),
-            ]);
-        }
-
         $content = $transaction->content;
 
         return [
@@ -155,21 +142,17 @@ class TransactionService
     {
         $isFinance = $this->userRoleService->isFinancialPath($pathId);
 
-        $transactions = ArchiveTransaction::get()->filter(function ($transaction) use ($pathId) {
-            if (!is_array($transaction->status_history)) return false;
+        // استخدم الدالة الجاهزة مع فلتر الزمن (false = أقدم من 48 ساعة)
+        $transactions = $this->getExternalTransactions($pathId, false);
 
-            foreach ($transaction->status_history as $entry) {
-                if (
-                    isset($entry['to_path_id'], $entry['status']) &&
-                    (int)$entry['to_path_id'] === $pathId &&
-                    in_array($entry['status'], [TransactionStatus::FORWARDED->value, TransactionStatus::REJECTED->value])
-                ) {
-                    return true;
-                }
-            }
-            return false;
-        });
+        $path = Path::find($pathId);
 
-        return TransactionPresenter::exportList($transactions, $pathId, $isFinance);
+        return [
+            'path' => [
+                'id' => $path?->id,
+                'name' => $path?->name,
+            ],
+            'transactions' => TransactionPresenter::exportList($transactions, $pathId, $isFinance),
+        ];
     }
 }

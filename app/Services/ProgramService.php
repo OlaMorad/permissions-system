@@ -55,6 +55,12 @@ class ProgramService
 
         return new successResource($programs);
     }
+    public function get_approved_programs()
+    {
+        $programs = Program::where('approved', ExamRequestEnum::APPROVED)->get();
+
+        return new successResource(ProgramPresenter::program($programs));
+    }
     // عرض تفاصيل برنامج امتحاني
     public function show_program_details($id)
     {
