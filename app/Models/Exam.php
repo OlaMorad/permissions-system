@@ -19,7 +19,10 @@ class Exam extends Model
         'average_ratio',
         'hard_ratio',
         'start_time',
-        'end_time'
+        'end_time',
+        'candidates_count',       
+        'present_candidates_count',
+        'success_rate',
     ];
 
     protected $casts = [

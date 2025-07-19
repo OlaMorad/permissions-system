@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 
 Schedule::command('backup:run')->dailyAt('20:00');
 Schedule::command('transactions:archive-rejected')->hourly();
+Schedule::command('exams:update-candidates-count')->daily();
+Schedule::command('programs:auto-reject')->daily();
+Schedule::command('programs:activate')->daily();

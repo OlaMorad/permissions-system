@@ -25,8 +25,8 @@ class ExamRequestObserver
     {
         // تحقق من أن الحالة تغيرت إلى مقبول
         if (
-            $examRequest->isDirty('status') &&
-            $examRequest->status === ExamRequestEnum::APPROVED->value
+            $examRequest->wasChanged('status') &&
+            $examRequest->status === ExamRequestEnum::APPROVED
         ) {
             $formName = $examRequest->formContent?->form?->name;
 

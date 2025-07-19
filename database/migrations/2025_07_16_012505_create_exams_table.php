@@ -21,6 +21,9 @@ return new class extends Migration
             $table->float('simple_ratio');
             $table->float('average_ratio');
             $table->float('hard_ratio');
+            $table->unsignedInteger('candidates_count')->nullable();
+            $table->unsignedInteger('present_candidates_count')->nullable();
+            $table->decimal('success_rate', 5, 2)->nullable();
             $table->time('start_time');
             $table->time('end_time');
             $table->timestamps();
