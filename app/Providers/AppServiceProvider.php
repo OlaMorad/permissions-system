@@ -6,6 +6,8 @@ use App\Models\Manager;
 use App\Models\Employee;
 use App\Models\FormContent;
 use App\Models\Transaction;
+use App\Models\ExamRequest;
+use App\Observers\ExamRequestObserver;
 use App\Observers\ManagerObserver;
 use App\Observers\employeeObserver;
 use App\Observers\FormContentObserver;
@@ -31,5 +33,6 @@ class AppServiceProvider extends ServiceProvider
         Employee::observe(employeeObserver::class);
         FormContent::observe(FormContentObserver::class);
         Transaction::observe(TransactionObserver::class);
+        ExamRequest::observe(ExamRequestObserver::class);
     }
 }

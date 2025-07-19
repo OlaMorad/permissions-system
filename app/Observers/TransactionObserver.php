@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Transaction;
 use App\Enums\TransactionStatus;
 use App\Models\ArchiveTransaction;
+use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionObserver
@@ -27,7 +28,7 @@ class TransactionObserver
             return;
         }
 
-        $userId = Auth::id();
+        $employeeId = Employee::where('user_id', Auth::id())->value('id');
         $newStatus = $transaction->status_to;
 
         // إذا كانت الحالة مرفوضة
@@ -38,16 +39,16 @@ class TransactionObserver
                 'status_from' => TransactionStatus::REJECTED->value,
                 'status_to' => null,
                 'sent_at' => now(),
-                'changed_by' => $userId,
+                'changed_by' => $employeeId,
             ]);
-            $this->archiveOrUpdate($transaction, $userId);
+            $this->archiveOrUpdate($transaction, $employeeId);
             return;
         }
 
         // إذا كانت الحالة محولة
         if ($newStatus === TransactionStatus::FORWARDED) {
-            $this->moveToNextStep($transaction, $userId);
-            $this->archiveOrUpdate($transaction, $userId);
+            $this->moveToNextStep($transaction, $employeeId);
+            $this->archiveOrUpdate($transaction, $employeeId);
             return;
         }
 
@@ -57,9 +58,9 @@ class TransactionObserver
                 'from' => $transaction->to,
                 'to' => null,
                 'sent_at' => now(),
-                'changed_by' => $userId,
+                'changed_by' => $employeeId,
             ]);
-            $this->archiveOrUpdate($transaction, $userId);
+            $this->archiveOrUpdate($transaction, $employeeId);
             return;
         }
     }
@@ -67,7 +68,7 @@ class TransactionObserver
     /**
      * جبلي المسار التالي للمعاملة
      */
-    private function moveToNextStep(Transaction $transaction, $userId): void
+    private function moveToNextStep(Transaction $transaction, $employeeId): void
     {
         $current = $transaction->to;
         $form = $transaction->content->form;
@@ -78,13 +79,13 @@ class TransactionObserver
         $next = $steps[$index + 1] ?? null;
 
         if ($next) {
-            $this->updateTransaction($transaction, $current, $next, $userId);
+            $this->updateTransaction($transaction, $current, $next, $employeeId);
         } else {
             // لا يوجد مسار تالي => تعيين حالة المنجزة
             $transaction->update([
                 'status_to' => TransactionStatus::COMPLETED->value,
                 'status_from' => TransactionStatus::FORWARDED->value,
-                'changed_by' => $userId,
+                'changed_by' => $employeeId,
             ]);
         }
     }
@@ -92,7 +93,7 @@ class TransactionObserver
     /**
      * تحديث معلومات المعاملة ومسارها
      */
-    private function updateTransaction(Transaction $transaction, $current, $next, $userId): void
+    private function updateTransaction(Transaction $transaction, $current, $next, $employeeId): void
     {
         Transaction::where('id', $transaction->id)->update([
             'from' => $current,
@@ -100,20 +101,20 @@ class TransactionObserver
             'sent_at' => now(),
             'status_from' => TransactionStatus::FORWARDED->value,
             'status_to' => TransactionStatus::PENDING->value,
-            'changed_by' => $userId,
+            'changed_by' => $employeeId,
         ]);
     }
 
     /**
      * حفظ أو تحديث سجل الأرشيف حسب حالة المعاملة
      */
-    private function archiveOrUpdate(Transaction $transaction, $userId): void
+    private function archiveOrUpdate(Transaction $transaction, $employeeId): void
     {
         $changeData = [
             'from_path_id' => $transaction->from,
             'to_path_id' => $transaction->to,
             'status' => $transaction->status_to,
-            'changed_by' => $userId,
+            'changed_by' => $employeeId,
             'changed_at' => now(),
         ];
 

@@ -99,7 +99,8 @@ Route::controller(TransactionController::class)->group(function () {
                 Route::get('/archive/path/{id}', 'archiveByPath')->middleware('Verify.Session', 'role:المدير');
                 Route::get('/show/{uuid}', 'showFormContent')->middleware('Verify.Session');
                 Route::get('content/{uuid}', 'ShowTransactionContent')->middleware('Verify.Session');
-                Route::post('/status/{uuid}', 'updateTransactionStatus')->middleware('Verify.Session');
+            Route::patch('/under-review/{uuid}','MarkAsUnderReview')->middleware('Verify.Session');
+            Route::post('/status/{uuid}', 'updateTransactionStatus')->middleware('Verify.Session');
                 Route::post('/receipt_status', 'updateReceiptStatus')->middleware('Verify.Session', 'role:موظف المالية');
             });
         });
@@ -154,10 +155,12 @@ Route::prefix('statistics')->middleware(['Verify.Session'])->group(function () {
     });
 
     // Program
-    Route::controller(ProgramController::class)->group(function(){
-        Route::post('/program/add', 'store')->middleware('Verify.Session', 'role:رئيس الامتحانات');
-        Route::get('/program/{id}', 'show_program_details')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
-        Route::get('/programs', 'index')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
+    Route::prefix('program')->controller(ProgramController::class)->group(function(){
+        Route::post('/add', 'store')->middleware('Verify.Session', 'role:رئيس الامتحانات');
+        Route::get('/show_all', 'index')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
+        Route::get('/approved','get_approved_programs');
+        Route::get('/{id}', 'show_program_details')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
+        Route::post('/update-status/{id}', 'update_status')->middleware('Verify.Session', 'role:المدير');
     });
 
 });

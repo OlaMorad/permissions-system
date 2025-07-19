@@ -57,7 +57,10 @@ class TransactionController extends Controller
         $data = $this->transactionService->getArchiveTransactionsByPath((int)$pathId);
         return new successResource($data);
     }
-
+    public function MarkAsUnderReview(string $uuid)
+    {
+        return $this->transactionStatusService->markAsUnderReview($uuid);
+    }
     public function updateTransactionStatus(TransactionStatusRequest $request, string $uuid)
     {
         return $this->transactionStatusService->updateTransactionStatus($uuid, $request->status());
