@@ -13,8 +13,7 @@ class QuestionBankController extends Controller
 
     public function addManual(StoreQuestionRequest $request)
     {
-        $this->questionService->addFromForm($request);
-        return new successResource('تمت إضافة السؤال بنجاح');
+      return  $this->questionService->addFromForm($request);
     }
 
     public function importFromExcel(Request $request)

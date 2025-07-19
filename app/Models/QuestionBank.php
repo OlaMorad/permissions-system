@@ -16,7 +16,8 @@ class QuestionBank extends Model
     'option_c',
     'option_d',
     'correct_answer',
-    'difficulty_level'
+    'difficulty_level',
+    'question_hash'
     ];
 
         protected $casts = [

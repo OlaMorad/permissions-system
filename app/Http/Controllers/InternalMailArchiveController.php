@@ -16,4 +16,12 @@ class InternalMailArchiveController extends Controller
     public function show_received_archive(){
         return $this->archive->show_received_archive();
     }
+
+    public function show_sent_archive_for_director($role_name){
+         return $this->archive->show_sent_archive_for_director($role_name);
+    }
+
+    public function show_received_archive_for_director($role_name){
+        return $this->archive->show_received_archive_for_director($role_name);
+    }
 }

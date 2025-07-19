@@ -122,6 +122,10 @@ Route::prefix('statistics')->middleware(['Verify.Session'])->group(function () {
     // Archive
     Route::get('/archive/internal/mails', [InternalMailArchiveController::class, 'add_to_archive'])->middleware('Verify.Session');
     Route::get('/archive/import/internal/mails',[InternalMailArchiveController::class,'show_received_archive'])->middleware('Verify.Session');
+    Route::get('archive/export/for/admin/{path}',[InternalMailArchiveController::class,'show_sent_archive_for_director'])->middleware(['Verify.Session','role:المدير|نائب المدير']);
+    Route::get('archive/import/for/admin/{path}',[InternalMailArchiveController::class,'show_received_archive_for_director'])->middleware(['Verify.Session','role:المدير|نائب المدير']);
+
+
     // Specializations
     Route::prefix('specializations')->group(function () {
         Route::get('/show_all', [SpecializationController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الامتحانات|موظف الامتحانات|المدير|نائب المدير']);

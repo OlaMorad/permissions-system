@@ -48,7 +48,7 @@ class Requests_FormSeeder extends Seeder
             ['label' => 'تاريخ', 'type' => Element_Type::DATE],
             ['label' => 'بصفة', 'type' => Element_Type::INPUT],
             ['label' => 'لدى وزارة التعليم العالي_جامعة', 'type' => Element_Type::INPUT],
-            ['label' => 'يرجى الموافقة على دخولي الاختبار النهائي لأختصاص', 'type' => Element_Type::INPUT],
+            ['label' => 'يرجى الموافقة على دخولي الاختبار النهائي لاختصاص', 'type' => Element_Type::INPUT],
             ['label' => 'فرعي', 'type' => Element_Type::CHECKBOX],
             ['label' => 'رئيسي', 'type' => Element_Type::CHECKBOX],
             ['label' => 'مسبوق باختصاص رئيسي هو', 'type' => Element_Type::INPUT],

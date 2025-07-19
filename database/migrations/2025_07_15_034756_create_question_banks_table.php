@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('question_banks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('specialization_id')->references('id')->on('specializations');
+            $table->foreignId('specialization_id')->references('id')->on('specializations')->index();;
             $table->text('question');
             $table->string('option_a');
             $table->string('option_b');
@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('option_d');
             $table->string('correct_answer');
             $table->string('difficulty_level');
+            $table->string('question_hash')->unique();
             $table->timestamps();
         });
     }
