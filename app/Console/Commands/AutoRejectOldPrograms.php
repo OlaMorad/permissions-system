@@ -15,12 +15,13 @@ class AutoRejectOldPrograms extends Command
 
     public function handle()
     {
+        // جلب اليوم الحالي و نقصنا منه اسبوع
         $weekAgo = Carbon::now()->subDays(7);
-
+        // البرامج يلي لسا حالتها قيد الدراسة و صرلها مكريتة من أسبوع
         $programs = Program::where('approved', ExamRequestEnum::PENDING->value)
             ->where('created_at', '<=', $weekAgo)
             ->get();
-
+        // منغير حالتها لمرفوضة
         foreach ($programs as $program) {
             $program->update(['approved' => ExamRequestEnum::REJECTED->value]);
         }

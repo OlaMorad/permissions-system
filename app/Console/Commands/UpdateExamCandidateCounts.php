@@ -29,13 +29,13 @@ class UpdateExamCandidateCounts extends Command
     public function handle()
     {
         $today = Carbon::today();
-        $limitDate = $today->copy()->addWeek();
+        $targetDate = $today->copy()->addWeek(); // بعد أسبوع بالضبط
 
-        // جلب الامتحانات بالحالة انتظار وتاريخها خلال أسبوع
+        // جلب الامتحانات بالحالة انتظار وتاريخها بعد أسبوع بالضبط
         $exams = Exam::where('status', Program_ExamStatus::PENDING)
-            ->whereBetween('date', [$today, $limitDate]) // من اليوم حتى أسبوع قادم
+            ->whereDate('date', $targetDate)
             ->get();
-
+        // منحسب عدد المرشحين لهي الامتحانات و منخزنو بتيبل الامتحانات
         foreach ($exams as $exam) {
             $count = $exam->candidates()->count();
             $exam->update([
