@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use App\Http\Resources\successResource;
+use App\Models\Candidate;
 use App\Models\Exam;
 use App\Presenters\ProgramPresenter;
 use Carbon\Carbon;
 
 class ExamCandidateService
 {
-
+    // عرض المرشجين لامتحان معين
     public function getCandidatesByExamId(int $examId)
     {
         $exam = Exam::find($examId);
@@ -36,6 +37,7 @@ class ExamCandidateService
 
         return new successResource(ProgramPresenter::candidates($candidates));
     }
+    // عرض المتقدمين لامتحان معين
     public function get_present_candidates_ByExamId(int $examId)
     {
         $exam = Exam::find($examId);
@@ -59,5 +61,14 @@ class ExamCandidateService
             ->get();
 
         return new successResource(ProgramPresenter::Candidates_present($candidates));
+    }
+    // عرض كل علامات الاطباء
+    public function get_all_present_candidates()
+    {
+        $candidates = Candidate::whereNotNull('degree')
+            ->with(['doctor.user', 'exam.specialization'])
+            ->get();
+
+        return new successResource(ProgramPresenter::Doctor_Degree($candidates));
     }
 }

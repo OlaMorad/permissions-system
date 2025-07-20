@@ -25,6 +25,6 @@ class AutoRejectOldPrograms extends Command
             $program->update(['approved' => ExamRequestEnum::REJECTED->value]);
         }
 
-        $this->info('تم رفض البرامج لمرور أكثر من أسبوع على إنشائها وعدم اتخاذ قرار بشأنها');
+        $this->info('تم رفض البرامج التي مر أكثر من أسبوع على إنشائها ولم يتم اتخاذ قرار بشأنها');
     }
 }
