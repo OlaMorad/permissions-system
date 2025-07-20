@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ExamRequestEnum;
+use App\Models\Program;
 use App\Models\Specialization;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
@@ -77,9 +79,20 @@ class ProgramExamRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+
             $exams = $this->input('exams', []);
             $monthName = $this->input('month');
             $year = $this->input('year');
+            // التحقق من عدم تكرار برنامج لنفس الشهر والسنة إذا لم يكن مرفوضاً
+            $existingProgram = Program::where('month', $monthName)
+                ->where('year', $year)
+                ->where('approved', '!=', ExamRequestEnum::REJECTED->value)
+                ->first();
+
+            if ($existingProgram) {
+                $validator->errors()->add('month', 'يوجد بالفعل برنامج لهذا الشهر والسنة ولم يتم رفضه . لا يمكن إنشاء برنامج جديد إلا بعد رفض البرنامج السابق.');
+            }
+            
             // خريطة أسماء الأشهر لأرقام الشهور الميلادية
             $monthsMap = [
                 'نيسان' => 4,
