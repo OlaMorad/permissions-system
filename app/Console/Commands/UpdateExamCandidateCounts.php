@@ -41,7 +41,8 @@ class UpdateExamCandidateCounts extends Command
             $exam->update([
                 'candidates_count' => $count
             ]);
+            $this->info("الامتحان رقم: {$exam->id} | عدد المرشحين: {$count}");
         }
-        $this->info("تم تحديث عدد المرشحين لـ " . $exams->count() . " امتحانات.");
+        $this->info("تم تحديث عدد المرشحين في {$exams->count()} من الامتحانات.");
     }
 }

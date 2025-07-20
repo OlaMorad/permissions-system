@@ -7,6 +7,7 @@ use App\Models\Candidate;
 use App\Models\Exam;
 use App\Enums\ExamRequestEnum;
 use App\Models\Specialization;
+use Illuminate\Support\Facades\Log;
 
 class ExamRequestObserver
 {
@@ -23,10 +24,9 @@ class ExamRequestObserver
      */
     public function updated(ExamRequest $examRequest): void
     {
-        // تحقق من أن الحالة تغيرت إلى مقبول
         if (
             $examRequest->wasChanged('status') &&
-            $examRequest->status === ExamRequestEnum::APPROVED
+            $examRequest->status === ExamRequestEnum::APPROVED->value
         ) {
             $formName = $examRequest->formContent?->form?->name;
 
@@ -36,6 +36,7 @@ class ExamRequestObserver
                     'طلب ترشيح للأمتحان خارج القطر'
                 ])
             ) {
+
                 $specialtyElement = $examRequest->formContent->elementValues->first(function ($elementValue) {
                     $label = $elementValue->formElement->label ?? '';
                     return stripos($label, 'اختصاص') !== false;
@@ -55,7 +56,6 @@ class ExamRequestObserver
                     }
                 }
                 if ($exam) {
-                    // توليد رقم امتحان مكون من 6 خانات عشوائية غير مكررة
                     do {
                         $examNumber = random_int(100000, 999999);
                     } while (Candidate::where('exam_number', $examNumber)->exists());
@@ -69,7 +69,8 @@ class ExamRequestObserver
                     ]);
                 }
             }
-        }}
+        }
+    }
 
     /**
      * Handle the ExamRequest "deleted" event.

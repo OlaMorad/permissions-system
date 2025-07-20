@@ -14,3 +14,4 @@ Schedule::command('transactions:archive-rejected')->hourly();
 Schedule::command('exams:update-candidates-count')->daily();
 Schedule::command('programs:auto-reject')->daily();
 Schedule::command('programs:activate')->daily();
+Schedule::command('exams:update-status')->everyMinute();

@@ -3,6 +3,7 @@
 namespace App\Presenters;
 
 use App\Models\Program;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class ProgramPresenter
@@ -48,7 +49,7 @@ class ProgramPresenter
         return $candidates->map(function ($candidate) {
             return [
                 'الرقم الامتحاني' => $candidate->exam_number,
-                'صورة الطبيب' => $candidate->doctor->user->avatar ?? null,
+                'صورة الطبيب' => isset($candidate->doctor->user->avatar) ? asset('storage/' . $candidate->doctor->user->avatar) : null,
                 'اسم الطبيب' => $candidate->doctor->user->name ?? null,
                 'تاريخ الترشيح' => $candidate->nomination_date,
             ];
@@ -60,11 +61,26 @@ class ProgramPresenter
             return [
                 'الرقم الامتحاني' => $candidate->exam_number,
                 'اسم الطبيب' => $candidate->doctor->user->name ?? null,
-                'صورة الطبيب' => $candidate->doctor->user->avatar ?? null,
+                'صورة الطبيب' => isset($candidate->doctor->user->avatar) ? asset('storage/' . $candidate->doctor->user->avatar) : null,
                 'الحالة' => $candidate->status,
                 'العلامة' => $candidate->degree,
                 'التقدير' => $candidate->rating,
-                'تاريخ التقديم' => $candidate->exam_date?->format('Y-m-d H:i'),
+                'تاريخ التقديم' => $candidate->exam_date ? Carbon::parse($candidate->exam_date)->format('Y-m-d H:i') : null,
+            ];
+        })->toArray();
+    }
+    public static function Doctor_Degree(Collection $candidates): array
+    {
+        return $candidates->map(function ($candidate) {
+            return [
+                'الرقم الامتحاني' => $candidate->exam_number,
+                'اسم الطبيب' => $candidate->doctor->user->name ?? null,
+                'صورة الطبيب' => isset($candidate->doctor->user->avatar) ? asset('storage/' . $candidate->doctor->user->avatar) : null,
+                'الاختصاص' => $candidate->exam->specialization->name ?? null,
+                'الحالة' => $candidate->status,
+                'العلامة' => $candidate->degree,
+                'التقدير' => $candidate->rating,
+                'تاريخ التقديم' => $candidate->exam_date ? Carbon::parse($candidate->exam_date)->format('Y-m-d H:i') : null,
             ];
         })->toArray();
     }

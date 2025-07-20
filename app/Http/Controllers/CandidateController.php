@@ -20,4 +20,9 @@ class CandidateController extends Controller
     {
         return $this->candidateService->get_present_candidates_ByExamId($examId);
     }
+    // عرض كل علامات الأطباء
+    public function show_all_present_candidates()
+    {
+        return $this->candidateService->get_all_present_candidates();
+    }
 }

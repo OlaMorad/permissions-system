@@ -171,9 +171,12 @@ class ExamRequestService
 
     public function edit_form_content_exam_status($uuid, $status)
     {
-        $examRequest = ExamRequest::where('uuid', $uuid)->update([
-            'status' => $status
-        ]);
+        $examRequest = ExamRequest::where('uuid', $uuid)->first();
+        if ($examRequest) {
+            $examRequest->update([
+                'status' => $status
+            ]);
+        }
     }
     private function getExamRequestsByStatus(array $statuses, bool $includeStatus = true)
     {

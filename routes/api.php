@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\EmployeeController;
@@ -164,4 +165,17 @@ Route::middleware(['throttle:10,1'])->group(function () {
         Route::get('/{id}', 'show_program_details')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
         Route::post('/update-status/{id}', 'update_status')->middleware('Verify.Session', 'role:المدير');
     });
+
+    // candidates
+    Route::controller(CandidateController::class)->prefix('candidates')
+        ->middleware(['Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات'])
+        ->group(function () {
+            // عدد المرشحين لامتحان معيّن
+            Route::get('exam/{id}', 'show_candidates_By_ExamId');
+            // عدد المتقدّمين لامتحان معيّن
+            Route::get('/present/exam/{examId}', 'show_present_candidates_By_ExamId');
+            // علامات الأطباء
+            Route::get('/present/all', 'show_all_present_candidates');
+        });
+
 });
