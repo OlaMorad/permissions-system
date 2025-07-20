@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use App\Models\Exam;
+use App\Models\Form;
 use App\Models\ExamRequest;
 use App\Models\FormContent;
 use App\Enums\ExamRequestEnum;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ExamRequestService
 {
+    public function __construct(protected ExamRequestServiceHelper $helper) {}
+
 
     public function create_form_content_exam($data)
     {
@@ -22,8 +25,6 @@ class ExamRequestService
         $elements = $data['elements'] ?? [];
         $specializationLabel = null;
         $specializationValue = null;
-
-        // البحث عن مفتاح يحتوي على كلمة "اختصاص"
         foreach ($elements as $label => $value) {
             if (stripos($label, 'اختصاص') !== false) {
                 $specializationLabel = $label;
@@ -35,18 +36,40 @@ class ExamRequestService
         if ($specializationValue && !$doctor->specializations->pluck('name')->contains($specializationValue)) {
             throw new \Exception("الاختصاص المدخل غير مسجل لدى الطبيب.");
         }
-
-        if ($specializationValue && $this->isExamTooClose($specializationValue)) {
+//اذا ضل اسبوع او اقل للامتحان نمنع ارسال الطلبات
+        if ($specializationValue && $this->helper->isExamTooClose($specializationValue)) {
             throw new \Exception("لا يمكن تقديم الطلب لهذا الاختصاص لأن الامتحان سيبدأ خلال أسبوع.");
         }
-
-
+        $specialization = Specialization::where('name', $specializationValue)->first();
         $year = $data['elements']['السنة'] ?? null;
+        $cycle = $data['elements']['دورة'] ?? null;
 
-        $cycle = $this->extractCycle($data['elements'] ?? []);
+        if (is_array($year)) {
+            $year = $year[0];
+        }
+        if (is_array($cycle)) {
+            $cycle = $cycle[0];
+        }
+        $cycle = $this->helper->extractCycle($data['elements'] ?? []);
+        $form = Form::find($data['form_id']);
+        $formName = $form?->name ?? '';
 
-        if ($year && $cycle && $this->hasSubmittedForSameSession($doctor->id, $year, $cycle)) {
-            throw new \Exception("لقد قمت بإرسال طلب سابق لنفس السنة والدورة.");
+
+        if (str_contains($formName, 'اعتذار')) {
+            // تحقق إذا سبق وقدم اعتذار بنفس السنة والدورة والاختصاص
+            if ($this->helper->hasPreviousApologyRequest($doctor->id, $year, $cycle, $form->id, $specialization->name)) {
+                throw new \Exception("لقد قدمت طلب اعتذار سابق بنفس السنة والدورة و الاختصاص .");
+            }
+
+            // تحقق وجود طلب ترشيح سابق بنفس المواصفات
+            if ($this->helper->checkNominationRequestPrecondition($data['form_id'], $doctor->id, $specialization->id, $year,  $cycle)) {
+            }
+        } else {
+            // طلب ترشيح
+
+            if ($this->helper->hasSubmittedForSameSession($doctor->id, $year, $cycle, $form->id, $specialization->name)) {
+                throw new \Exception("لقد قمت بإرسال طلب ترشيح سابق لنفس السنة والدورة.");
+            }
         }
 
         return DB::transaction(function () use ($data, $doctor) {
@@ -62,18 +85,8 @@ class ExamRequestService
         });
     }
 
-    protected function extractCycle(array $elements): ?string
-    {
-        if (isset($elements['نيسان'])) {
-            return 'نيسان';
-        }
 
-        if (isset($elements['تشرين الأول'])) {
-            return 'تشرين الأول';
-        }
 
-        return null;
-    }
 
 
     //لنخزن قيم الليبلات
@@ -82,13 +95,26 @@ class ExamRequestService
         foreach ($elements as $label => $value) {
             $formElement = $formContent->form->elements->firstWhere('label', $label);
             if ($formElement) {
-                $formContent->elementValues()->create([
-                    'form_element_id' => $formElement->id,
-                    'value' => $value,
-                ]);
+                if (is_array($value)) {
+                    // إذا القيمة مصفوفة، خزّن كل عنصر في صف مستقل
+                    foreach ($value as $singleValue) {
+                        $formContent->elementValues()->create([
+                            'form_element_id' => $formElement->id,
+                            'value' => $singleValue,
+                        ]);
+                    }
+                } else {
+                    // القيمة مفردة
+                    $formContent->elementValues()->create([
+                        'form_element_id' => $formElement->id,
+                        'value' => $value,
+                    ]);
+                }
             }
         }
     }
+
+
 
 
     //تخزين المرفقات
@@ -119,25 +145,8 @@ class ExamRequestService
     }
 
 
-    //للتتحقق ان الدكتور نفسو ما قدر يبعت اكتر من طلب لنفس الدورة و السنة
-    protected function hasSubmittedForSameSession(int $doctorId, string $year, string $cycle): bool
-    {
-        return FormContent::where('doctor_id', $doctorId)
-            ->whereHas('elementValues', function ($query) use ($year) {
-                $query->whereHas('formElement', function ($q) {
-                    $q->where('label', 'السنة');
-                })->where('value', $year);
-            })
-            ->whereHas('elementValues', function ($query) use ($cycle) {
-                $query->whereHas('formElement', function ($q) use ($cycle) {
-                    $q->where('label', $cycle);
-                })->where('value', 'on');
-            })
-            ->exists();
-    }
 
-
-
+//عرض الطلب بناء عال uuid
     public function show_form_content_exam($uuid)
     {
         $examRequest = ExamRequest::where('uuid', $uuid)->firstOrFail();
@@ -168,7 +177,7 @@ class ExamRequestService
         ];
     }
 
-
+//الموافقة او رفض الطلب من قبل موظف الامتحانات
     public function edit_form_content_exam_status($uuid, $status)
     {
         $examRequest = ExamRequest::where('uuid', $uuid)->first();
@@ -220,7 +229,7 @@ class ExamRequestService
         });
     }
 
-
+//عرض الطلبات الواردة يلي لسا حالتها قيد الدراسة
     public function show_all_import_request_exam()
     {
         // PENDING فقط دون إظهار حالة الطلب
@@ -231,7 +240,7 @@ class ExamRequestService
 
         return new successResource($result);
     }
-
+//عرض الطلبات المنتهية يلي حالتها تغيرت لمرفوضة او مقبولة
     public function show_all_end_request_exam()
     {
         // APPROVED و REJECTED مع إظهار حالة الطلب
@@ -241,29 +250,5 @@ class ExamRequestService
         );
 
         return new successResource($result);
-    }
-
-    // لحتى نوقف استقبال الطلبات بالنسبة للاختصاص اذا ضل للامتحان اسبوع
-    protected function isExamTooClose(string $specializationName): bool
-    {
-        $specialization = Specialization::where('name', $specializationName)->first();
-
-        if (!$specialization) {
-            return false; // إذا لم نجد الاختصاص لا نمنع الطلب
-        }
-
-        $today = Carbon::today();
-
-        $exam = Exam::where('specialization_id', $specialization->id)
-            ->whereDate('date', '>=', $today)
-            ->orderBy('date')
-            ->first();
-
-        if (!$exam) {
-            return false; // لا يوجد امتحان قريب، نسمح بالإرسال
-        }
-
-        // إذا الفرق بين التاريخ أقل أو يساوي 7 أيام نمنع
-        return Carbon::parse($today)->diffInDays($exam->date) <= 7;
     }
 }
