@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProgramStatusService
 {
+    public function __construct(protected ExamQuestionAssignmentService $examQuestions){}
     public function updateApprovalStatus(int $programId, string $newStatus)
     {
         $program = Program::findOrFail($programId);
@@ -34,6 +35,7 @@ class ProgramStatusService
                     'status' => Program_ExamStatus::PENDING->value,
                     'updated_at' => now(),
                 ]);
+                   $this->examQuestions->assignQuestionsToExams($program->load('exams'));
         }
         $program->save();
 

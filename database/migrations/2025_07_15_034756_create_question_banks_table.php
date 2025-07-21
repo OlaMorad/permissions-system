@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('correct_answer');
             $table->string('difficulty_level');
             $table->string('question_hash')->unique();
+            $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
         });
     }

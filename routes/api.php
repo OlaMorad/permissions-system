@@ -1,26 +1,27 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Models\InternalMailArchive;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ExamController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\ExamRequestController;
+use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\ExamRequestController;
 use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\SpecializationController;
 use App\Http\Controllers\InternalMailArchiveController;
-use App\Http\Controllers\ProgramController;
-use App\Models\InternalMailArchive;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -178,4 +179,9 @@ Route::middleware(['throttle:10,1'])->group(function () {
             Route::get('/present/all', 'show_all_present_candidates');
         });
 
+
+        //Exam
+    Route::controller(ExamController::class) ->group(function () {
+             Route::get('show/examQuestions','show_exam_quetions')->middleware(['Verify.Session','role:الطبيب']);
+     });
 });

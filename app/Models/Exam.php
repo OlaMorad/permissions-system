@@ -20,7 +20,7 @@ class Exam extends Model
         'hard_ratio',
         'start_time',
         'end_time',
-        'candidates_count',       
+        'candidates_count',
         'present_candidates_count',
         'success_rate',
     ];
@@ -50,4 +50,14 @@ class Exam extends Model
     {
         return $this->hasMany(Candidate::class);
     }
+
+public function questions()
+{
+    return $this->belongsToMany(QuestionBank::class, 'exam_questions', 'exam_id', 'question_bank_id')
+        ->using(\App\Models\ExamQuestion::class)
+        ->withPivot('id') // للحصول على id من جدول exam_questions
+        ->withTimestamps();
+}
+
+
 }

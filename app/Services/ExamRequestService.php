@@ -120,7 +120,7 @@ class ExamRequestService
     //تخزين المرفقات
     protected function storeAttachments(FormContent $formContent, array $media): void
     {
-        foreach ($media as $label => $files) {
+        foreach ($media as $label => $files) { 
             // تأكدي أن الملفات مصفوفة
             if (!is_array($files)) {
                 $files = [$files];
