@@ -7,12 +7,11 @@ use App\Services\ExamQuestionShowService;
 
 class ExamController extends Controller
 {
-    public function __construct(protected ExamQuestionShowService $exam)
+    public function __construct(protected ExamQuestionShowService $exam) {}
+    public function show_exam_quetions()
     {
-    }
-    public function show_exam_quetions(){
-$doctor = Auth::user()->doctor->id;
+        $doctor = Auth::user()->doctor->id;
 
-    return $this->exam->getTodayExamQuestionsForSpecialization($doctor);
+        return $this->exam->getTodayExamQuestionsForSpecialization($doctor);
     }
 }

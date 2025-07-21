@@ -7,10 +7,11 @@ use App\Enums\FormStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Form extends Model
 {
-    use HasFactory; 
+    use HasFactory;
     protected $fillable = ['name', 'status', 'cost'];
 
     protected $casts = [
+        'created_at' => 'datetime:Y-m-d',
         'status' => FormStatus::class,
     ];
 
