@@ -8,6 +8,7 @@ use App\Http\Controllers\ExamController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\ProgramController;
@@ -65,7 +66,7 @@ Route::middleware(['throttle:10,1'])->group(function () {
         Route::put('/working-hours', [AdminController::class, 'updateWorkingHours']);
         Route::get('/working-hours/show', [AdminController::class, 'showWorkingHours']);
     });
-    Route::get('show/employees/by/{path}', [AdminController::class, 'show_employees_by_path'])->middleware('Verify.Session','role:المدير|نائب المدير');
+    Route::get('show/employees/by/{path}', [AdminController::class, 'show_employees_by_path'])->middleware('Verify.Session', 'role:المدير|نائب المدير');
 
 
     // Internal Mail
@@ -110,7 +111,7 @@ Route::middleware(['throttle:10,1'])->group(function () {
     });
 
     // Form Content
-    Route::post('create_form_content', [FormContentController::class, 'create_form_content'])->middleware('Verify.Session','role:الطبيب');
+    Route::post('create_form_content', [FormContentController::class, 'create_form_content'])->middleware('Verify.Session', 'role:الطبيب');
 
     // Statistics
     Route::prefix('statistics')->middleware(['Verify.Session'])->group(function () {
@@ -180,8 +181,14 @@ Route::middleware(['throttle:10,1'])->group(function () {
         });
 
 
-        //Exam
-    Route::controller(ExamController::class) ->group(function () {
-             Route::get('show/examQuestions','show_exam_quetions')->middleware(['Verify.Session','role:الطبيب']);
-     });
+    //Exam
+    Route::controller(ExamController::class)->group(function () {
+        Route::get('show/examQuestions', 'show_exam_quetions')->middleware(['Verify.Session', 'role:الطبيب']);
+        Route::post('submit/answers', 'submit_answers')->middleware(['Verify.Session', 'role:الطبيب']);
+    });
+    //announcements
+    Route::controller(AnnouncementController::class)->prefix('announcement')->group(function () {
+        Route::get('/all', 'index')->middleware(['Verify.Session', 'role:المدير|الطبيب']);
+        Route::post('/add', 'store')->middleware(['Verify.Session', 'role:المدير']);
+    });
 });
