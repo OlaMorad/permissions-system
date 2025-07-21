@@ -46,6 +46,5 @@ class QuestionService implements QuestioneInterface
             uniqid() . '_' . $request->file('file')->getClientOriginalName()
         );
         ImportQuestionsFromExcel::dispatch($path, $request->specialization_id);
-
     }
 }
