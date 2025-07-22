@@ -28,5 +28,22 @@ class InternalMailRequest extends FormRequest
             'body'         => 'required|string',
             'to_path_ids'  => 'nullable|array'
         ];
+
+
     }
+
+    public function messages(): array
+{
+    return [
+        'subject.required' => 'حقل الموضوع مطلوب.',
+        'subject.string'   => 'حقل الموضوع يجب أن يكون نصًا.',
+        'subject.max'      => 'حقل الموضوع يجب ألا يتجاوز 255 حرفًا.',
+
+        'body.required'    => 'حقل المحتوى مطلوب.',
+        'body.string'      => 'حقل المحتوى يجب أن يكون نصًا.',
+
+        'to_path_ids.array' => 'حقل جهات الاستلام يجب أن يكون مصفوفة.',
+    ];
+}
+
 }
