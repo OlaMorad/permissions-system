@@ -12,7 +12,13 @@ class AnnouncementController extends Controller
     // عرض جميع الإعلانات
     public function index()
     {
-        $data = Announcement::all();
+        $data = Announcement::select('id', 'title', 'created_at')->get();
+        return new successResource($data);
+    }
+    // عرض إعلان واحد بالتفصيل
+    public function show($id)
+    {
+        $data = Announcement::findOrFail($id);
         return new successResource($data);
     }
 

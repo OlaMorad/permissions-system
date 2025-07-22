@@ -123,7 +123,7 @@ Route::middleware(['throttle:10,1'])->group(function () {
     });
 
     // Paths
-    Route::get('all_paths', [PathController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الديوان']);
+    Route::get('all_paths', [PathController::class, 'index'])->middleware('Verify.Session');
 
     // Archive
     Route::get('/archive/internal/mails', [InternalMailArchiveController::class, 'add_to_archive'])->middleware('Verify.Session');
@@ -134,7 +134,8 @@ Route::middleware(['throttle:10,1'])->group(function () {
 
     // Specializations
     Route::prefix('specializations')->group(function () {
-        Route::get('/show_all', [SpecializationController::class, 'index'])->middleware(['Verify.Session', 'role:رئيس الامتحانات|موظف الامتحانات|المدير|نائب المدير']);
+        Route::get('/show_all', [SpecializationController::class, 'index'])
+            ->middleware(['Verify.Session', 'role:رئيس الامتحانات|موظف الامتحانات|المدير|نائب المدير|الطبيب']);
         Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
     });
@@ -190,5 +191,6 @@ Route::middleware(['throttle:10,1'])->group(function () {
     Route::controller(AnnouncementController::class)->prefix('announcement')->group(function () {
         Route::get('/all', 'index')->middleware(['Verify.Session', 'role:المدير|الطبيب']);
         Route::post('/add', 'store')->middleware(['Verify.Session', 'role:المدير']);
+        Route::get('/{id}', 'show')->middleware(['Verify.Session', 'role:المدير|الطبيب']);
     });
 });
