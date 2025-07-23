@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('code', 4);
             $table->timestamp('expires_at');
+            $table->string('reset_token')->nullable();
+             $table->text('data')->nullable();
+
             $table->timestamps();
         });
     }

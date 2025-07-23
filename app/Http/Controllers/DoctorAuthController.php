@@ -8,13 +8,24 @@ use Illuminate\Http\Request;
 use App\Services\DoctorAuthService;
 use App\Http\Requests\DoctorRegisterRequest;
 use App\Http\Requests\ForgetPasswordRequest;
+use App\Http\Requests\SetNewPasswordRequest;
 
 class DoctorAuthController extends Controller
 {
     public function __construct(protected DoctorAuthService $doctor) {}
     public function register(DoctorRegisterRequest $request)
     {
-        return $this->doctor->register($request);
+        return $this->doctor->pre_register($request);
+    }
+
+        public function verify_register_code(Request $request)
+    {
+       $validate=$request->validate([
+        'code'=>'required|exists:email_verifications,code',
+        'email'=>'required|exists:email_verifications,email'
+
+       ]);
+        return $this->doctor->verify_register_code($validate);
     }
 
     public function login(DoctorLoginRequest $request)
@@ -31,5 +42,9 @@ return $this->doctor->forget_password($request);
     public function put_code(CodeRequest $request){
         return $this->doctor->put_code($request);
     }
-    
+
+    public function set_password(SetNewPasswordRequest $request){
+                  return $this->doctor->set_password($request);
+
+    }
 }

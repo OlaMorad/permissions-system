@@ -29,7 +29,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::middleware(['throttle:10,1'])->group(function () {
+Route::middleware(['throttle:100,1'])->group(function () {
 
     // Auth
     Route::controller(AuthController::class)->group(function () {
@@ -202,9 +202,10 @@ Route::middleware(['throttle:10,1'])->group(function () {
     //Doctor Auth
        Route::controller(DoctorAuthController::class)->group(function () {
         Route::post('register/doctor','register');
+        Route::post('verify/register/code','verify_register_code');
         Route::post('/login/doctor', 'login');
         Route::post('/forget/password', 'forget_password');
         Route::post('/put/code', 'put_code');
-
+        Route::post('set/password','set_password');
     });
 

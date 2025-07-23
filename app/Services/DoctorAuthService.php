@@ -5,6 +5,7 @@ namespace App\Services;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Doctor;
+use Illuminate\Support\Str;
 use App\Jobs\forgetPasswordJob;
 use App\Models\EmailVerification;
 use App\Http\Resources\failResource;
@@ -16,27 +17,67 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class DoctorAuthService
 {
-    public function register($data)
-    {
+//ما قبل انشاء الحساب نرسل كود التحقق بعدين اذا دخله صح ننشئ حسابه
+public function pre_register($request)
+{
+    $email = $request->email;
 
-        $avatarDefault = 'avatars\2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg';
-        $user = User::create([
-            'name' => $data->name,
-            'phone' => $data->phone,
-            'email' => $data->email,
-            'avatar' => $avatarDefault,
-            'address' => '',
-            'password' => Hash::make($data->password),
-        ]);
+    // توليد كود تحقق 4 خانات
+    $code = rand(1000, 9999);
 
-        $user->assignRole('الطبيب');
+    EmailVerification::updateOrCreate(
+        ['email' => $email],
+        [
+            'code' => $code,
+            'data' => json_encode($request->only(['name', 'email', 'phone', 'password'])),
+            'expires_at' => now()->addMinutes(10),
+        ]
+    );
 
-        Doctor::create([
-            'user_id' => $user->id,
-        ]);
+    forgetPasswordJob::dispatch($email, $code);
 
-        return new successResource([]);
+    return new successResource(['message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني.']);
+}
+
+public function verify_register_code($request)
+{
+    $email = $request['email'];
+    $code = $request['code'];
+
+    $verification = EmailVerification::where('email', $email)
+        ->where('code', $code)
+        ->where('expires_at', '>=', now())
+        ->first();
+
+    if (!$verification) {
+        return response()->json(['message' => 'الكود غير صحيح أو منتهي الصلاحية.'], 422);
     }
+
+    // استعادة البيانات من json
+    $data = json_decode($verification->data);
+
+    // أنشئ الحساب
+    $avatarDefault = 'avatars/2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg';
+    $user = User::create([
+        'name' => $data->name,
+        'phone' => $data->phone,
+        'email' => $data->email,
+        'avatar' => $avatarDefault,
+        'address' => '',
+        'password' => Hash::make($data->password),
+    ]);
+
+    $user->assignRole('الطبيب');
+
+    Doctor::create([
+        'user_id' => $user->id,
+    ]);
+
+    // حذف سجل التحقق بعد الاستخدام
+    $verification->delete();
+
+    return new successResource(['message' => 'تم إنشاء الحساب بنجاح.']);
+}
 
 
     public function login(array $credentials)
@@ -73,29 +114,33 @@ class DoctorAuthService
 
         // توليد كود 4 خانات عشوائي
         $code = rand(1000, 9999);
-
+        $resetToken = Str::random(64);
         // حفظ الكود في الجدول مع صلاحية 10 دقائق
         EmailVerification::updateOrCreate(
             ['email' => $email],
             [
                 'code' => $code,
                 'expires_at' => Carbon::now()->addMinutes(10),
+                'reset_token' => $resetToken,
             ]
         );
 
         // إرسال الكود عبر البريد الإلكتروني
-    forgetPasswordJob::dispatch($email, $code);
+        forgetPasswordJob::dispatch($email, $code);
 
-        return new successResource(['تم إرسال رمز التحقق إلى بريدك الإلكتروني.']);
+        return new successResource([
+            'تم إرسال رمز التحقق إلى بريدك الإلكتروني.',
+            'reset_token' => $resetToken
+        ]);
     }
 
     public function put_code($request)
     {
-        $email = $request->email;
+        $resetToken = $request->reset_token;
         $code = $request->code;
 
         // جلب السجل الذي يطابق البريد والكود ويكون غير منتهي الصلاحية
-        $verification = EmailVerification::where('email', $email)
+        $verification = EmailVerification::where('reset_token', $resetToken)
             ->where('code', $code)
             ->where('expires_at', '>=', Carbon::now())
             ->first();
@@ -105,18 +150,24 @@ class DoctorAuthService
                 'message' => 'الكود غير صحيح أو منتهي الصلاحية.'
             ], 422);
         }
-    $doctor = User::where('email', $email)->first();
 
-    if (! $doctor) {
-        return response()->json(['message' => 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني'], 404);
-    }
-
-    $doctor->password = Hash::make($request->password);
-    $doctor->save();
-
-
-        $verification->delete();
         return new successResource([]);
     }
 
+    public function set_password($request)
+    {
+        $resetToken = $request->reset_token;
+
+        $verification = EmailVerification::where('reset_token', $resetToken)->first();
+
+        if (!$verification || $verification->expires_at < Carbon::now()) {
+            return response()->json(['message' => 'رمز الاستعادة غير صالح أو منتهي.'], 404);
+        }
+        $user = User::where('email', $verification->email)->first();
+        $user->password = Hash::make($request->password);
+        $user->save();
+        $verification->delete();
+
+        return new successResource(['تم تحديث كلمة المرور بنجاح']);
+    }
 }
