@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Candidate;
 use App\Models\Exam;
+use App\Models\Specialization;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Crypt;
 
@@ -37,10 +38,12 @@ class ExamQuestionShowService
                 'message' => 'الطبيب غير مرشح لهذا الامتحان.',
             ], 403);
         }
+$specialization=Specialization::where('id',$exam->specialization_id)->first();
 
         // إرجاع الأسئلة بصيغة مرتبة
 return response()->json([
     'exam_id' => $exam->id,
+    'specialization'=>$specialization->name,
     'exam_date' => $exam->date,
     'start_time' => $exam->start_time,
     'end_time' => $exam->end_time,
