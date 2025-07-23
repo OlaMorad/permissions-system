@@ -9,6 +9,7 @@ use App\Services\DoctorAuthService;
 use App\Http\Requests\DoctorRegisterRequest;
 use App\Http\Requests\ForgetPasswordRequest;
 use App\Http\Requests\SetNewPasswordRequest;
+use App\Http\Requests\VerifyRegisterCodeRequest;
 
 class DoctorAuthController extends Controller
 {
@@ -18,14 +19,10 @@ class DoctorAuthController extends Controller
         return $this->doctor->pre_register($request);
     }
 
-        public function verify_register_code(Request $request)
+        public function verify_register_code(VerifyRegisterCodeRequest $request)
     {
-       $validate=$request->validate([
-        'code'=>'required|exists:email_verifications,code',
-        'email'=>'required|exists:email_verifications,email'
 
-       ]);
-        return $this->doctor->verify_register_code($validate);
+        return $this->doctor->verify_register_code($request);
     }
 
     public function login(DoctorLoginRequest $request)
