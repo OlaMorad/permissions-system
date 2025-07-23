@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CodeRequest extends FormRequest
+class SetNewPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +22,7 @@ class CodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => 'required|exists:email_verifications,code',
+            'password' => 'required|string|min:8|confirmed',
             'reset_token' => 'required|exists:email_verifications',
         ];
     }
@@ -30,10 +30,11 @@ class CodeRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'password.required' => 'كلمة المرور مطلوبة',
+            'password.min' => 'يجب أن تكون كلمة المرور 8 أحرف على الأقل',
+            'password.confirmed' => 'كلمة المرور وتأكيدها غير متطابقين',
             'reset_token.required' => 'التوكين مطلوب',
             'reset_token.exists' => 'التوكين غير موجود',
-            'code.required' => 'الكود مطلوب',
-            'code.exists' => 'الكود غير صحيح',
         ];
     }
 }

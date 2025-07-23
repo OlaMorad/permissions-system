@@ -9,6 +9,8 @@ class EmailVerification extends Model
    protected $fillable=[
     'email',
     'code',
-    'expires_at'
+    'expires_at',
+    'reset_token',
+    'data'
    ];
 }

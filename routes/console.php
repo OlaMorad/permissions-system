@@ -16,3 +16,4 @@ Schedule::command('programs:auto-reject')->daily();
 Schedule::command('programs:activate')->daily();
 Schedule::command('exams:update-status')->everyMinute();
 Schedule::command('exams:update-present-candidates')->everyTenMinutes();
+Schedule::command('email-verifications:clear-expired')->everyMinute();
