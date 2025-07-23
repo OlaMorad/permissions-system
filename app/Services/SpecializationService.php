@@ -2,8 +2,9 @@
 
 namespace App\Services;
 
-use App\Http\Resources\successResource;
 use App\Models\Specialization;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\successResource;
 
 class SpecializationService
 {
@@ -21,5 +22,11 @@ class SpecializationService
         $specialization->update($data);
 
         return new successResource($specialization);
+    }
+
+    public function show_my_Specialization(){
+
+        $doctor=Auth::user()->doctor->specializations;
+        return new successResource([ $doctor]);
     }
 }

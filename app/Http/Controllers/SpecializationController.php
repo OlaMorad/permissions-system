@@ -30,4 +30,8 @@ class SpecializationController extends Controller
     {
         return $this->SpecializationService->update($id, $request->validated());
     }
+
+    public function show_my_Specialization(){
+          return $this->SpecializationService->show_my_Specialization();
+    }
 }
