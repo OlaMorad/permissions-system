@@ -14,6 +14,7 @@ use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CandidateController;
+use App\Http\Controllers\DoctorAuthController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\ExamRequestController;
@@ -136,8 +137,10 @@ Route::middleware(['throttle:10,1'])->group(function () {
     Route::prefix('specializations')->group(function () {
         Route::get('/show_all', [SpecializationController::class, 'index'])
             ->middleware(['Verify.Session', 'role:رئيس الامتحانات|موظف الامتحانات|المدير|نائب المدير|الطبيب']);
+
         Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
+        Route::get('show/my/Specialization',[SpecializationController::class,'show_my_Specialization'])->middleware('Verify.Session','role:الطبيب');
     });
 
     // Exam Requests
@@ -194,3 +197,14 @@ Route::middleware(['throttle:10,1'])->group(function () {
         Route::get('/{id}', 'show')->middleware(['Verify.Session', 'role:المدير|الطبيب']);
     });
 });
+
+
+    //Doctor Auth
+       Route::controller(DoctorAuthController::class)->group(function () {
+        Route::post('register/doctor','register');
+        Route::post('/login/doctor', 'login');
+        Route::post('/forget/password', 'forget_password');
+        Route::post('/put/code', 'put_code');
+
+    });
+

@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->prepend([
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
@@ -26,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
 
-       $exceptions->renderable(function (NotFoundHttpException $e, $request) {
+        $exceptions->renderable(function (NotFoundHttpException $e, $request) {
             // رسالة مخصصة
             $message = 'الرابط المطلوب غير موجود. الرجاء التحقق من الرابط.';
 
@@ -37,8 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response($message, Response::HTTP_NOT_FOUND);
         });
-        
-  $exceptions->renderable(function (\Exception $e, $request) {
+
+        $exceptions->renderable(function (\Exception $e, $request) {
 
             $message = strtolower($e->getMessage());
 
@@ -60,9 +63,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     ], 499); // كود 499 مخصص لحالة انقطاع العميل قبل اكتمال الرد
                 }
             }
-
         });
-
-
     })
     ->create();
