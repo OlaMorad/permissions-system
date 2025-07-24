@@ -197,62 +197,70 @@ class InternalMailService
             'mail' => collect($mail)->except('id'),
         ]);
     }
+public function show_import_internal_mails()
+{
+    $pathData = $this->presenter->get_path_name();
+    if (!$pathData['path_name']) {
+        return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
+    }
 
-    public function show_import_internal_mails()
-    {
-        $pathData = $this->presenter->get_path_name();
-        if (!$pathData['path_name']) {
-            return response()->json(['message' => 'المسار الخاص بدور المستخدم غير معرف.'], 403);
-        }
+    if (!$pathData['path_id']) {
+        return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
+    }
 
-        if (!$pathData['path_id']) {
-            return response()->json(['message' => 'المسار غير موجود في قاعدة البيانات.'], 404);
-        }
+    $userPathId = $pathData['path_id'];
 
-        // تحميل الرسائل الموافق عليها
-        $approvedMails = InternalMail::with(['fromUser:id,name,phone,avatar'])
-            ->where('status', StatusInternalMail::APPROVED)
-            ->select('id', 'uuid', 'from_user_id', 'subject', 'updated_at')
-            ->get();
+    // 1. جلب الرسائل APPROVED المرتبطة بالمسار الحالي فقط (من جدول internal_mail_paths)
+    $approvedMailIds = DB::table('internal_mail_paths')
+        ->where('path_id', $userPathId)
+        ->pluck('internal_mail_id')
+        ->unique();
 
-        // جلب الرسائل المرتبطة بالمسار الحالي
-        $mailIdsForPath = DB::table('internal_mail_paths')
-            ->where('path_id', $pathData['path_id'])
-            ->whereIn('internal_mail_id', $approvedMails->pluck('id'))
-            ->pluck('internal_mail_id')
-            ->unique();
+    // 2. جلب الرسائل التي حالتها APPROVED ومطابقة للـ IDs أعلاه
+    $approvedMails = InternalMail::with(['fromUser:id,name,phone,avatar'])
+        ->where('status', StatusInternalMail::APPROVED)
+        ->whereIn('id', $approvedMailIds)
+        ->select('id', 'uuid', 'from_user_id', 'subject', 'updated_at')
+        ->get();
 
-        $filteredMails = $approvedMails->filter(function ($mail) use ($mailIdsForPath) {
-            return $mailIdsForPath->contains($mail->id);
-        });
+    // 3. جلب الرسائل PENDING التي المرسل منها نفس مسار المستخدم (دون النظر إلى جدول internal_mail_paths)
+    $pendingMails = InternalMail::with(['fromUser:id,name,phone,avatar'])
+        ->where('status', StatusInternalMail::PENDING)
+        ->whereHas('fromUser.roles', function ($q) use ($userPathId) {
+            $q->where('path_id', $userPathId);
+        })
+        ->select('id', 'uuid', 'from_user_id', 'subject', 'updated_at')
+        ->get();
 
-        return $filteredMails->map(function ($mail) {
-            $user = $mail->fromUser;
-            $roleName = $user->getRoleNames()->first();
-            // في حال كان المرسل هو الموظف نبدله لرئيس
-             if(str_starts_with( $roleName,'موظف')){
-                 $from = $this->presenter->sender_mail($roleName);
-        }
-         else {
+    // 4. دمج القائمتين مع إزالة التكرار
+    $allMails = $approvedMails->merge($pendingMails)->unique('id');
+
+    // 5. تجهيز البيانات للعرض
+    return $allMails->map(function ($mail) {
+        $user = $mail->fromUser;
+        $roleName = $user->getRoleNames()->first();
+
+        if (str_starts_with($roleName, 'موظف')) {
+            $from = $this->presenter->sender_mail($roleName);
+        } else {
             $from = $roleName;
         }
-            // جلب path_id من جدول roles
-            $pathId = Role::where('name', $roleName)->value('path_id');
 
-            // جلب اسم المكتب من جدول paths
-            $officeName = DB::table('paths')->where('id', $pathId)->value('name');
+        $pathId = Role::where('name', $roleName)->value('path_id');
+        $officeName = DB::table('paths')->where('id', $pathId)->value('name');
 
-            return [
-                'uuid' => $mail->uuid,
-                'from_name' => $from,
-                'from_phone' => $user->phone,
-                'from_avatar' => $user->avatar ? asset($user->avatar) : null,
-                'from_office' => $officeName,
-                'subject' => $mail->subject,
-                'received_at' => $mail->updated_at->toDateTimeString(),
-            ];
-        })->values();
-    }
+        return [
+            'uuid' => $mail->uuid,
+            'from_name' => $from,
+            'from_phone' => $user->phone,
+            'from_avatar' => $user->avatar ? asset($user->avatar) : null,
+            'from_office' => $officeName,
+            'subject' => $mail->subject,
+            'received_at' => $mail->updated_at->toDateTimeString(),
+        ];
+    })->values();
+}
+
 
 
     public function show_internal_mail_details($uuid)
