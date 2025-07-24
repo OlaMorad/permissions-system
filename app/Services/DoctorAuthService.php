@@ -87,6 +87,18 @@ public function verify_register_code($request)
         }
 
         $user = Auth::user();
+        // تحقق من حالة التفعيل
+        if (!$user->is_active) {
+            $days = now()->diffInDays($user->updated_at);
+
+            if ($days >= 30) {
+                return new failResource("تم إلغاء تفعيل هذا الحساب منذ أكثر من 30 يوم ولا يمكن استعادته.");
+            } else {
+                // تفعيل الحساب لأنه سجل دخول قبل مرور 30 يوم
+                $user->is_active = true;
+                $user->save();
+            }
+        }
         $user->last_login_at = now();
         $user->save();
 
@@ -169,5 +181,14 @@ public function verify_register_code($request)
         $verification->delete();
 
         return new successResource(['تم تحديث كلمة المرور بنجاح']);
+    }
+// الغاء تفعيل الحساب
+    public function deactivateAccount()
+    {
+        $user = Auth::user();
+        $user->is_active = false;
+        $user->save();
+
+        return new successResource('تم إلغاء تفعيل الحساب ');
     }
 }

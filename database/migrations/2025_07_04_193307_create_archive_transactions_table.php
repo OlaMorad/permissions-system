@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->json('transaction_content');
-            $table->string('receipt_number', 6);
+            $table->string('receipt_number', 15);
             $table->json('status_history');
             $table->string('final_status')->nullable();
             $table->timestamps();

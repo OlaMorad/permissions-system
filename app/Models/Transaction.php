@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
 use App\Enums\TransactionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,12 +22,15 @@ class Transaction extends Model
         'status_to',
         'receipt_number',
         'receipt_status',
+        'payment_status',
         'changed_by'
     ];
 
     protected $casts = [
         'status_from' => TransactionStatus::class,
         'status_to' => TransactionStatus::class,
+        'payment_status' => PaymentStatus::class,
+
     ];
 
     protected static function booted()

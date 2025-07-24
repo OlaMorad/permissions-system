@@ -92,7 +92,7 @@ class ProgramExamRequest extends FormRequest
             if ($existingProgram) {
                 $validator->errors()->add('month', 'يوجد بالفعل برنامج لهذا الشهر والسنة ولم يتم رفضه . لا يمكن إنشاء برنامج جديد إلا بعد رفض البرنامج السابق.');
             }
-            
+
             // خريطة أسماء الأشهر لأرقام الشهور الميلادية
             $monthsMap = [
                 'نيسان' => 4,
@@ -122,12 +122,24 @@ class ProgramExamRequest extends FormRequest
                     $allowed_months[] = ['month' => $month, 'year' => $start_year];
                 }
 
-                // تحقق من تواريخ الامتحانات
+                // خريطة الأيام بالعربية إلى الإنجليزية
+                $arabicDaysMap = [
+                    'الأحد'     => 'Sunday',
+                    'الاثنين'   => 'Monday',
+                    'الثلاثاء'  => 'Tuesday',
+                    'الأربعاء'  => 'Wednesday',
+                    'الخميس'    => 'Thursday',
+                    'الجمعة'    => 'Friday',
+                    'السبت'     => 'Saturday',
+                ];
+
+                // تحقق من تواريخ الامتحانات وتطابق اليوم مع التاريخ
                 foreach ($exams as $index => $exam) {
                     $examDate = Carbon::parse($exam['date']);
                     $examMonth = $examDate->month;
                     $examYear = $examDate->year;
 
+                    // التحقق من أن تاريخ الامتحان يقع ضمن الأشهر المسموح بها
                     $valid = false;
                     foreach ($allowed_months as $allowed) {
                         if ($examMonth === $allowed['month'] && $examYear === $allowed['year']) {
@@ -139,6 +151,22 @@ class ProgramExamRequest extends FormRequest
                         $validator->errors()->add(
                             "exams.$index.date",
                             "تاريخ الامتحان يجب أن يكون ضمن الفترة الزمنية المعتمدة في برنامج الامتحان، ولا يتجاوز بداية الدورة الامتحانية القادمة."
+                        );
+                    }
+
+                    // التحقق من تطابق اليوم مع التاريخ
+                    $expectedDayEn = $examDate->format('l'); // Sunday, Monday...
+                    $providedDayAr = $exam['day'] ?? null;
+
+                    if (
+                        $providedDayAr &&
+                        isset($arabicDaysMap[$providedDayAr]) &&
+                        $arabicDaysMap[$providedDayAr] !== $expectedDayEn
+                    ) {
+                        $correctArabicDay = array_search($expectedDayEn, $arabicDaysMap);
+                        $validator->errors()->add(
+                            "exams.$index.day",
+                            "اليوم المدخل ({$providedDayAr}) لا يتطابق مع تاريخ الامتحان ({$exam['date']})، حيث يصادف يوم {$correctArabicDay}."
                         );
                     }
                 }

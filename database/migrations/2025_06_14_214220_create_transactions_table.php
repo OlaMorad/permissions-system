@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PaymentStatus;
 use App\Enums\TransactionStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -23,8 +24,9 @@ return new class extends Migration
             $table->timestamp('received_at')->nullable();
             $table->string('status_from')->default(TransactionStatus::PENDING->value);
             $table->string('status_to')->nullable()->default(TransactionStatus::PENDING->value);
-            $table->string('receipt_number',6)->unique();
+            $table->string('receipt_number', 15)->unique();
             $table->string('receipt_status')->default(StatusInternalMail::PENDING->value);
+            $table->string('payment_status')->default(PaymentStatus::PENDING->value);
             $table->foreignId('changed_by')->nullable()->constrained('users');
             $table->timestamps();
         });

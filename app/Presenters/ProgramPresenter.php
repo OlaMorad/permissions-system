@@ -24,6 +24,19 @@ class ProgramPresenter
             ];
         })->toArray();
     }
+    public static function simpleProgram(Collection $programs): array
+    {
+        return $programs->map(function (Program $program) {
+            return [
+                'id' => $program->id,
+                'الشهر' => $program->month,
+                'السنة' => $program->year,
+                'الحالة' => $program->status?->value,
+                'تاريخ البدء' => $program->start_date,
+                'تاريخ الانتهاء' => $program->end_date,
+            ];
+        })->toArray();
+    }
 
     public static function exams(Collection $exams): array
     {
@@ -44,6 +57,20 @@ class ProgramPresenter
             ];
         })->toArray();
     }
+    public static function examsForDoctor(Collection $exams): array
+    {
+        return $exams->map(function ($exam) {
+            return [
+                'id' => $exam->id,
+                'الاختصاص' => $exam->specialization->name,
+                'اليوم' => $exam->day,
+                'التاريخ' => $exam->date,
+                'الساعة' => $exam->exam_time,
+                'الحالة' => $exam->status,
+            ];
+        })->toArray();
+    }
+
     public static function candidates(Collection $candidates): array
     {
         return $candidates->map(function ($candidate) {

@@ -27,31 +27,24 @@ class FormContentObserver
             ]);
         }
          else {
-            $firstPathId = DB::table('form_path')->where('form_id', $formContent->form_id)
-                ->orderBy('id')
-                ->value('path_id');
+                $prefix = now()->format('ymd');
+                do {
+                    $receiptNumber = $prefix . random_int(10000, 99999);
+                    $exists = DB::table('transactions')->where('receipt_number', $receiptNumber)->exists();
+                } while ($exists);
 
-            if ($firstPathId) {
-                // نحسب رقم الإيصال التالي
-                $lastReceiptNumber = DB::table('transactions')->max('receipt_number');
-                $nextReceiptNumber = $lastReceiptNumber ? ((int)$lastReceiptNumber + 1) : 1;
-
-                // تنسيق الرقم ليكون 6 خانات مثل: 000001
-                $ReceiptNumber = str_pad($nextReceiptNumber, 6, '0', STR_PAD_LEFT);
                 Transaction::create([
                     'form_content_id' => $formContent->id,
                     'from' => null,
-                    'to' => $firstPathId,
+                    'to' => null,
                     'status_from' => TransactionStatus::FORWARDED,
                     'status_to' => TransactionStatus::PENDING,
                     'received_at' => now(),
-                    'receipt_number' => $ReceiptNumber,
+                    'receipt_number' => $receiptNumber,
                     'changed_by' => null,
                 ]);
             }
         }
-    }
-
 
     /**
      * Handle the FormContent "updated" event.
