@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('form_content_id')->references('id')->on('form_contents')->cascadeOnDelete();
             $table->string('file')->nullable();   // ملف
             $table->string('image')->nullable();  // صورة
-            $table->string('receipt');  // ايصال الدفع
+            $table->string('receipt')->nullable();  // ايصال الدفع
             $table->timestamps();
         });
     }

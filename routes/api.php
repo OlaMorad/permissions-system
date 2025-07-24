@@ -90,6 +90,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
             Route::get('/show_all', 'index')->middleware('role:المدير|رئيس الديوان');
             Route::patch('/toggle-status/{id}', 'toggleStatus')->middleware('role:رئيس الديوان');
             Route::get('/active', 'activeForms')->middleware('role:الطبيب');
+            Route::get('/request', 'requestForms')->middleware('role:الطبيب');
             Route::get('/{id}', 'show_Form')->middleware('role:رئيس الديوان|المدير|الطبيب');
             Route::post('/review/{id}', 'formReviewDecision')->middleware('role:المدير');
         });
@@ -102,6 +103,9 @@ Route::middleware(['throttle:100,1'])->group(function () {
             Route::get('/export', 'Export_Transaction')->middleware('Verify.Session');
             Route::get('/archived-export', 'archivedExportedTransactions')->middleware('Verify.Session');
             Route::get('archive', 'show_archive'); //->middleware('Verify.Session','role:المدير');
+            Route::get('my', 'show_doctor_transaction')->middleware('Verify.Session', 'role:الطبيب');
+            Route::get('my/archived', 'archivedDoctorTransactions')->middleware('Verify.Session', 'role:الطبيب');
+            Route::get('my/{uuid}', 'showDoctorTransactionDetails')->middleware('Verify.Session', 'role:الطبيب');
             Route::get('/archive/path/{id}', 'archiveByPath')->middleware('Verify.Session', 'role:المدير');
             Route::get('/show/{uuid}', 'showFormContent')->middleware('Verify.Session');
             Route::get('content/{uuid}', 'ShowTransactionContent')->middleware('Verify.Session');
@@ -113,6 +117,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
 
     // Form Content
     Route::post('create_form_content', [FormContentController::class, 'create_form_content'])->middleware('Verify.Session', 'role:الطبيب');
+    Route::post('upload_receipt', [FormContentController::class, 'uploadReceipt'])->middleware('Verify.Session', 'role:الطبيب');
 
     // Statistics
     Route::prefix('statistics')->middleware(['Verify.Session'])->group(function () {
@@ -167,8 +172,8 @@ Route::middleware(['throttle:100,1'])->group(function () {
     Route::prefix('program')->controller(ProgramController::class)->group(function () {
         Route::post('/add', 'store')->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::get('/show_all', 'index')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
-        Route::get('/approved', 'get_approved_programs');
-        Route::get('/{id}', 'show_program_details')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات');
+        Route::get('/approved', 'get_approved_programs')->middleware('Verify.Session', 'role:الطبيب');
+        Route::get('/{id}', 'show_program_details')->middleware('Verify.Session', 'role:رئيس الامتحانات|نائب المدير|المدير|موظف الامتحانات|الطبيب');
         Route::post('/update-status/{id}', 'update_status')->middleware('Verify.Session', 'role:المدير');
     });
 
@@ -207,5 +212,6 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('/forget/password', 'forget_password');
         Route::post('/put/code', 'put_code');
         Route::post('set/password','set_password');
+        Route::get('deactivate', 'deactivate_account')->middleware('Verify.Session');
     });
 

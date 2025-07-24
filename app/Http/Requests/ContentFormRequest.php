@@ -4,8 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\Element_Type;
 use App\Models\FormElement;
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 
 class ContentFormRequest extends FormRequest
 {
@@ -19,9 +19,16 @@ class ContentFormRequest extends FormRequest
         return [
             'form_id' => ['required', 'exists:forms,id'],
             'elements' => ['required', 'array'],
-            'media.receipt' => ['required', 'file', 'mimes:jpg,jpeg,png'],
-            'media.*.file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
-            'media.*.image' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'form_id.required' => 'حقل رقم النموذج مطلوب.',
+            'form_id.exists' => 'النموذج المحدد غير موجود.',
+            'elements.required' => 'يجب إدخال عناصر النموذج.',
+            'elements.array' => 'صيغة العناصر غير صحيحة.',
         ];
     }
 
@@ -29,85 +36,113 @@ class ContentFormRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $formId = $this->input('form_id');
-            $elementsInput = $this->input('elements') ?? [];
 
-            // تأكد من أن form_id صالح لتفادي الأخطاء
             if (!$formId || !is_numeric($formId)) return;
 
-            $requiredElements = FormElement::where('form_id', $formId)->get();
+            $inputElements = $this->input('elements', []);
+            $fileElements = $this->file('elements', []);
 
-            foreach ($requiredElements as $element) {
-                $this->validateElement($validator, $element, $elementsInput);
+            $formElements = FormElement::where('form_id', $formId)->orderBy('id')->get();
+
+            $groups = [];
+            $currentGroup = [];
+            $validTypes = [Element_Type::CHECKBOX->value, Element_Type::Multiple_Choice->value];
+
+            foreach ($formElements as $element) {
+                $type = $element->type->value;
+                $label = $element->label;
+
+                // اجمع عناصر المجموعة
+                if (in_array($type, $validTypes)) {
+                    $currentGroup[] = $element;
+                } else {
+                    // إذا انتهت مجموعة، خزّنها ثم أفرغها
+                    if (!empty($currentGroup)) {
+                        $groups[] = $currentGroup;
+                        $currentGroup = [];
+                    }
+
+                    // تحقق من قيمة العنصر (نص أو ملف)
+                    $value = $fileElements[$label] ?? $inputElements[$label] ?? null;
+                    $this->validateElement($validator, $element, $value);
+                }
+            }
+
+            // أضف المجموعة الأخيرة إن وُجدت
+            if (!empty($currentGroup)) {
+                $groups[] = $currentGroup;
+            }
+
+            // تحقق من كل مجموعة (يجب اختيار خيار واحد فقط)
+            foreach ($groups as $group) {
+                $selectedCount = 0;
+                $labels = array_map(fn($el) => $el->label, $group);
+
+                foreach ($group as $element) {
+                    $label = $element->label;
+                    $value = $inputElements[$label] ?? null;
+
+                    if (!empty($value)) {
+                        $selectedCount++;
+                    }
+                }
+
+                if ($selectedCount !== 1) {
+                    $validator->errors()->add(
+                        'elements',
+                        'يجب اختيار خيار واحد فقط من بين: ' . implode(' أو ', $labels)
+                    );
+                }
             }
         });
     }
 
-    /**
-     * التحقق من عنصر فردي بناءً على نوعه.
-     */
-    protected function validateElement($validator, FormElement $element, array $inputElements): void
+    protected function validateElement($validator, FormElement $element, $value): void
     {
         $label = $element->label;
-        $type = $element->type instanceof Element_Type
-            ? $element->type->value
-            : (int) $element->type;
+        $type = $element->type->value;
 
-        // تجاوز التحقق لعناصر الملفات/الصور
-        if (in_array($type, [
-            Element_Type::ATTACHED_FILE->value,
-            Element_Type::ATTACHED_IMAGE->value,
-        ])) {
+        if (is_null($value)) {
+            $validator->errors()->add('elements', "العنصر ذو التسمية '{$label}' مفقود ويجب تعبئته.");
             return;
         }
 
-        // تحقق من وجود العنصر
-        if (!array_key_exists($label, $inputElements)) {
-            $validator->errors()->add(
-                'elements',
-                "العنصر ذو التسمية '{$label}' مفقود ويجب تعبئته."
-            );
+        // تحقق من ملف مرفق
+        if ($type === Element_Type::ATTACHED_FILE->value) {
+            $this->validateUploadedFile($validator, $value, $label, ['pdf', 'doc', 'docx', 'xls', 'xlsx'], 'ملف');
             return;
         }
 
-        $value = $inputElements[$label];
-
-        // تحقق من نوع CHECKBOX
-        if ($type === Element_Type::CHECKBOX->value) {
-            $this->validateCheckbox($validator, $label, $value);
-        } else {
-            $this->validateStandardInput($validator, $label, $value);
+        // تحقق من صورة مرفقة
+        if ($type === Element_Type::ATTACHED_IMAGE->value) {
+            $this->validateUploadedFile($validator, $value, $label, ['jpg', 'jpeg', 'png'], 'صورة');
+            return;
         }
+
+        // تحقق من إدخال عادي
+        $this->validateStandardInput($validator, $label, $value);
     }
 
-    /**
-     * التحقق من صحة بيانات checkbox.
-     */
-    protected function validateCheckbox($validator, string $label, $value): void
-    {
-        $rawOptions = explode('☐', $label);
-        $allowedOptions = collect($rawOptions)
-            ->map(fn($v) => trim($v))
-            ->filter()
-            ->values()
-            ->all();
-
-        if (!in_array($value, $allowedOptions)) {
-            $validator->errors()->add(
-                'elements',
-                "القيمة المختارة '{$value}' غير مسموحة لحقل '{$label}'. القيم المسموحة: [" . implode(', ', $allowedOptions) . "]"
-            );
-        }
-    }
-
-    /**
-     * التحقق من القيم النصية العادية.
-     */
     protected function validateStandardInput($validator, string $label, $value): void
     {
         if (is_null($value) || $value === '') {
+            $validator->errors()->add('elements', "يجب إدخال قيمة للعنصر '{$label}'.");
+        }
+    }
+
+    protected function validateUploadedFile($validator, $file, string $label, array $allowedExtensions, string $type): void
+    {
+        if (!($file instanceof UploadedFile) || !$file->isValid()) {
+            $validator->errors()->add('elements', "الـ {$type} المرفق في '{$label}' غير صالح.");
+            return;
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension());
+
+        if (!in_array($ext, $allowedExtensions)) {
             $validator->errors()->add(
                 'elements',
-                "يجب إدخال قيمة للعنصر '{$label}'."
+                "نوع {$type} '{$label}' غير مسموح. الأنواع المسموحة: [" . implode(', ', $allowedExtensions) . "]"
             );
         }
     }

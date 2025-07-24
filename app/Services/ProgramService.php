@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Enums\ExamRequestEnum;
 use App\Http\Resources\successResource;
 use App\Presenters\ProgramPresenter;
-
+use Illuminate\Support\Facades\Auth;
 
 class ProgramService
 {
@@ -55,11 +55,12 @@ class ProgramService
 
         return new successResource($programs);
     }
+    // عرض البرامج التي تمت الموافقة عليها فقط
     public function get_approved_programs()
     {
         $programs = Program::where('approved', ExamRequestEnum::APPROVED)->get();
 
-        return new successResource(ProgramPresenter::program($programs));
+        return new successResource(ProgramPresenter::simpleProgram($programs));
     }
     // عرض تفاصيل برنامج امتحاني
     public function show_program_details($id)
@@ -71,6 +72,13 @@ class ProgramService
                 'message' => 'البرنامج غير موجود.',
             ], 404);
         }
-        return new successResource(ProgramPresenter::exams($program->exams));
+        $user = Auth::user();
+        $isDoctor = $user->hasRole('الطبيب');
+
+        $data = $isDoctor
+            ? ProgramPresenter::examsForDoctor($program->exams)
+            : ProgramPresenter::exams($program->exams);
+
+        return new successResource($data);
     }
 }

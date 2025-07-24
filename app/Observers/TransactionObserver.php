@@ -61,7 +61,12 @@ class TransactionObserver
                 'changed_by' => $employeeId,
             ]);
             $this->archiveOrUpdate($transaction, $employeeId);
+            // حذف المحتوى فقط في حالة منجزة
+            if ($transaction->content) {
+                $transaction->content->delete();
+            }
             return;
+
         }
     }
 
@@ -182,9 +187,11 @@ class TransactionObserver
             'form_id' => $content->form->id,
             'form_name' => $content->form->name,
             'form_cost' => $content->form->cost,
+            'doctor_id' => $content->doctor->id ?? null,
             'doctor_name' => $content->doctor->user->name ?? '',
             'doctor_phone' => $content->doctor->user->phone ?? '',
             'doctor_image' => $content->doctor->user->avatar ?? null,
+            'payment_status' => $transaction->payment_status ?? null,
             'elements' => $content->elementValues->map(fn($ev) => [
                 'label' => $ev->formElement->label,
                 'type' => $ev->formElement->type,
