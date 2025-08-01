@@ -36,7 +36,7 @@ class AdminService
                 'office' => $pathNAme->name,
                 'role'=>$employee->role?->name,
                 'handled_transactions' => $stats[$userId]['handled_transactions'] ?? 0,
-                'status' => $employee->user?->is_active ?: null,
+                'status' => $employee->user?->is_active ?: 0,
                 'date join' => $employee->created_at ?: null
             ];
         });
@@ -49,7 +49,7 @@ class AdminService
             'office' => $pathNAme->name,
             'role' => $manager->role?->name,
             'handled_transactions' => null, // المعاملات نل
-            'status' => $manager->user?->is_active ?: null,
+            'status' => $manager->user?->is_active ?: 0,
             'date join' => $manager->created_at ?: null
         ];
     });
