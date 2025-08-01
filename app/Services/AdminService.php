@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Path;
 use App\Models\Role;
+use App\Models\Manager;
 use App\Models\Employee;
 use App\Services\EmployeeService;
 use App\Http\Resources\successResource;
@@ -23,9 +24,10 @@ class AdminService
         }
         $role = Role::where('path_id', $pathNAme->id)->pluck('id');
         $employees = Employee::whereIn('role_id', $role)->with('user','role')->get();
+        $managers=Manager::whereIn('role_id', $role)->with('user','role')->get();
          $stats = $this->employeeService->employeeStatistics();
         //استخدمت ماب لان عندي اكتر من موظف وكل موظف بدي اوصل لخصائصه بجدول المستخدمين
-        $data = $employees->map(function ($employee) use ($pathNAme, $stats) {
+        $employeeData = $employees->map(function ($employee) use ($pathNAme, $stats) {
               $userId = $employee->id;
             return [
                 'avatar' => $employee->user?->avatar ? asset('storage/' . $employee->user->avatar) : null,
@@ -38,6 +40,21 @@ class AdminService
                 'date join' => $employee->created_at ?: null
             ];
         });
-        return new successResource([$data]);
+
+            $managerData = $managers->map(function ($manager) use ($pathNAme) {
+        return [
+            'avatar' => $manager->user?->avatar ? asset('storage/' . $manager->user->avatar) : null,
+            'name' => $manager->user?->name ?: null,
+            'phone' => $manager->user?->phone ?: null,
+            'office' => $pathNAme->name,
+            'role' => $manager->role?->name,
+            'handled_transactions' => null, // المعاملات نل
+            'status' => $manager->user?->is_active ?: null,
+            'date join' => $manager->created_at ?: null
+        ];
+    });
+     $allData = $employeeData->merge($managerData);
+
+        return new successResource([$allData]);
     }
 }
