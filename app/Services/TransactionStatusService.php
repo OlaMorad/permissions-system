@@ -57,17 +57,34 @@ class TransactionStatusService
 
     public function updateTransactionStatus(string $uuid, TransactionStatus $requestedStatus)
     {
+        $roleName = $this->userRoleService->getUserRoleName();
         $transaction = $this->getAuthorizedTransaction($uuid);
 
         if (!in_array($requestedStatus, [TransactionStatus::FORWARDED, TransactionStatus::REJECTED])) {
             return new failResource(['الحالة غير صالحة. يجب أن تكون "محول" أو "مرفوض".']);
         }
-        // تحقق أن حالة المعاملة الحالية هي "قيد الدراسة"
-        if ($transaction->status_to !== TransactionStatus::UNDER_REVIEW) {
+        // إذا المستخدم مش مدير أو نائب، لازم تكون الحالة الحالية "قيد الدراسة"
+        if (
+            !$this->userRoleService->isManager($roleName) &&
+            $transaction->status_to !== TransactionStatus::UNDER_REVIEW
+        ) {
             return new failResource(['لا يمكن تحويل أو رفض المعاملة إلا إذا كانت حالتها "قيد الدراسة".']);
         }
-        $transaction->status_to = $requestedStatus->value;
-        $transaction->save();
+        // تحديد من قام بالتغيير
+        $changedBy = null;
+        // موظف
+        if ($this->userRoleService->isEmployee()) {
+            $changedBy = Employee::where('user_id', Auth::id())->value('id');
+        } else {
+            // مدير أو نائب مدير
+            $changedBy = Auth::id();
+        }
+
+        // تحديث الحالة ومُغيرها
+        $transaction->update([
+            'status_to'  => $requestedStatus->value,
+            'changed_by' => $changedBy,
+        ]);
 
         return new successResource([
             'message' => $requestedStatus === TransactionStatus::FORWARDED

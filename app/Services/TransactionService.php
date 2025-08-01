@@ -80,8 +80,11 @@ class TransactionService
         $role = $this->userRoleService->getUserRoleName();
 
         $query = Transaction::where('to', $userPathId);
-
-        if (!$this->userRoleService->isSectionHead($role)) {
+// اذا كان المستخدم موظف ما بيقدر يشوف المعاملات يلي بحالة قيد الدراسة
+        if (
+            !$this->userRoleService->isManager($role) &&
+            !$this->userRoleService->isSectionHead($role)
+        ) {
             $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
         }
 

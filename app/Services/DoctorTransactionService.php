@@ -46,7 +46,7 @@ class DoctorTransactionService
                 TransactionStatus::REJECTED->value,
             ])
             ->whereJsonContains('transaction_content->doctor_id', $doctorId)
-            ->orderByDesc('updated_at')
+            ->orderBy('created_at')
             ->get()
             ->map(function ($archive) {
                 $content = $archive->transaction_content;
