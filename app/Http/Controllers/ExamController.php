@@ -7,13 +7,16 @@ use App\Services\AnswerExamService;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\AnswerExamRequest;
 use App\Http\Requests\ExamNameRequest;
+use App\Services\DoctorService;
 use App\Services\ExamQuestionShowService;
 
 class ExamController extends Controller
 {
     public function __construct(
         protected ExamQuestionShowService $exam,
-        protected AnswerExamService $answers
+        protected AnswerExamService $answers,
+        protected DoctorService $doctorService
+
     ) {}
     public function show_exam_quetions(ExamNameRequest $request)
     {
@@ -26,5 +29,10 @@ class ExamController extends Controller
         $data = $request->validated();
 
         return $this->answers->submitDoctorAnswers($data);
+    }
+    
+    public function exam_profile()
+    {
+        return $this->doctorService->exam_profile();
     }
 }

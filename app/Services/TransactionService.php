@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\TransactionStatus;
 use App\Http\Resources\successResource;
 use App\Models\ArchiveTransaction;
+use App\Models\Employee;
 use App\Models\Path;
 use App\Models\Transaction;
 use App\Models\TransactionMovement;
@@ -61,12 +62,19 @@ class TransactionService
     public function import_for_financial()
     {
         $pathId = $this->userRoleService->getUserPathId();
-        $role = $this->userRoleService->getUserRoleName();
+        $employee_id = Employee::where('user_id', Auth::id())->value('id');
 
         $query = Transaction::where('to', $pathId)->whereNull('from');
 
-        if (!$this->userRoleService->isSectionHead($role)) {
-            $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
+        // الموظفين فقط يخضعون لفلترة المعاملات قيد الدراسة
+        if ($this->userRoleService->isEmployee()) {
+            $query->where(function ($q) use ($employee_id) {
+                $q->where('status_to', '!=', TransactionStatus::UNDER_REVIEW) // كل الحالات غير "قيد الدراسة"
+                    ->orWhere(function ($q2) use ($employee_id) {
+                        $q2->where('status_to', TransactionStatus::UNDER_REVIEW) // "قيد الدراسة"
+                            ->where('changed_by', $employee_id); // ولكن هو من غير حالتها
+                    });
+            });
         }
 
         return TransactionPresenter::FinanceImportList(
@@ -77,15 +85,18 @@ class TransactionService
     public function import_transactions()
     {
         $userPathId = $this->userRoleService->getUserPathId();
-        $role = $this->userRoleService->getUserRoleName();
+        $employee_id = Employee::where('user_id', Auth::id())->value('id');
 
         $query = Transaction::where('to', $userPathId);
-// اذا كان المستخدم موظف ما بيقدر يشوف المعاملات يلي بحالة قيد الدراسة
-        if (
-            !$this->userRoleService->isManager($role) &&
-            !$this->userRoleService->isSectionHead($role)
-        ) {
-            $query->where('status_to', '!=', TransactionStatus::UNDER_REVIEW->value);
+        // اذا كان المستخدم موظف ما بيقدر يشوف المعاملات يلي بحالة قيد الدراسة
+        if ($this->userRoleService->isEmployee()) {
+            $query->where(function ($q) use ($employee_id) {
+                $q->where('status_to', '!=', TransactionStatus::UNDER_REVIEW) // كل الحالات غير "قيد الدراسة"
+                    ->orWhere(function ($q2) use ($employee_id) {
+                        $q2->where('status_to', TransactionStatus::UNDER_REVIEW) // "قيد الدراسة"
+                            ->where('changed_by', $employee_id); // ولكن هو من غير حالتها
+                    });
+            });
         }
 
         return TransactionPresenter::forImportList(
@@ -138,7 +149,14 @@ class TransactionService
                 }
             }
             return false;
-        })->values();
+        })->sortBy(function ($transaction) {
+            $lastChange = collect($transaction->status_history)
+                ->sortByDesc('changed_at')
+                ->first();
+
+            return $lastChange['changed_at'] ?? null;
+        })
+        ->values();
     }
 
     public function getArchiveTransactionsByPath(int $pathId): array
@@ -157,5 +175,13 @@ class TransactionService
             ],
             'transactions' => TransactionPresenter::exportList($transactions, $pathId, $isFinance),
         ];
+    }
+
+    // الارشيف الكلي
+    public function show_archive()
+    {
+        $transactions = ArchiveTransaction::where('final_status', 'منجزة')->get();
+
+        return TransactionPresenter::exportList($transactions, null, false);
     }
 }

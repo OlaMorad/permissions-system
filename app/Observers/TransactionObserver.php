@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Enums\TransactionStatus;
 use App\Models\ArchiveTransaction;
 use App\Models\Employee;
+use App\Services\UserRoleService;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionObserver
@@ -28,7 +29,6 @@ class TransactionObserver
             return;
         }
 
-        $employeeId = Employee::where('user_id', Auth::id())->value('id');
         $newStatus = $transaction->status_to;
 
         // إذا كانت الحالة مرفوضة
@@ -39,41 +39,39 @@ class TransactionObserver
                 'status_from' => TransactionStatus::REJECTED->value,
                 'status_to' => null,
                 'sent_at' => now(),
-                'changed_by' => $employeeId,
             ]);
-            $this->archiveOrUpdate($transaction, $employeeId);
+            $this->archiveOrUpdate($transaction);
             return;
         }
 
         // إذا كانت الحالة محولة
         if ($newStatus === TransactionStatus::FORWARDED) {
-            $this->moveToNextStep($transaction, $employeeId);
-            $this->archiveOrUpdate($transaction, $employeeId);
+            $this->moveToNextStep($transaction);
+            $this->archiveOrUpdate($transaction);
             return;
         }
 
-        // إذا الحالة منجزة
-        if ($newStatus === TransactionStatus::COMPLETED) {
-            Transaction::where('id', $transaction->id)->update([
-                'from' => $transaction->to,
-                'to' => null,
-                'sent_at' => now(),
-                'changed_by' => $employeeId,
-            ]);
-            $this->archiveOrUpdate($transaction, $employeeId);
-            // حذف المحتوى فقط في حالة منجزة
-            if ($transaction->content) {
-                $transaction->content->delete();
-            }
-            return;
+        // // إذا الحالة منجزة
+        // if ($newStatus === TransactionStatus::COMPLETED) {
+        //     Transaction::where('id', $transaction->id)->update([
+        //         'from' => $transaction->to,
+        //         'to' => null,
+        //         'sent_at' => now(),
+        //     ]);
+        //     $this->archiveOrUpdate($transaction);
+        //     // حذف المحتوى فقط في حالة منجزة
+        //     if ($transaction->content) {
+        //         $transaction->content->delete();
+        //     }
+        //     return;
 
-        }
+        // }
     }
 
     /**
      * جبلي المسار التالي للمعاملة
      */
-    private function moveToNextStep(Transaction $transaction, $employeeId): void
+    private function moveToNextStep(Transaction $transaction): void
     {
         $current = $transaction->to;
         $form = $transaction->content->form;
@@ -84,21 +82,29 @@ class TransactionObserver
         $next = $steps[$index + 1] ?? null;
 
         if ($next) {
-            $this->updateTransaction($transaction, $current, $next, $employeeId);
+            $this->updateTransaction($transaction, $current, $next);
         } else {
+            $this->archiveOrUpdate($transaction); // هذا بيحفظ الحالة الحالية قبل ما نغيّرها
             // لا يوجد مسار تالي => تعيين حالة المنجزة
             $transaction->update([
-                'status_to' => TransactionStatus::COMPLETED->value,
                 'status_from' => TransactionStatus::FORWARDED->value,
-                'changed_by' => $employeeId,
+                'status_to' => TransactionStatus::COMPLETED->value,
+                'from' => $transaction->to,
+                'to'         => null,
+                'sent_at'    => now(),
             ]);
+            // حذف المحتوى فقط في حالة منجزة
+            if ($transaction->content) {
+                $transaction->content->delete();
+            }
+            return;
         }
     }
 
     /**
      * تحديث معلومات المعاملة ومسارها
      */
-    private function updateTransaction(Transaction $transaction, $current, $next, $employeeId): void
+    private function updateTransaction(Transaction $transaction, $current, $next): void
     {
         Transaction::where('id', $transaction->id)->update([
             'from' => $current,
@@ -106,21 +112,30 @@ class TransactionObserver
             'sent_at' => now(),
             'status_from' => TransactionStatus::FORWARDED->value,
             'status_to' => TransactionStatus::PENDING->value,
-            'changed_by' => $employeeId,
         ]);
     }
 
     /**
      * حفظ أو تحديث سجل الأرشيف حسب حالة المعاملة
      */
-    private function archiveOrUpdate(Transaction $transaction, $employeeId): void
+    private function archiveOrUpdate(Transaction $transaction): void
     {
+        $userRoleService = app(UserRoleService::class);
+        // تحديد من قام بالتغيير
+        $changedBy = null;
+        if ($userRoleService->isEmployee()) {
+            // إذا كان موظف، نخزّن معرفه من جدول employees
+            $changedBy = Employee::where('user_id', Auth::id())->value('id');
+        } else {
+            // إذا كان مدير أو نائب مدير، نخزّن user_id مباشرة
+            $changedBy = Auth::id();
+        }
         $changeData = [
             'from_path_id' => $transaction->from,
             'to_path_id' => $transaction->to,
             'status' => $transaction->status_to,
-            'changed_by' => $employeeId,
             'changed_at' => now(),
+            'changed_by' => $changedBy,
         ];
 
         $archived = ArchiveTransaction::where('uuid', $transaction->uuid)->first();

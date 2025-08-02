@@ -36,17 +36,31 @@ class TransactionStatusService
         if (!$this->userRoleService->isEmployee()) {
             abort(403, 'غير مسموح لك بتغيير حالة المعاملة إلى قيد الدراسة.');
         }
+
         //  جلب المعاملة
         $transaction = $this->getAuthorizedTransaction($uuid);
 
         //  تحقق إذا كانت الحالة بالفعل "قيد الدراسة"
         if ($transaction->status_to === TransactionStatus::UNDER_REVIEW) {
-            return new failResource('المعاملة هي بالفعل قيد الدراسة');
+            // إذا الموظف الحالي هو اللي غير الحالة
+            $employeeId = Employee::where('user_id', Auth::id())->value('id');
+
+            if ($transaction->changed_by == $employeeId) {
+                // رجع الحالة إلى انتظار وصفر changed_by
+                $transaction->update([
+                    'status_to'  => TransactionStatus::PENDING->value,
+                    'changed_by' => null,
+                ]);
+                return new successResource(['message' => 'تم تغيير حالة المعاملة إلى انتظار.']);
+            }
+
+            // غير مسموح لغير الذي غيّر الحالة بتعديلها
+            abort(403, 'غير مسموح لك بتغيير حالة المعاملة.');
         }
 
+        // لو الحالة مش قيد الدراسة، حولها لقيد الدراسة
         $employeeId = Employee::where('user_id', Auth::id())->value('id');
 
-        //  تحديث الحالة
         $transaction->update([
             'status_to'  => TransactionStatus::UNDER_REVIEW->value,
             'changed_by' => $employeeId,
@@ -97,6 +111,7 @@ class TransactionStatusService
     {
         $uuid = $request->input('uuid');
         $requestedStatus = $request->input('status');
+        $employee_id = Employee::where('user_id', Auth::id())->value('id');
 
         $transaction = $this->getAuthorizedTransaction($uuid);
         //  التحقق من أن الحالة الحالية "قيد الدراسة" قبل السماح بالتعديل
@@ -106,10 +121,12 @@ class TransactionStatusService
         if ($requestedStatus === StatusInternalMail::APPROVED->value) {
             $transaction->receipt_status = StatusInternalMail::APPROVED->value;
             $transaction->status_to = TransactionStatus::FORWARDED->value;
+            $transaction->changed_by = $employee_id; //  تحديث المستخدم الذي غيّر الحالة
             $message = 'تمت الموافقة على الإيصال وتحديث حالة المعاملة.';
         } elseif ($requestedStatus === StatusInternalMail::REJECTED->value) {
             $transaction->receipt_status = StatusInternalMail::REJECTED->value;
             $transaction->status_to = TransactionStatus::REJECTED->value;
+            $transaction->changed_by = $employee_id; //  تحديث المستخدم الذي غيّر الحالة
             $message = 'تم رفض الإيصال وتحديث حالة المعاملة إلى مرفوضة.';
         } else {
             return new failResource(['الحالة غير صالحة. يجب أن تكون "مرسلة" أو "مرفوضة".']);
