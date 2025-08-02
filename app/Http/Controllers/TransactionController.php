@@ -81,7 +81,7 @@ class TransactionController extends Controller
     // الارشيف الكلي
     public function show_archive()
     {
-        return new successResource(ArchiveTransaction::all());
+        return $this->transactionService->show_archive();
     }
     //عرض معاملات الطبيب الحالية
     public function show_doctor_transaction()

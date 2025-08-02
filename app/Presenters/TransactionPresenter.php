@@ -78,7 +78,7 @@ class TransactionPresenter
         ];
     }
 
-    public static function exportList(Collection $transactions, int $pathId, bool $isFinance): array
+    public static function exportList(Collection $transactions, ?int $pathId = null, bool $isFinance = false): array
     {
         return $transactions->map(function ($t) use ($pathId, $isFinance) {
             return $isFinance
@@ -126,8 +126,13 @@ class TransactionPresenter
         }, $media);
     }
 
-    private static function extractStatusFromHistory(array $history, int $pathId): string
+    private static function extractStatusFromHistory(array $history, ?int $pathId): string
     {
+        if (is_null($pathId)) {
+            // رجّع آخر حالة موجودة
+            $last = end($history);
+            return $last['status'] ?? '--';
+        }
         foreach ($history as $entry) {
             if (isset($entry['to_path_id'], $entry['status']) && (int)$entry['to_path_id'] === $pathId) {
                 return $entry['status'];
@@ -136,7 +141,7 @@ class TransactionPresenter
         return '--';
     }
 
-    private static function getNextPath(array $history, int $pathId, array $transactionContent): string
+    private static function getNextPath(array $history, ?int $pathId, array $transactionContent): string
     {
         $status = self::extractStatusFromHistory($history, $pathId);
         if ($status === TransactionStatus::REJECTED->value) return '--';
@@ -145,6 +150,14 @@ class TransactionPresenter
         if (!$formId) return '--';
 
         $allPathIds = DB::table('form_path')->where('form_id', $formId)->orderBy('id')->pluck('path_id')->toArray();
+        if (is_null($pathId)) {
+            // نجيب آخر to_path_id من الهستوري
+            $lastPathId = end($history)['to_path_id'] ?? null;
+            if (!$lastPathId) return '--';
+            $index = array_search($lastPathId, $allPathIds);
+        } else {
+            $index = array_search($pathId, $allPathIds);
+        }
         $index = array_search($pathId, $allPathIds);
         $nextPathId = $allPathIds[$index + 1] ?? null;
         return $nextPathId ? (Path::find($nextPathId)?->name ?? '--') : '--';

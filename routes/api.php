@@ -102,11 +102,11 @@ Route::middleware(['throttle:100,1'])->group(function () {
             Route::get('/import', 'Import_Transaction')->middleware('Verify.Session');
             Route::get('/export', 'Export_Transaction')->middleware('Verify.Session');
             Route::get('/archived-export', 'archivedExportedTransactions')->middleware('Verify.Session');
-            Route::get('archive', 'show_archive'); //->middleware('Verify.Session','role:المدير');
+            Route::get('archive', 'show_archive')->middleware('Verify.Session','role:المدير');
             Route::get('my', 'show_doctor_transaction')->middleware('Verify.Session', 'role:الطبيب');
             Route::get('my/archived', 'archivedDoctorTransactions')->middleware('Verify.Session', 'role:الطبيب');
             Route::get('my/{uuid}', 'showDoctorTransactionDetails')->middleware('Verify.Session', 'role:الطبيب');
-            Route::get('/archive/path/{id}', 'archiveByPath')->middleware('Verify.Session', 'role:المدير');
+            Route::get('/archive/path/{id}', 'archiveByPath')->middleware('Verify.Session', 'role:المدير|نائب المدير');
             Route::get('/show/{uuid}', 'showFormContent')->middleware('Verify.Session');
             Route::get('content/{uuid}', 'ShowTransactionContent')->middleware('Verify.Session');
             Route::patch('/under-review/{uuid}', 'MarkAsUnderReview')->middleware('Verify.Session');
@@ -194,6 +194,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
     Route::controller(ExamController::class)->group(function () {
         Route::get('show/examQuestions', 'show_exam_quetions')->middleware(['Verify.Session', 'role:الطبيب']);
         Route::post('submit/answers', 'submit_answers')->middleware(['Verify.Session', 'role:الطبيب']);
+        Route::get('exam/profile', 'exam_profile')->middleware(['Verify.Session', 'role:الطبيب']);
     });
     //announcements
     Route::controller(AnnouncementController::class)->prefix('announcement')->group(function () {
