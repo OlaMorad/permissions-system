@@ -26,7 +26,7 @@ class ExamRequest extends FormRequest
             'elements' => ['required', 'array'],
             'attachments' => ['nullable', 'array'],
             'attachments.file' => ['nullable'],
-            'attachments.file.*' => ['file', 'mimes:pdf,doc,docx,txt', 'max:2048'],
+            'attachments.file.*' => ['file', 'mimes:pdf,doc,docx,txt,jpg,jpeg ,png', 'max:2048'],
         ];
     }
 }

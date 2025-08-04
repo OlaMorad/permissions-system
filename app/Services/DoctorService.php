@@ -52,7 +52,6 @@ class DoctorService
         $now = Carbon::now();
         $startTime = Carbon::parse($exam->start_time);
         $endTime = Carbon::parse($exam->end_time);
-
         if ($now->gt($endTime)) {
             return response()->json(['message' => 'انتهى وقت الامتحان.'], 403);
         }
