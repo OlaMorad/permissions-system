@@ -120,7 +120,7 @@ class ExamRequestService
     //تخزين المرفقات
     protected function storeAttachments(FormContent $formContent, array $media): void
     {
-        foreach ($media as $label => $files) { 
+        foreach ($media as $label => $files) {
             // تأكدي أن الملفات مصفوفة
             if (!is_array($files)) {
                 $files = [$files];
@@ -241,14 +241,42 @@ class ExamRequestService
         return new successResource($result);
     }
 //عرض الطلبات المنتهية يلي حالتها تغيرت لمرفوضة او مقبولة
-    public function show_all_end_request_exam()
-    {
-        // APPROVED و REJECTED مع إظهار حالة الطلب
-        $result = $this->getExamRequestsByStatus(
-            [ExamRequestEnum::APPROVED->value, ExamRequestEnum::REJECTED->value],
-            true
-        );
+  public function show_all_end_request_exam()
+{
+    $result = $this->getExamRequestsByStatus(
+        [ExamRequestEnum::APPROVED->value, ExamRequestEnum::REJECTED->value],
+        true
+    );
 
-        return new successResource($result);
-    }
+    $specializationNames = $result->pluck('الاختصاص')->filter()->unique();
+
+    $specializations = Specialization::whereIn('name', $specializationNames)->get();
+
+    $specializationMap = $specializations->pluck('id', 'name');
+
+$examDates = Exam::whereIn('specialization_id', $specializations->pluck('id'))
+    ->get()
+    ->groupBy('specialization_id')
+    ->map(function ($exams) {
+        return $exams->sortByDesc('created_at')->first()?->date;
+    });
+
+
+    // نضيف "تاريخ الامتحان" لكل طلب حسب اختصاصه
+    $finalResult = $result->map(function ($item) use ($specializationMap, $examDates) {
+        $specializationName = $item['الاختصاص'] ?? null;
+
+        if ($specializationName && isset($specializationMap[$specializationName])) {
+            $specId = $specializationMap[$specializationName];
+            $item['تاريخ الامتحان'] = $examDates[$specId] ?? null;
+        } else {
+            $item['تاريخ الامتحان'] = null;
+        }
+
+        return $item;
+    });
+
+    return new successResource($finalResult);
+}
+
 }
