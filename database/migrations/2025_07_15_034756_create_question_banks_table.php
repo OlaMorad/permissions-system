@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Enums\QuestionBankEnum;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -23,6 +24,7 @@ return new class extends Migration
             $table->string('difficulty_level');
             $table->string('question_hash')->unique();
             $table->timestamp('last_used_at')->nullable();
+            $table->String('status')->default(QuestionBankEnum::PENDING->value);
             $table->timestamps();
         });
     }

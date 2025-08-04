@@ -5,6 +5,8 @@ namespace App\Services;
 use Carbon\Carbon;
 use App\Models\Exam;
 use App\Models\Form;
+use App\Models\User;
+use App\Models\Doctor;
 use App\Models\ExamRequest;
 use App\Models\FormContent;
 use App\Enums\ExamRequestEnum;
@@ -170,10 +172,13 @@ class ExamRequestService
                 'value' => $value,
             ];
         }
+        $doctor=Doctor::where('id',$examRequest->doctor_id)->first();
+        $DoctorImage=User::where('id',$doctor->user_id)->select('avatar')->first();
         return [
             'form_name' => $formContent->form->name,
             'uuid' => $examRequest->uuid,
             'elements' => $elements,
+            'Doctor_image'=>asset('storage/'. $DoctorImage->avatar)
         ];
     }
 

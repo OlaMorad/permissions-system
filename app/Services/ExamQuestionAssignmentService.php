@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Exam;
 use App\Models\Program;
 use App\Models\QuestionBank;
+use App\Enums\QuestionBankEnum;
 use Illuminate\Support\Facades\DB;
 
 class ExamQuestionAssignmentService
@@ -16,8 +17,7 @@ class ExamQuestionAssignmentService
         foreach ($program->exams as $exam) {
             $specializationId = $exam->specialization_id;
 
-            //  (تقديريًا مثلاً 20 سؤال لكل امتحان)
-            $totalQuestions = 20;
+            $totalQuestions = 100;
 
             $easyCount = round($exam->simple_ratio * $totalQuestions / 100);
             $mediumCount = round($exam->average_ratio * $totalQuestions / 100);
@@ -27,7 +27,7 @@ class ExamQuestionAssignmentService
 
             $questions = $questions->merge(
                 QuestionBank::where('specialization_id', $specializationId)
-                    ->where('difficulty_level', 'بسيط')
+                    ->where('difficulty_level', 'بسيط')->where('status',QuestionBankEnum::APPROVED->value)
                     ->where(function ($q) use ($avoidRecentlyUsedBefore) {
                         $q->whereNull('last_used_at')
                             ->orWhere('last_used_at', '<', $avoidRecentlyUsedBefore);
