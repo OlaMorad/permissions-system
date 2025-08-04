@@ -8,8 +8,8 @@ use App\Http\Controllers\ExamController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PathController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\EmployeeController;
@@ -20,6 +20,7 @@ use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\ExamRequestController;
 use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\SpecializationController;
@@ -102,7 +103,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
             Route::get('/import', 'Import_Transaction')->middleware('Verify.Session');
             Route::get('/export', 'Export_Transaction')->middleware('Verify.Session');
             Route::get('/archived-export', 'archivedExportedTransactions')->middleware('Verify.Session');
-            Route::get('archive', 'show_archive')->middleware('Verify.Session','role:المدير');
+            Route::get('archive', 'show_archive')->middleware('Verify.Session', 'role:المدير');
             Route::get('my', 'show_doctor_transaction')->middleware('Verify.Session', 'role:الطبيب');
             Route::get('my/archived', 'archivedDoctorTransactions')->middleware('Verify.Session', 'role:الطبيب');
             Route::get('my/{uuid}', 'showDoctorTransactionDetails')->middleware('Verify.Session', 'role:الطبيب');
@@ -145,7 +146,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
 
         Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
-        Route::get('show/my/Specialization',[SpecializationController::class,'show_my_Specialization'])->middleware('Verify.Session','role:الطبيب');
+        Route::get('show/my/Specialization', [SpecializationController::class, 'show_my_Specialization'])->middleware('Verify.Session', 'role:الطبيب');
     });
 
     // Exam Requests
@@ -205,14 +206,19 @@ Route::middleware(['throttle:100,1'])->group(function () {
 });
 
 
-    //Doctor Auth
-       Route::controller(DoctorAuthController::class)->group(function () {
-        Route::post('register/doctor','register');
-        Route::post('verify/register/code','verify_register_code');
-        Route::post('/login/doctor', 'login');
-        Route::post('/forget/password', 'forget_password');
-        Route::post('/put/code', 'put_code');
-        Route::post('set/password','set_password');
-        Route::get('deactivate', 'deactivate_account')->middleware('Verify.Session');
-    });
+//Doctor Auth
+Route::controller(DoctorAuthController::class)->group(function () {
+    Route::post('register/doctor', 'register');
+    Route::post('verify/register/code', 'verify_register_code');
+    Route::post('/login/doctor', 'login');
+    Route::post('/forget/password', 'forget_password');
+    Route::post('/put/code', 'put_code');
+    Route::post('set/password', 'set_password');
+    Route::get('deactivate', 'deactivate_account')->middleware('Verify.Session');
+});
 
+//search
+Route::controller(SearchController::class)->group(function () {
+    Route::post('search/degree', 'Search_degree_doctor');
+    Route::post('search/Exam/request', 'Search_Exam_Request');
+});
