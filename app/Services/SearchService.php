@@ -3,96 +3,138 @@
 namespace App\Services;
 
 use App\Models\Exam;
+use App\Models\Form;
+use App\Models\Path;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Candidate;
 use App\Models\ExamRequest;
 use App\Enums\ExamRequestEnum;
 use App\Models\Specialization;
+use App\Http\Resources\failResource;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\successResource;
+use App\Models\Announcement;
 
 class SearchService
 {
-
+    public function __construct(protected EmployeeService $employeeService , protected SearchServiceHelper $helper) {}
     public function Search_degree_doctor($request)
     {
         $search = Candidate::where('degree', $request)->get();
         return new successResource([$search]);
     }
 
-public function Search_Exam_Request($request)
-{
-    $doctorIds = User::with('doctor')
-        ->where('name', 'LIKE', '%' . $request . '%')
-        ->get()
-        ->filter(fn($user) => $user->doctor)
-        ->pluck('doctor.id');
+    public function Search_Exam_Request($request)
+    {
+        // جلب معرفات الأطباء المرتبطين بالمستخدمين حسب الاسم
+        $doctorIds = User::with('doctor')
+            ->where('name', 'LIKE', '%' . $request . '%')
+            ->get()
+            ->filter(fn($user) => $user->doctor)
+            ->pluck('doctor.id');
 
-    if ($doctorIds->isEmpty()) {
-        return response()->json(['message' => 'لا يوجد أطباء مرتبطين'], 404);
+        if ($doctorIds->isEmpty()) {
+            return response()->json(['message' => 'لا يوجد أطباء مرتبطين'], 404);
+        }
+
+        // الطلبات الواردة والمنتهية
+        $importRequests = $this->helper->fetchFormattedExamRequests($doctorIds, [ExamRequestEnum::PENDING->value], true);
+        $endRequests    = $this->helper->fetchFormattedExamRequests($doctorIds, [ExamRequestEnum::APPROVED->value, ExamRequestEnum::REJECTED->value], true);
+
+        // إلحاق تواريخ الامتحانات للطلبات المنتهية فقط
+        $endRequestsWithDates = $this->helper->attachExamDates($endRequests);
+
+        // دمج النتائج وإرجاعها
+        return new successResource($importRequests->concat($endRequestsWithDates));
     }
 
-    $importRequests = $this->formatExamRequests($doctorIds, [ExamRequestEnum::PENDING->value], false);
-    $endRequests    = $this->formatExamRequests($doctorIds, [ExamRequestEnum::APPROVED->value, ExamRequestEnum::REJECTED->value], true);
-// dd($endRequests);
-    // تجهيز تواريخ الامتحانات للطلبات المنتهية
-    $endRequestsWithDates = $this->attachExamDates($endRequests);
 
-    return new successResource($importRequests->concat($endRequestsWithDates));
-}
+    public function Search_Specialization_Name($request)
+    {
+        $search = Specialization::where('name', 'LIKE', '%' . $request . '%')->get();
+        return new successResource([$search]);
+    }
 
-private function formatExamRequests($doctorIds, array $statuses, bool $includeStatus)
-{
-    return ExamRequest::with([
-            'formContent.elementValues.formElement',
-            'formContent.form',
-            'doctor.user'
-        ])
-        ->whereIn('status', $statuses)
-        ->whereIn('doctor_id', $doctorIds)
-        ->get()
-        ->map(function ($request) use ($includeStatus) {
+    public function Search_Employee($request)
+    {
+        $authUser = auth()->user();
+        $authRoleName = $authUser->getRoleNames()->first();
 
-            // ابحثي عن عنصر الاختصاص داخل elementValues حسب اللابل الخاص به
-            $specializationValue = $request->formContent->elementValues
-                ->firstWhere('formElement.label', 'يرجى الموافقة على دخولي الاختبار النهائي لاختصاص')?->value;
+        if (!$authRoleName) {
+            return new failResource([]);
+        }
 
-            $data = [
-                'اسم الطبيب'   => $request->doctor->user->name,
-                'الاختصاص'     => $specializationValue,
-                'اسم النموذج'  => $request->formContent->form->name ?? null,
-                'اسم المريض'   => $request->formContent->elementValues->first()?->value ?? null,
-                'تاريخ الطلب'  => $request->created_at->format('Y-m-d'),
-                'صورة الطبيب' => $request->doctor->user->avatar
-                                    ? asset('storage/' . $request->doctor->user->avatar)
-                                    : null,
-            ];
+        $isPresident = str_starts_with($authRoleName, 'رئيس');
 
-            if ($includeStatus) {
-                $data['حالة الطلب'] = $request->status;
+        $authPathId = null;
+
+        if ($isPresident) {
+            $authPathId = Role::where('name', $authRoleName)->value('path_id');
+            if (!$authPathId) {
+                return new failResource([]);
             }
+        }
 
-            return $data;
-        });
-}
+        $stats = $this->employeeService->employeeStatistics();
 
+        $query = User::with(['employee.role', 'manager.role'])
+            ->where('name', 'LIKE', '%' . $request . '%');
 
-private function attachExamDates($requests)
-{
-    $specializationNames = $requests->pluck('specialization_id')->filter()->unique();
-// dd($requests);
-    $specializationMap = Specialization::whereIn('id', $specializationNames)->pluck('id', 'name');
+        if ($isPresident) {
+            // الرئيس يبحث فقط عن الموظفين المرتبطين به بنفس الـ path
+            $query->whereHas('employee.role', function ($q) use ($authPathId) {
+                $q->where('path_id', $authPathId);
+            });
+        } else {
+            // المدير أو النائب يمكنه رؤية الموظفين والمدراء
+            $query->where(function ($q) {
+                $q->whereHas('employee')->orWhereHas('manager');
+            });
+        }
 
-    $examDates = Exam::whereIn('specialization_id', $specializationMap->values())
-        ->get()
-        ->groupBy('specialization_id')
-        ->map(fn($exams) => $exams->sortByDesc('created_at')->first()?->date);
+        $results = $query
+            ->select('id', 'name', 'phone', 'avatar', 'is_active', 'created_at')
+            ->get()
+            ->map(function ($user) use ($stats) {
+                $employee = $user->employee ?? $user->manager;
+                if (!$employee) {
+                    return null;
+                }
 
-    return $requests->map(function ($item) use ($specializationMap, $examDates) {
-        $specName = $item['الاختصاص'] ?? null;
-        $specId   = $specializationMap[$specName] ?? null;
-        $item['تاريخ الامتحان'] = $specId ? $examDates[$specId] ?? null : null;
-        return $item;
-    });
-}
+                $employeeId = $employee->id;
+                $pathId = Path::where('id', $employee->role->path_id)->first();
+                return [
+                    'avatar' => $user->avatar ? asset('storage/' . $user->avatar) : null,
+                    'name' => $user->name,
+                    'phone' => $user->phone,
+                    'role' => $employee->role?->name,
+                    'handled_transactions' => $stats[$employeeId]['handled_transactions'] ?? 0,
+                    'date_jion' => $user->created_at,
+                    'is_active' => $user->is_active,
+                    'path' => $pathId->name
+                ];
+            })
+            ->filter() // إزالة null
+            ->values(); // ترتيب
 
+        return new successResource([$results]);
+    }
+
+    public function Search_Form($request)
+    {
+        $search = Form::where('name', 'LIKE', '%' . $request . '%')->get();
+        return new successResource([$search]);
+    }
+
+    public function Search_Announcements($request)
+    {
+        $search = Announcement::where('title', 'LIKE', '%' . $request . '%')
+            ->orwhere('body', 'LIKE', '%' . $request . '%')->get();
+        return new successResource([$search]);
+    }
+
+    public function Search_Archive($request){
+
+    }
 }
