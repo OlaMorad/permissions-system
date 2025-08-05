@@ -11,7 +11,7 @@ class FaceRecognitionService
 $response = Http::asMultipart()
     ->attach('img1', base64_decode($base64Image1), 'img1.jpg')
     ->attach('img2', base64_decode($base64Image2), 'img2.jpg')
-    ->post('https://c00b74b199a2.ngrok-free.app/process');
+    ->post('http://127.0.0.1:5000/process');
 
 
 
