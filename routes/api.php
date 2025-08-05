@@ -218,7 +218,12 @@ Route::controller(DoctorAuthController::class)->group(function () {
 });
 
 //search
-Route::controller(SearchController::class)->group(function () {
-    Route::post('search/degree', 'Search_degree_doctor');
-    Route::post('search/Exam/request', 'Search_Exam_Request');
+Route::controller(SearchController::class)->prefix('search')->group(function () {
+    Route::post('degree', 'Search_degree_doctor');
+    Route::post('Exam/request', 'Search_Exam_Request');
+    Route::post('Specialization/Name', 'Search_Specialization_Name');
+    Route::post('Employee', 'Search_Employee');
+    Route::post('Form', 'Search_Form');
+    Route::post('Announcements', 'Search_Announcements');
+
 });
