@@ -21,6 +21,7 @@ use App\Http\Controllers\ExamRequestController;
 use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\SpecializationController;
@@ -196,7 +197,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::get('show/examQuestions', 'show_exam_quetions')->middleware(['Verify.Session', 'role:الطبيب']);
         Route::post('submit/answers', 'submit_answers')->middleware(['Verify.Session', 'role:الطبيب']);
         Route::get('exam/profile', 'exam_profile')->middleware(['Verify.Session', 'role:الطبيب']);
-        Route::get('exam','check_exam_time')->middleware(['Verify.Session', 'role:الطبيب']);
+        Route::get('exam', 'check_exam_time')->middleware(['Verify.Session', 'role:الطبيب']);
     });
     //announcements
     Route::controller(AnnouncementController::class)->prefix('announcement')->group(function () {
@@ -227,5 +228,7 @@ Route::controller(SearchController::class)->prefix('search')->group(function () 
     Route::post('Employee', 'Search_Employee');
     Route::post('Form', 'Search_Form');
     Route::post('Announcements', 'Search_Announcements');
-
 });
+
+//face
+Route::post('face/recogination', [FaceRecognitionController::class, 'verify'])->middleware('Verify.Session');
