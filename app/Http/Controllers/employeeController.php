@@ -11,33 +11,33 @@ use App\Http\Requests\UpdateEmployeeRequest;
 
 class employeeController extends Controller
 {
-    public function __construct(protected RegisterService $registerService , protected EmployeeService $employeeService) {}
+    public function __construct(protected RegisterService $registerService, protected EmployeeService $employeeService) {}
 
 
     public function create_employee(UserRequest $request)
     {
         $this->registerService->register_employee($request->validated());
-      return new successResource([]);
-
+        return new successResource([]);
     }
 
-    public function edit_employee_information(UpdateEmployeeRequest $request){
-   $respone= $this->employeeService->edit_employee_information($request);
-    return new successResource([
-        'employee'=> $respone
-    ]);
+    public function edit_employee_information(UpdateEmployeeRequest $request)
+    {
+        $respone = $this->employeeService->edit_employee_information($request);
+        return new successResource([
+            'employee' => $respone
+        ]);
     }
 
-    public function show_employees(){
-     return    $respone= $this->employeeService->show_employees();
-
+    public function show_employees()
+    {
+        return    $respone = $this->employeeService->show_employees();
     }
-//تفعيل او الغاء تفعيل الموظف
-    public function convert_employee_status(Request $request){
- $request->validate([
-        'id' => 'required|exists:employees,id',
-    ]);
-  return    $respone= $this->employeeService->convert_employee_status($request['id']);
+    //تفعيل او الغاء تفعيل الموظف
+    public function convert_employee_status(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:employees,id',
+        ]);
+        return    $respone = $this->employeeService->convert_employee_status($request['id']);
     }
-
 }

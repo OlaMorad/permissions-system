@@ -42,7 +42,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
 
     // Employee
     Route::middleware('Verify.Session')->group(function () {
-        Route::post('/register-employee', [EmployeeController::class, 'create_employee']);
+        Route::post('/register-employee', [EmployeeController::class, 'create_employee'])->middleware(['role:نائب المدير', 'Verify.Session']);
         Route::post('/edit_employee_information', [EmployeeController::class, 'edit_employee_information']);
         Route::get('/show_employees', [EmployeeController::class, 'show_employees']);
         Route::get('/convert_employee_status', [EmployeeController::class, 'convert_employee_status']);
@@ -50,7 +50,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
 
     // Manager
     Route::controller(ManagerController::class)->group(function () {
-        Route::get('Manager_Roles', 'ManagerRoles');
+        Route::get('all_roles', 'show_roles')->middleware(['role:نائب المدير', 'Verify.Session']);
         Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير', 'Verify.Session']);
         Route::get('show_my_employees', 'show_my_employees')->middleware('Verify.Session');
         Route::get('show_all_managers', 'show_all_managers');
@@ -196,6 +196,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::get('show/examQuestions', 'show_exam_quetions')->middleware(['Verify.Session', 'role:الطبيب']);
         Route::post('submit/answers', 'submit_answers')->middleware(['Verify.Session', 'role:الطبيب']);
         Route::get('exam/profile', 'exam_profile')->middleware(['Verify.Session', 'role:الطبيب']);
+        Route::get('exam','check_exam_time')->middleware(['Verify.Session', 'role:الطبيب']);
     });
     //announcements
     Route::controller(AnnouncementController::class)->prefix('announcement')->group(function () {
@@ -214,7 +215,8 @@ Route::controller(DoctorAuthController::class)->group(function () {
     Route::post('/forget/password', 'forget_password');
     Route::post('/put/code', 'put_code');
     Route::post('set/password', 'set_password');
-    Route::get('deactivate', 'deactivate_account')->middleware('Verify.Session');
+    Route::get('deactivate', 'deactivate_account')->middleware(['Verify.Session', 'role:الطبيب']);
+    Route::get('profile', 'doctor_profile')->middleware(['Verify.Session', 'role:الطبيب']);
 });
 
 //search

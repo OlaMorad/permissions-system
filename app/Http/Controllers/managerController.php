@@ -17,19 +17,10 @@ class ManagerController extends Controller
     public function __construct(protected RegisterService $registerService, protected ManagerService $managerService) {}
 
 
-    public function create_manager(RegisterManagerRequest $request, $role_id)
+    public function show_roles()
     {
-        $this->registerService->registerManager($request->validated());
-
-        return new successResource([]);
-    }
-
-    public function ManagerRoles()
-    {
-        $roles = Role::where('name', 'like', 'رئيس %')->get(['id', 'name']);
-        return response()->json([
-            'roles' => $roles
-        ]);
+        $roles = Role::whereNotIn('name', ['الطبيب', 'المدير', 'نائب المدير'])->orderBy('id')->get(['id', 'name']);
+        return new successResource($roles);
     }
 
 
@@ -40,7 +31,7 @@ class ManagerController extends Controller
     }
 
     public function show_all_managers()
-    { 
+    {
         $managers_id = dB::table("managers")->pluck('user_id');
         $users = User::whereIn('id', $managers_id)->select('name', 'avatar', 'phone')->get();
         foreach ($users as $user) {

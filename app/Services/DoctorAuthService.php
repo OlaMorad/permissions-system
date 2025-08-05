@@ -13,71 +13,72 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\successResource;
+use App\Models\ContactInfo;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class DoctorAuthService
 {
-//ما قبل انشاء الحساب نرسل كود التحقق بعدين اذا دخله صح ننشئ حسابه
-public function pre_register($request)
-{
-    $email = $request->email;
+    //ما قبل انشاء الحساب نرسل كود التحقق بعدين اذا دخله صح ننشئ حسابه
+    public function pre_register($request)
+    {
+        $email = $request->email;
 
-    // توليد كود تحقق 4 خانات
-    $code = rand(1000, 9999);
+        // توليد كود تحقق 4 خانات
+        $code = rand(1000, 9999);
 
-    EmailVerification::updateOrCreate(
-        ['email' => $email],
-        [
-            'code' => $code,
-            'data' => json_encode($request->only(['name', 'email', 'phone', 'password'])),
-            'expires_at' => now()->addMinutes(10),
-        ]
-    );
+        EmailVerification::updateOrCreate(
+            ['email' => $email],
+            [
+                'code' => $code,
+                'data' => json_encode($request->only(['name', 'email', 'phone', 'password'])),
+                'expires_at' => now()->addMinutes(10),
+            ]
+        );
 
-    forgetPasswordJob::dispatch($email, $code);
+        forgetPasswordJob::dispatch($email, $code);
 
-    return new successResource(['message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني.']);
-}
-
-public function verify_register_code($request)
-{
-    $email = $request['email'];
-    $code = $request['code'];
-
-    $verification = EmailVerification::where('email', $email)
-        ->where('code', $code)
-        ->where('expires_at', '>=', now())
-        ->first();
-
-    if (!$verification) {
-        return response()->json(['message' => 'الكود غير صحيح أو منتهي الصلاحية.'], 422);
+        return new successResource(['message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني.']);
     }
 
-    // استعادة البيانات من json
-    $data = json_decode($verification->data);
+    public function verify_register_code($request)
+    {
+        $email = $request['email'];
+        $code = $request['code'];
 
-    // أنشئ الحساب
-    $avatarDefault = 'avatars/2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg';
-    $user = User::create([
-        'name' => $data->name,
-        'phone' => $data->phone,
-        'email' => $data->email,
-        'avatar' => $avatarDefault,
-        'address' => '',
-        'password' => Hash::make($data->password),
-    ]);
+        $verification = EmailVerification::where('email', $email)
+            ->where('code', $code)
+            ->where('expires_at', '>=', now())
+            ->first();
 
-    $user->assignRole('الطبيب');
+        if (!$verification) {
+            return response()->json(['message' => 'الكود غير صحيح أو منتهي الصلاحية.'], 422);
+        }
 
-    Doctor::create([
-        'user_id' => $user->id,
-    ]);
+        // استعادة البيانات من json
+        $data = json_decode($verification->data);
 
-    // حذف سجل التحقق بعد الاستخدام
-    $verification->delete();
+        // أنشئ الحساب
+        $avatarDefault = 'avatars/2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg';
+        $user = User::create([
+            'name' => $data->name,
+            'phone' => $data->phone,
+            'email' => $data->email,
+            'avatar' => $avatarDefault,
+            'address' => '',
+            'password' => Hash::make($data->password),
+        ]);
 
-    return new successResource(['message' => 'تم إنشاء الحساب بنجاح.']);
-}
+        $user->assignRole('الطبيب');
+
+        Doctor::create([
+            'user_id' => $user->id,
+        ]);
+
+        // حذف سجل التحقق بعد الاستخدام
+        $verification->delete();
+
+        return new successResource(['message' => 'تم إنشاء الحساب بنجاح.']);
+    }
 
 
     public function login(array $credentials)
@@ -182,7 +183,7 @@ public function verify_register_code($request)
 
         return new successResource(['تم تحديث كلمة المرور بنجاح']);
     }
-// الغاء تفعيل الحساب
+    // الغاء تفعيل الحساب
     public function deactivateAccount()
     {
         $user = Auth::user();
@@ -190,5 +191,22 @@ public function verify_register_code($request)
         $user->save();
 
         return new successResource('تم إلغاء تفعيل الحساب ');
+    }
+    // بروفايل الدكتور
+    public function doctor_profile()
+    {
+        $user = Auth::user();
+        $doctor = $user->doctor;
+        if (!$doctor) {
+            return response()->json(['message' => 'الدكتور غير موجود.'], 404);
+        }
+        $contactInfo = ContactInfo::first();
+        return new successResource([
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar' =>asset('storage/'.$user->avatar),
+            'contact_info' => $contactInfo,
+        ]);
     }
 }
