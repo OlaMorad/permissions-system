@@ -9,16 +9,13 @@ use Illuminate\Http\Request;
 class DoctorController extends Controller
 {
 
-    public function __construct(protected DoctorService $doctor)
+    public function __construct(protected DoctorService $doctor) {}
+    // اضافة اختصاص للطبيب
+    public function add_specialization(Request $request)
     {
+        $id = $request->validate([
+            'id' => 'required|exists:specializations,id'
+        ]);
+        return  $this->doctor->add_specialization($id);
     }
-
-
-
-   public function add_specialization(Request $request){
- $id= $request->validate([
-    'id'=>'required|exists:specializations,id'
-  ]);
- return  $this->doctor->add_specialization($id);
-   }
 }

@@ -48,5 +48,9 @@ return $this->doctor->forget_password($request);
     {
         return $this->doctor->deactivateAccount();
     }
+    public function doctor_profile()
+    {
+        return $this->doctor->doctor_profile();
+    }
 }
 

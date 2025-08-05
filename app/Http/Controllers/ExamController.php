@@ -30,9 +30,14 @@ class ExamController extends Controller
 
         return $this->answers->submitDoctorAnswers($data);
     }
-    
+    // عرض بروفايل الامتحان
     public function exam_profile()
     {
         return $this->doctorService->exam_profile();
+    }
+    // عرض الوقت المتبقي و تاريخ الامتحان
+    public function check_exam_time()
+    {
+        return $this->doctorService->check_exam_time();
     }
 }

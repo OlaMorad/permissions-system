@@ -47,7 +47,7 @@ class ExamRequestObserver
                 $exam = null;
 
                 if ($specialtyName) {
-                    $specialization = Specialization::where('name', 'like', "%$specialtyName%")->first();
+                    $specialization = Specialization::where('name',$specialtyName)->first();
 
                     if ($specialization) {
                         $exam = Exam::where('specialization_id', $specialization->id)

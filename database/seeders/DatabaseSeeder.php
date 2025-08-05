@@ -26,7 +26,8 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             pathSeeder::class,
             FormSeeder::class,
-            Requests_FormSeeder::class
+            Requests_FormSeeder::class,
+            ContactInfoSeeder::class,
         ]);
     }
 }
