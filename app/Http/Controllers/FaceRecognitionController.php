@@ -18,14 +18,14 @@ class FaceRecognitionController extends Controller
         ]);
 
         $image1 = base64_encode(file_get_contents($request->file('image')->path()));
-$imagePath = public_path('storage/' . Auth::user()->avatar);
+        $imagePath = public_path('storage/' . Auth::user()->avatar);
 
-if (!file_exists($imagePath)) {
-    throw new \Exception("User avatar not found at: $imagePath");
-}
+        if (!file_exists($imagePath)) {
+            throw new \Exception("User avatar not found at: $imagePath");
+        }
 
 
-$imageAuthUser = base64_encode(file_get_contents($imagePath));
+        $imageAuthUser = base64_encode(file_get_contents($imagePath));
         try {
             $result = $this->faceRecognitionService->compareFaces($image1, $imageAuthUser);
             return response()->json($result);

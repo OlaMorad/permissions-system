@@ -14,6 +14,7 @@ use App\Services\FormFactoryService;
 use App\Services\FormService;
 use App\Services\WordFormInputService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FormController extends Controller
 {
@@ -37,9 +38,25 @@ class FormController extends Controller
     // عرض كل المعاملات بغض النظر عن الحالة و التكلفة ما تكون صفر مشان ما تنعرض طلبات الامتحان ضمنهم
     public function index()
     {
-        $data = Form::where('cost', '!=', 0)->get()->makeHidden(['updated_at', 'cost']);
+        $forms = Form::where('cost', '!=', 0)->get();
+
+        if (Auth::user()->hasRole('المدير')) {
+            $data = $forms->map(function ($form) {
+                return [
+                    'id' => $form->id,
+                    'status' => $form->status,
+                    'name' => $form->name,
+                    'created_at' => $form->created_at->format('Y-m-d'),
+                    'received_at' => $form->created_at->format('Y-m-d'),
+                ];
+            });
+        } else {
+            $data = $forms->makeHidden(['updated_at', 'cost']);
+        }
+
         return new successResource([$data]);
     }
+
     // عرض تفاصيل الفورم يعني  عناصره
     public function show_Form($id)
     {
