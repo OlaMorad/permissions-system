@@ -215,8 +215,8 @@ Route::controller(DoctorAuthController::class)->group(function () {
     Route::post('/forget/password', 'forget_password');
     Route::post('/put/code', 'put_code');
     Route::post('set/password', 'set_password');
-<<<<<<< Updated upstream
-    Route::get('deactivate', 'deactivate_account')->middleware('Verify.Session');
+    Route::get('deactivate', 'deactivate_account')->middleware(['Verify.Session', 'role:الطبيب']);
+    Route::get('profile', 'doctor_profile')->middleware(['Verify.Session', 'role:الطبيب']);
 });
 
 //search
@@ -228,8 +228,4 @@ Route::controller(SearchController::class)->prefix('search')->group(function () 
     Route::post('Form', 'Search_Form');
     Route::post('Announcements', 'Search_Announcements');
 
-=======
-    Route::get('deactivate', 'deactivate_account')->middleware(['Verify.Session', 'role:الطبيب']);
-    Route::get('profile', 'doctor_profile')->middleware(['Verify.Session', 'role:الطبيب']);
->>>>>>> Stashed changes
 });
