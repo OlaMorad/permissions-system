@@ -26,7 +26,7 @@ class AdminSeeder extends Seeder
                 'password' => Hash::make('admin@123'),
                 'phone' => '0956883161',
                 'address' => 'دمشق',
-                'avatar' => 'avatars\2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg'
+                'avatar' => 'avatars\7ScVX1Vzwwwh5ZNy8sSAACoqfvYD1p9MRm9FZB6e.png'
             ]
         );
         $admin->assignRole('المدير');
@@ -39,7 +39,7 @@ class AdminSeeder extends Seeder
                 'password' => Hash::make('sub_admin'),
                 'phone' => '0950883161',
                 'address' => 'دمشق',
-                'avatar' => 'avatars\2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg'
+                'avatar' => 'avatars\7ScVX1Vzwwwh5ZNy8sSAACoqfvYD1p9MRm9FZB6e.png'
             ]
         );
         $subAdmin->assignRole('نائب المدير');
@@ -52,7 +52,7 @@ class AdminSeeder extends Seeder
                 'password' => Hash::make('heba2007'),
                 'phone' => '0956823161',
                 'address' => 'دمشق',
-                'avatar' => 'avatars\2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg'
+                'avatar' => 'avatars\7ScVX1Vzwwwh5ZNy8sSAACoqfvYD1p9MRm9FZB6e.png'
             ]
         );
         $doctor->assignRole('الطبيب');
@@ -93,7 +93,7 @@ class AdminSeeder extends Seeder
                     'password' => Hash::make('33333333'),
                     'phone' => '09' . $faker->numberBetween(500000000, 599999999),
                     'address' => $faker->city,
-                    'avatar' => 'avatars\2vrjbanTePmk7v0vMBaZNthsdZCDqVEqHYQV3xW4.jpg'
+                    'avatar' => 'avatars\7ScVX1Vzwwwh5ZNy8sSAACoqfvYD1p9MRm9FZB6e.png'
                 ]
             );
 
