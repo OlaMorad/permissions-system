@@ -20,11 +20,12 @@ use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\ExamRequestController;
 use App\Http\Controllers\FormContentController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\uploadImageController;
 use App\Http\Controllers\AnnouncementController;
-use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\SpecializationController;
+use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\InternalMailArchiveController;
 
 Route::get('/user', function (Request $request) {
@@ -232,3 +233,6 @@ Route::controller(SearchController::class)->prefix('search')->group(function () 
 
 //face
 Route::post('face/recogination', [FaceRecognitionController::class, 'verify'])->middleware('Verify.Session');
+
+//uploadImage
+Route::post('uploadAvatar', [uploadImageController::class, 'uploadAvatar'])->middleware('Verify.Session');
