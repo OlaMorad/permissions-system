@@ -196,41 +196,38 @@ class StatisticsService
         })->values()->toArray();
     }
     // احصائيات البريد الداخلي
-    public function InternalStatistics()
-    {
-        $currentUser = Auth::id();
-        $manager = Manager::where('user_id', $currentUser)->first();
-        if (!$manager) {
-            return 'ليس من صلاحياتك عرض الاقسام';
-        }
+public function InternalStatistics()
+{
+    $currentUser = Auth::id();
+    $manager = Manager::where('user_id', $currentUser)->first();
+
+    if ($manager) {
+        // إذا كان مدير أو نائب مدير → إحصائيات موظفيه فقط
         $employeesId = Employee::where('manager_id', $manager->id)->pluck('user_id');
 
-        $APPROVED = internalMail::whereIn('from_user_id', $employeesId)->where('status', StatusInternalMail::APPROVED)->count();
+        $APPROVED = internalMail::whereIn('from_user_id', $employeesId)
+            ->where('status', StatusInternalMail::APPROVED)
+            ->count();
 
-        $PENDING = internalMail::whereIn('from_user_id', $employeesId)->where('status', StatusInternalMail::PENDING)->count();
+        $PENDING = internalMail::whereIn('from_user_id', $employeesId)
+            ->where('status', StatusInternalMail::PENDING)
+            ->count();
 
-        $REJECTED = internalMail::whereIn('from_user_id', $employeesId)->where('status', StatusInternalMail::REJECTED)->count();
-        return [
-            'approved' => $APPROVED,
-            'pending' => $PENDING,
-            'rejected' => $REJECTED
-        ];
-    }
-
-
-        public function InternalStatisticsForAdmin()
-    {
+        $REJECTED = internalMail::whereIn('from_user_id', $employeesId)
+            ->where('status', StatusInternalMail::REJECTED)
+            ->count();
+    } else {
+        // إذا كان أدمن → إحصائيات لجميع المستخدمين
         $APPROVED = internalMail::where('status', StatusInternalMail::APPROVED)->count();
-
         $PENDING = internalMail::where('status', StatusInternalMail::PENDING)->count();
-
         $REJECTED = internalMail::where('status', StatusInternalMail::REJECTED)->count();
-        return [
-            'approved' => $APPROVED,
-            'pending' => $PENDING,
-            'rejected' => $REJECTED,
-            'total'=> $APPROVED + $PENDING+ $REJECTED
-        ];
     }
 
+    return [
+        'approved' => $APPROVED,
+        'pending'  => $PENDING,
+        'rejected' => $REJECTED,
+        'total'    => $APPROVED + $PENDING + $REJECTED
+    ];
+}
 }
