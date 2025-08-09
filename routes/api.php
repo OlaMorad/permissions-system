@@ -129,6 +129,8 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::get('/weekly-done', [StatisticsController::class, 'weeklyDone']);
         Route::get('/weekly/path/{id}', [StatisticsController::class, 'weeklyDoneByPath'])->middleware('role:المدير');
         Route::get('/InternalStatisticsSummary', [StatisticsController::class, 'InternalStatisticsSummary']);
+        Route::get('/InternalStatisticsForAdmin', [StatisticsController::class, 'InternalStatisticsForAdmin'])->middleware('role:المدير|نائب المدير');
+
     });
 
     // Paths

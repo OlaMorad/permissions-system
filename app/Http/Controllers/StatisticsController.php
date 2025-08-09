@@ -44,4 +44,14 @@ class StatisticsController extends Controller
     }
          return new successResource($data);
     }
+
+     public function InternalStatisticsForAdmin(){
+
+        $data = $this->Service->InternalStatisticsForAdmin();
+           // إذا كانت القيمة String، نعيد FailResource
+    if (is_string($data)) {
+        return new failResource($data);
+    }
+         return new successResource($data);
+    }
 }
