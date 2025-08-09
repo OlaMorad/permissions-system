@@ -218,9 +218,9 @@ public function InternalStatistics()
             ->count();
     } else {
         // إذا كان أدمن → إحصائيات لجميع المستخدمين
-        $APPROVED = internalMail::where('status', StatusInternalMail::APPROVED)->count();
-        $PENDING = internalMail::where('status', StatusInternalMail::PENDING)->count();
-        $REJECTED = internalMail::where('status', StatusInternalMail::REJECTED)->count();
+        $APPROVED = internalMail::where('status', StatusInternalMail::APPROVED)->where('from_user_id', $currentUser)->count();
+        $PENDING = internalMail::where('status', StatusInternalMail::PENDING)->where('from_user_id', $currentUser)->count();
+        $REJECTED = internalMail::where('status', StatusInternalMail::REJECTED)->where('from_user_id', $currentUser)->count();
     }
 
     return [
