@@ -216,4 +216,21 @@ class StatisticsService
             'rejected' => $REJECTED
         ];
     }
+
+
+        public function InternalStatisticsForAdmin()
+    {
+        $APPROVED = internalMail::where('status', StatusInternalMail::APPROVED)->count();
+
+        $PENDING = internalMail::where('status', StatusInternalMail::PENDING)->count();
+
+        $REJECTED = internalMail::where('status', StatusInternalMail::REJECTED)->count();
+        return [
+            'approved' => $APPROVED,
+            'pending' => $PENDING,
+            'rejected' => $REJECTED,
+            'total'=> $APPROVED + $PENDING+ $REJECTED
+        ];
+    }
+
 }
