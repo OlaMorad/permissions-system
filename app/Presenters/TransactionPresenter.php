@@ -31,7 +31,7 @@ class TransactionPresenter
     public static function FinanceImport($transaction): array
     {
         $receipt = DB::table('form_media')
-            ->where('form_content_id', $transaction->content->id)
+            ->where('form_content_id', $transaction->content->id)->latest()
             ->value('receipt');
         return [
             'uuid' => $transaction->uuid,
