@@ -115,6 +115,8 @@ Route::middleware(['throttle:100,1'])->group(function () {
             Route::patch('/under-review/{uuid}', 'MarkAsUnderReview')->middleware('Verify.Session');
             Route::post('/status/{uuid}', 'updateTransactionStatus')->middleware('Verify.Session');
             Route::post('/receipt_status', 'updateReceiptStatus')->middleware('Verify.Session', 'role:موظف المالية');
+            Route::get('/receipt_image/{uuid}', 'get_receipt_image')->middleware('Verify.Session', 'role:موظف المالية|رئيس المالية|نائب المدير|المدير');
+            Route::get('archived_receipt_image/{uuid}', 'archived_receipt_image')->middleware('Verify.Session', 'role:موظف المالية|رئيس المالية|نائب المدير|المدير');
         });
     });
 

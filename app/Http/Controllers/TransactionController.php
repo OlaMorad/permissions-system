@@ -101,4 +101,13 @@ class TransactionController extends Controller
         $details = $this->doctorService->getTransactionDetailsByUuid($uuid);
         return new successResource($details);
     }
+    // عرض صورة الوصل بالمالية
+    public function get_receipt_image($uuid)
+    {
+        return $this->transactionService->get_receipt_image($uuid);
+    }
+    public function archived_receipt_image($uuid)
+     {
+        return $this->transactionService->archived_receipt_image($uuid);
+     }
 }

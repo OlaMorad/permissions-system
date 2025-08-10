@@ -16,6 +16,7 @@ use App\Presenters\TransactionPresenter;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class TransactionService
 {
@@ -156,7 +157,7 @@ class TransactionService
 
             return $lastChange['changed_at'] ?? null;
         })
-        ->values();
+            ->values();
     }
 
     public function getArchiveTransactionsByPath(int $pathId): array
@@ -183,5 +184,32 @@ class TransactionService
         $transactions = ArchiveTransaction::where('final_status', 'منجزة')->get();
 
         return TransactionPresenter::exportList($transactions, null, false);
+    }
+    // عرض صورة الوصل من تيبل المعاملات
+    public function get_receipt_image($uuid)
+    {
+        $transaction = Transaction::where('uuid', $uuid)->with('content')->first();
+
+        if (!$transaction || !$transaction->content) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+        $receipt = DB::table('form_media')
+            ->where('form_content_id', $transaction->content->id)->latest()
+            ->value('receipt');
+        $receipt_image = $receipt ? asset('storage/' . $receipt) : null;
+        return new successResource($receipt_image);
+    }
+    // عرض الصورة من الارشيف
+    public function archived_receipt_image($uuid)
+    {
+        $transaction = ArchiveTransaction::where('uuid', $uuid)->first();
+        $content = $transaction->transaction_content;
+        $media = $content['media'] ?? [];
+        foreach ($media as $item) {
+            if (!empty($item['receipt'])) {
+                $receipt_image = asset('storage/' . $item['receipt']);
+                return new successResource($receipt_image);
+            }
+        }
     }
 }

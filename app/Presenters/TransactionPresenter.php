@@ -30,16 +30,16 @@ class TransactionPresenter
 
     public static function FinanceImport($transaction): array
     {
-        $receipt = DB::table('form_media')
-            ->where('form_content_id', $transaction->content->id)->latest()
-            ->value('receipt');
+        // $receipt = DB::table('form_media')
+        //     ->where('form_content_id', $transaction->content->id)->latest()
+        //     ->value('receipt');
         return [
             'uuid' => $transaction->uuid,
             'doctor_name' => $transaction->content->doctor->user->name ?? '',
             'receipt_number' => $transaction->receipt_number,
             'form_name' => $transaction->content->form->name,
             'form_cost' => $transaction->content->form->cost,
-            'receipt_image' => $receipt ? asset('storage/' . $receipt) : null,
+          //  'receipt_image' => $receipt ? asset('storage/' . $receipt) : null,
             'submitted_at' => $transaction->created_at,
             'received_at' => $transaction->created_at,
         ];
@@ -53,7 +53,7 @@ class TransactionPresenter
     public static function ArchiveFinanceExport($transaction, $pathId): array
     {
         $content = $transaction->transaction_content ?? [];
-        $receiptUrl = self::getReceiptFromContent($content);
+ //       $receiptUrl = self::getReceiptFromContent($content);
         return [
             'uuid' => $transaction->uuid,
             'doctor_name' => $content['doctor_name'] ?? '',
@@ -62,7 +62,7 @@ class TransactionPresenter
             'form_cost' => $content['form_cost'] ?? null,
             'status' => self::extractStatusFromHistory($transaction->status_history, $pathId),
             'to_path' => self::getNextPath($transaction->status_history, $pathId, $content),
-            'receipt_image' => $receiptUrl,
+  //          'receipt_image' => $receiptUrl,
             'submitted_at' => $transaction->created_at,
             'sent_at' => $transaction->updated_at,
         ];
@@ -168,16 +168,16 @@ class TransactionPresenter
         $nextPathId = $allPathIds[$index + 1] ?? null;
         return $nextPathId ? (Path::find($nextPathId)?->name ?? '--') : '--';
     }
-    // صورة الوصل
-    private static function getReceiptFromContent(array $content): ?string
-    {
-        $media = $content['media'] ?? [];
+    // // صورة الوصل
+    // private static function getReceiptFromContent(array $content): ?string
+    // {
+    //     $media = $content['media'] ?? [];
 
-        foreach ($media as $item) {
-            if (!empty($item['receipt'])) {
-                return asset('storage/' . $item['receipt']);
-            }
-        }
-        return null;
-    }
+    //     foreach ($media as $item) {
+    //         if (!empty($item['receipt'])) {
+    //             return asset('storage/' . $item['receipt']);
+    //         }
+    //     }
+    //     return null;
+    // }
 }
