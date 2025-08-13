@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Http\Resources\successResource;
 use App\Http\Requests\RegisterManagerRequest;
+use App\Models\Role as ModelsRole;
 
 class ManagerController extends Controller
 {
@@ -19,7 +20,9 @@ class ManagerController extends Controller
 
     public function show_roles()
     {
-        $roles = Role::whereNotIn('name', ['الطبيب', 'المدير', 'نائب المدير'])->orderBy('id')->get(['id', 'name']);
+        $roles = ModelsRole::whereNotIn('name', ['الطبيب', 'المدير', 'نائب المدير'])->orderBy('id')
+            ->with(['path:id,name'])
+            ->get(['id', 'name', 'path_id']);
         return new successResource($roles);
     }
 
