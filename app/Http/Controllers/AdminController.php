@@ -35,4 +35,7 @@ class AdminController extends Controller
     public function show_employees_by_path($path){
       return $this->admin->show_employees_by_path($path);
     }
+     public function show_employees_and_manager(){
+      return $this->admin->show_employees_and_manager();
+    }
 }
