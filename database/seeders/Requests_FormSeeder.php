@@ -63,6 +63,8 @@ class Requests_FormSeeder extends Seeder
             ['label' => 'موافقة عميد الكلية على الترشح', 'type' => Element_Type::ATTACHED_FILE],
             ['label' => 'كشف العلامات الأصلي', 'type' => Element_Type::ATTACHED_FILE],
             ['label' => 'صورة بيان خدمة', 'type' => Element_Type::ATTACHED_IMAGE],
+            ['label' => 'صورة شخصية', 'type' => Element_Type::ATTACHED_IMAGE],
+
         ];
         foreach ($elements as $element) {
             FormElement::create([
@@ -110,7 +112,9 @@ class Requests_FormSeeder extends Seeder
             ['label' => 'السنة', 'type' => Element_Type::NUMBER],
             ['label' => 'المرفقات', 'type' => Element_Type::TEXT],
             ['label' => 'صورة الهوية الشخصية', 'type' => Element_Type::ATTACHED_IMAGE],
-            ['label' => 'صورة عن قرار لجنة التحميص', 'type' => Element_Type::ATTACHED_IMAGE]
+            ['label' => 'صورة عن قرار لجنة التحميص', 'type' => Element_Type::ATTACHED_IMAGE],
+            ['label' => 'صورة شخصية', 'type' => Element_Type::ATTACHED_IMAGE],
+
         ];
 
         foreach ($elements2 as $element) {

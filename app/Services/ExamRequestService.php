@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
 use App\Models\Exam;
 use App\Models\Form;
 use App\Models\User;
@@ -38,7 +37,7 @@ class ExamRequestService
         if ($specializationValue && !$doctor->specializations->pluck('name')->contains($specializationValue)) {
             throw new \Exception("الاختصاص المدخل غير مسجل لدى الطبيب.");
         }
-//اذا ضل اسبوع او اقل للامتحان نمنع ارسال الطلبات
+        //اذا ضل اسبوع او اقل للامتحان نمنع ارسال الطلبات
         if ($specializationValue && $this->helper->isExamTooClose($specializationValue)) {
             throw new \Exception("لا يمكن تقديم الطلب لهذا الاختصاص لأن الامتحان سيبدأ خلال أسبوع.");
         }
@@ -55,7 +54,6 @@ class ExamRequestService
         $cycle = $this->helper->extractCycle($data['elements'] ?? []);
         $form = Form::find($data['form_id']);
         $formName = $form?->name ?? '';
-
 
         if (str_contains($formName, 'اعتذار')) {
             // تحقق إذا سبق وقدم اعتذار بنفس السنة والدورة والاختصاص
@@ -133,6 +131,11 @@ class ExamRequestService
                     // خزني الملف واحصلي على المسار
                     $path = $file->store("exam_attachments/files", 'public');
 
+                    if (stripos($label, 'صورة شخصية') !== false) {
+                        $user = Auth::user();
+                        $user->avatar = $path;
+                        $user->save();
+                    }
                     //نبحث عن الليبل المدخل في جدول الايلمنت
                     $formElement = $formContent->form->elements->firstWhere('label', $label);
                     if ($formElement) {
@@ -148,7 +151,7 @@ class ExamRequestService
 
 
 
-//عرض الطلب بناء عال uuid
+    //عرض الطلب بناء عال uuid
     public function show_form_content_exam($uuid)
     {
         $examRequest = ExamRequest::where('uuid', $uuid)->firstOrFail();
@@ -172,17 +175,15 @@ class ExamRequestService
                 'value' => $value,
             ];
         }
-        $doctor=Doctor::where('id',$examRequest->doctor_id)->first();
-        $DoctorImage=User::where('id',$doctor->user_id)->select('avatar')->first();
+
         return [
             'form_name' => $formContent->form->name,
             'uuid' => $examRequest->uuid,
             'elements' => $elements,
-            'Doctor_image'=>asset('storage/'. $DoctorImage->avatar)
         ];
     }
 
-//الموافقة او رفض الطلب من قبل موظف الامتحانات
+    //الموافقة او رفض الطلب من قبل موظف الامتحانات
     public function edit_form_content_exam_status($uuid, $status)
     {
         $examRequest = ExamRequest::where('uuid', $uuid)->first();
@@ -234,7 +235,7 @@ class ExamRequestService
         });
     }
 
-//عرض الطلبات الواردة يلي لسا حالتها قيد الدراسة
+    //عرض الطلبات الواردة يلي لسا حالتها قيد الدراسة
     public function show_all_import_request_exam()
     {
         // PENDING فقط دون إظهار حالة الطلب
@@ -245,43 +246,42 @@ class ExamRequestService
 
         return new successResource($result);
     }
-//عرض الطلبات المنتهية يلي حالتها تغيرت لمرفوضة او مقبولة
-  public function show_all_end_request_exam()
-{
-    $result = $this->getExamRequestsByStatus(
-        [ExamRequestEnum::APPROVED->value, ExamRequestEnum::REJECTED->value],
-        true
-    );
+    //عرض الطلبات المنتهية يلي حالتها تغيرت لمرفوضة او مقبولة
+    public function show_all_end_request_exam()
+    {
+        $result = $this->getExamRequestsByStatus(
+            [ExamRequestEnum::APPROVED->value, ExamRequestEnum::REJECTED->value],
+            true
+        );
 
-    $specializationNames = $result->pluck('الاختصاص')->filter()->unique();
+        $specializationNames = $result->pluck('الاختصاص')->filter()->unique();
 
-    $specializations = Specialization::whereIn('name', $specializationNames)->get();
+        $specializations = Specialization::whereIn('name', $specializationNames)->get();
 
-    $specializationMap = $specializations->pluck('id', 'name');
+        $specializationMap = $specializations->pluck('id', 'name');
 
-$examDates = Exam::whereIn('specialization_id', $specializations->pluck('id'))
-    ->get()
-    ->groupBy('specialization_id')
-    ->map(function ($exams) {
-        return $exams->sortByDesc('created_at')->first()?->date;
-    });
+        $examDates = Exam::whereIn('specialization_id', $specializations->pluck('id'))
+            ->get()
+            ->groupBy('specialization_id')
+            ->map(function ($exams) {
+                return $exams->sortByDesc('created_at')->first()?->date;
+            });
 
 
-    // نضيف "تاريخ الامتحان" لكل طلب حسب اختصاصه
-    $finalResult = $result->map(function ($item) use ($specializationMap, $examDates) {
-        $specializationName = $item['الاختصاص'] ?? null;
+        // نضيف "تاريخ الامتحان" لكل طلب حسب اختصاصه
+        $finalResult = $result->map(function ($item) use ($specializationMap, $examDates) {
+            $specializationName = $item['الاختصاص'] ?? null;
 
-        if ($specializationName && isset($specializationMap[$specializationName])) {
-            $specId = $specializationMap[$specializationName];
-            $item['تاريخ الامتحان'] = $examDates[$specId] ?? null;
-        } else {
-            $item['تاريخ الامتحان'] = null;
-        }
+            if ($specializationName && isset($specializationMap[$specializationName])) {
+                $specId = $specializationMap[$specializationName];
+                $item['تاريخ الامتحان'] = $examDates[$specId] ?? null;
+            } else {
+                $item['تاريخ الامتحان'] = null;
+            }
 
-        return $item;
-    });
+            return $item;
+        });
 
-    return new successResource($finalResult);
-}
-
+        return new successResource($finalResult);
+    }
 }

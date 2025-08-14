@@ -20,15 +20,10 @@ class EmployeeService
     public function edit_employee_information($data)
     {
         $employee = $this->getEmployee($data->employee_id);
-
-        $this->authorizeManager($employee);
-
         $user = $employee->user;
-
         $this->updateBasicInformation($user, $data);
         $this->updatePassword($user, $data);
         $this->updateAvatar($user, $data);
-
         $user->save();
 
         return $this->formatUserResponse($user);
@@ -38,16 +33,6 @@ class EmployeeService
     private function getEmployee(int $id): Employee
     {
         return Employee::findOrFail($id);
-    }
-
-    //التأكد من ان الموظف تابع لهذا المدير
-    private function authorizeManager(Employee $employee)
-    {
-        $manager = Manager::where('user_id', Auth::id())->first();
-
-        if (!$manager || $employee->manager_id !== $manager->id) {
-            abort(403, 'ليس لديك الصلاحية لتعديل هذا الموظف');
-        }
     }
 
     private function updateBasicInformation($user,  $data): void
@@ -157,31 +142,31 @@ class EmployeeService
         return new successResource($employees);
     }
 
-    public function convert_employee_status($employeeId)
-    {
-        // 1. التحقق من أن المستخدم الحالي هو مدير
-        $manager = Manager::where('user_id', Auth::id())->first();
-        if (!$manager) {
-            return response()->json(['message' => 'غير مصرح لك بالوصول'], 403);
-        }
+    // public function convert_employee_status($employeeId)
+    // {
+    //     // 1. التحقق من أن المستخدم الحالي هو مدير
+    //     $manager = Manager::where('user_id', Auth::id())->first();
+    //     if (!$manager) {
+    //         return response()->json(['message' => 'غير مصرح لك بالوصول'], 403);
+    //     }
 
-        // 2. جلب الموظف المراد تعديله والتأكد من أنه يتبع للمدير نفسه
-        $employee = Employee::where('id', $employeeId)
-            ->where('manager_id', $manager->id)
-            ->with('user') // نحتاج بيانات المستخدم المرتبطة
-            ->first();
+    //     // 2. جلب الموظف المراد تعديله والتأكد من أنه يتبع للمدير نفسه
+    //     $employee = Employee::where('id', $employeeId)
+    //         ->where('manager_id', $manager->id)
+    //         ->with('user') // نحتاج بيانات المستخدم المرتبطة
+    //         ->first();
 
-        if (!$employee || !$employee->user) {
-            return response()->json(['message' => 'الموظف غير موجود أو لا يتبع لك'], 404);
-        }
+    //     if (!$employee || !$employee->user) {
+    //         return response()->json(['message' => 'الموظف غير موجود أو لا يتبع لك'], 404);
+    //     }
 
-        // 3. قلب حالة التفعيل
-        $employee->user->is_active = !$employee->user->is_active;
-        $employee->user->save();
+    //     // 3. قلب حالة التفعيل
+    //     $employee->user->is_active = !$employee->user->is_active;
+    //     $employee->user->save();
 
-        return response()->json([
-            'message' => 'تم تحديث حالة التفعيل بنجاح',
-            'is_activity' => $employee->user->is_active
-        ]);
-    }
+    //     return response()->json([
+    //         'message' => 'تم تحديث حالة التفعيل بنجاح',
+    //         'is_activity' => $employee->user->is_active
+    //     ]);
+    // }
 }

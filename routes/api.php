@@ -24,6 +24,7 @@ use App\Http\Controllers\uploadImageController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\InternalMailController;
 use App\Http\Controllers\QuestionBankController;
+use App\Http\Controllers\ConvertStatusController;
 use App\Http\Controllers\SpecializationController;
 use App\Http\Controllers\FaceRecognitionController;
 use App\Http\Controllers\InternalMailArchiveController;
@@ -45,7 +46,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
     // Employee
     Route::middleware('Verify.Session')->group(function () {
         Route::post('/register-employee', [EmployeeController::class, 'create_employee'])->middleware(['role:نائب المدير', 'Verify.Session']);
-        Route::post('/edit_employee_information', [EmployeeController::class, 'edit_employee_information']);
+        Route::post('/edit_employee_information', [EmployeeController::class, 'edit_employee_information'])->middleware(['role:نائب المدير', 'Verify.Session']);
         Route::get('/show_employees', [EmployeeController::class, 'show_employees']);
         Route::get('/convert_employee_status', [EmployeeController::class, 'convert_employee_status']);
     });
@@ -56,6 +57,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير', 'Verify.Session']);
         Route::get('show_my_employees', 'show_my_employees')->middleware('Verify.Session');
         Route::get('show_all_managers', 'show_all_managers');
+        Route::post('/edit_manager_information','edit_manager_information')->middleware(['role:نائب المدير', 'Verify.Session']);
     });
 
     // Permissions
@@ -240,3 +242,7 @@ Route::post('face/recogination', [FaceRecognitionController::class, 'verify'])->
 
 //uploadImage
 Route::post('uploadAvatar', [uploadImageController::class, 'uploadAvatar'])->middleware('Verify.Session');
+
+// convert status
+Route::get('ConverStatus/{type}', [ConvertStatusController::class, 'Convert_status_for_user'])->middleware('Verify.Session','role:نائب المدير');
+

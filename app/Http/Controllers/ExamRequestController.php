@@ -16,7 +16,7 @@ class ExamRequestController extends Controller
     {
     }
     public function create_form_content_exam(ExamRequest $request){
-    try {
+    try { 
         $this->exam->create_form_content_exam($request);
         return new successResource([]);
     } catch (\Exception $e) {

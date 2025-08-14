@@ -17,7 +17,7 @@ class ExamRequestServiceHelper
     public function hasPreviousApologyRequest(int $doctorId, string $year, string $cycle, int $formId, string $specialization): bool
     {
         return FormContent::where('doctor_id', $doctorId)
-            ->where('form_id', $formId) 
+            ->where('form_id', $formId)
             ->whereHas('elementValues', function ($query) use ($year) {
                 $query->whereHas('formElement', function ($q) {
                     $q->where('label', 'like', '%سنة%');
@@ -49,7 +49,7 @@ class ExamRequestServiceHelper
 
         $exam = Exam::where('specialization_id', $specialization->id)
             ->whereDate('date', '>=', $today)
-            ->orderBy('date')
+             ->latest('date')
             ->first();
 
         if (!$exam) {
