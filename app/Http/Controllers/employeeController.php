@@ -33,11 +33,11 @@ class employeeController extends Controller
         return    $respone = $this->employeeService->show_employees();
     }
     //تفعيل او الغاء تفعيل الموظف
-    public function convert_employee_status(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|exists:employees,id',
-        ]);
-        return    $respone = $this->employeeService->convert_employee_status($request['id']);
-    }
+    // public function convert_employee_status(Request $request)
+    // {
+    //     $request->validate([
+    //         'id' => 'required|exists:employees,id',
+    //     ]);
+    //     return    $respone = $this->employeeService->convert_employee_status($request['id']);
+    // }
 }

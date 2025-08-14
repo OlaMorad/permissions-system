@@ -27,7 +27,7 @@ class forgetPasswordJob implements ShouldQueue
     {
         Mail::html("رمز التحقق الخاص بك هو: {$this->code}", function ($message) {
             $message->to($this->email)
-                ->subject('رمز التحقق لاستعادة كلمة المرور');
+                ->subject('رمز التحقق الخاص بك');
         });
     }
 }

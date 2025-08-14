@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Http\Resources\successResource;
 use App\Http\Requests\RegisterManagerRequest;
+use App\Http\Requests\UpdateManagerRequest;
 use App\Models\Role as ModelsRole;
 
 class ManagerController extends Controller
@@ -41,5 +42,9 @@ class ManagerController extends Controller
             $user->avatar = asset('storage/' . $user->avatar);
         }
         return $users;
+    }
+
+    public function edit_manager_information(UpdateManagerRequest $request){ 
+   return $this->managerService->edit_manager_information($request);
     }
 }
