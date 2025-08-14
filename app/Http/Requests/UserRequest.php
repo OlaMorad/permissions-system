@@ -30,22 +30,44 @@ class UserRequest extends FormRequest
             'password' => ['required', 'min:8'],
             'address'  => ['required', 'string', 'max:255'],
             'phone'    => ['required', 'string', 'regex:/^[0-9+\-\s]+$/', 'min:6','unique:users,phone'],
-            'avatar'   => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'], // 2MB
+            'avatar'   => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:4096'], // 2MB
             'role_id'  => ['required', 'integer', 'exists:roles,id'],
         ];
     }
     public function messages(): array
     {
         return [
+            // الاسم
             'name.required' => 'يرجى إدخال اسم الموظف',
+            'name.string' => 'يجب أن يكون الاسم نصاً صحيحاً.',
+
+            // البريد الإلكتروني
             'email.required' => 'أدخل البريد الالكتروني الخاص بهذا الموظف',
             'email.email' => 'يجب أن يكون البريد الإلكتروني بصيغة صحيحة.',
             'email.unique' => 'هذا البريد الإلكتروني مستخدم مسبقاً',
-            'phone.required' => 'أدخل رقم الهاتف الخاص بهذا الموظف',
-            'phone.unique' => 'رقم الهاتف مستخدم مسبقاً',
+
+            // كلمة المرور
             'password.required' => 'ادخل كلمة المرور',
             'password.min' => 'يجب أن لا تقل كلمة المرور عن 8 محارف',
+
+            // العنوان
+            'address.required' => 'أدخل العنوان الخاص بالموظف',
+            'address.string' => 'يجب أن يكون العنوان نصاً صحيحاً.',
+            'address.max' => 'العنوان لا يجب أن يتجاوز 255 محرف.',
+
+            // رقم الهاتف
+            'phone.required' => 'أدخل رقم الهاتف الخاص بهذا الموظف',
+            'phone.min' => 'رقم الهاتف يجب أن لا يقل عن 6 أرقام.',
+            'phone.unique' => 'رقم الهاتف مستخدم مسبقاً',
+
+            // الصورة الرمزية (Avatar)
+            'avatar.required' => 'يرجى رفع صورة الموظف',
+            'avatar.mimes' => 'يجب أن تكون صيغة الصورة jpeg أو png أو jpg أو gif أو svg.',
+            'avatar.max' => 'حجم الصورة يجب ألا يتجاوز 4 ميغابايت.',
+
+            // الدور
             'role_id.required' => 'حدد الدور الذي سيشغله الموظف',
+            'role_id.exists' => 'الدور المحدد غير موجود في النظام',
         ];
     }
 
