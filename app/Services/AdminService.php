@@ -57,4 +57,30 @@ class AdminService
 
         return new successResource([$allData]);
     }
+    public function show_employees_and_manager(){
+        $managers=Manager::with('user')->get();
+        $employees=Employee::with('user')->get();
+       $stats = $this->employeeService->employeeStatistics();
+
+           $employeeData = $employees->map(function ($employee)use($stats) {
+              $userId = $employee->id;
+            return [
+                'avatar' => $employee->user?->avatar ? asset('storage/' . $employee->user->avatar) : null,
+                'name' => $employee->user?->name ?: null,
+                'role' => $employee->role?->name,
+                'handled_transactions' => $stats[$userId]['handled_transactions'] ?? 0,
+            ];
+        });
+
+            $managerData = $managers->map(function ($manager)  {
+        return [
+            'avatar' => $manager->user?->avatar ? asset('storage/' . $manager->user->avatar) : null,
+            'name' => $manager->user?->name ?: null,
+            'role' => $manager->role?->name,
+            'handled_transactions' => null, // المعاملات نل
+        ];
+    });
+   return  $employeeData->merge($managerData);
+
+    }
 }

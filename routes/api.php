@@ -73,6 +73,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::get('/working-hours/show', [AdminController::class, 'showWorkingHours']);
     });
     Route::get('show/employees/by/{path}', [AdminController::class, 'show_employees_by_path'])->middleware('Verify.Session', 'role:المدير|نائب المدير');
+    Route::get('show/employees/and/managers', [AdminController::class, 'show_employees_and_manager'])->middleware('Verify.Session', 'role:نائب المدير');
 
 
     // Internal Mail
@@ -229,12 +230,12 @@ Route::controller(DoctorAuthController::class)->group(function () {
 
 //search
 Route::controller(SearchController::class)->prefix('search')->group(function () {
-    Route::post('degree', 'Search_degree_doctor');
-    Route::post('Exam/request', 'Search_Exam_Request');
-    Route::post('Specialization/Name', 'Search_Specialization_Name');
-    Route::post('Employee', 'Search_Employee');
-    Route::post('Form', 'Search_Form');
-    Route::post('Announcements', 'Search_Announcements');
+    Route::get('degree', 'Search_degree_doctor');
+    Route::get('Exam/request', 'Search_Exam_Request');
+    Route::get('Specialization/Name', 'Search_Specialization_Name');
+    Route::get('Employee', 'Search_Employee');
+    Route::get('Form', 'Search_Form');
+    Route::get('Announcements', 'Search_Announcements');
 });
 
 //face
