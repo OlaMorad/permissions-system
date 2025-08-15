@@ -33,6 +33,8 @@ class AdminService
                 'avatar' => $employee->user?->avatar ? asset('storage/' . $employee->user->avatar) : null,
                 'name' => $employee->user?->name ?: null,
                 'phone' => $employee->user?->phone ?: null,
+                'email' => $employee->user?->email ?: null,
+                'address' => $employee->user?->address ?: null,
                 'office' => $pathNAme->name,
                 'role'=>$employee->role?->name,
                 'handled_transactions' => $stats[$userId]['handled_transactions'] ?? 0,
@@ -46,6 +48,8 @@ class AdminService
             'avatar' => $manager->user?->avatar ? asset('storage/' . $manager->user->avatar) : null,
             'name' => $manager->user?->name ?: null,
             'phone' => $manager->user?->phone ?: null,
+             'email' => $manager->user?->email ?: null,
+            'address' => $manager->user?->address ?: null,
             'office' => $pathNAme->name,
             'role' => $manager->role?->name,
             'handled_transactions' => null, // المعاملات نل

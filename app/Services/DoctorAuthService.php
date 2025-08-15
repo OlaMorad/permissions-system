@@ -22,7 +22,15 @@ class DoctorAuthService
     public function pre_register($request)
     {
         $email = $request->email;
+         $phone = $request->phone;
 
+   if (EmailVerification::where('email', $email)->exists()) {
+        return response()->json(['message' => 'تم إرسال كود تحقق مسبقاً لهذا البريد، يرجى استخدامه أو الانتظار حتى ينتهي.'], 422);
+    }
+
+    if (EmailVerification::where('data', 'like', '%"phone":"'.$phone.'"%')->exists()) {
+        return response()->json(['message' => 'تم إرسال كود تحقق مسبقاً لهذا الرقم، يرجى استخدامه أو الانتظار حتى ينتهي.'], 422);
+    }
         // توليد كود تحقق 4 خانات
         $code = rand(1000, 9999);
 
