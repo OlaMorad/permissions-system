@@ -45,7 +45,7 @@ class DoctorAuthService
 
         forgetPasswordJob::dispatch($email, $code);
 
-        return new successResource(['message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني.']);
+        return new successResource(['message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني.','email'=>$email]);
     }
 
     public function verify_register_code($request)
