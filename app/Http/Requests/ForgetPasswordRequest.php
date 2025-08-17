@@ -29,7 +29,7 @@ class ForgetPasswordRequest extends FormRequest
     {
         return[
         'email.required'=> 'البريد الالكتروني  مطلوب.',
-        'email.exists'=>'البري الالكتروني غير موجود ! ادخل بريد صحيح'
+        'email.exists'=>'البريد الالكتروني غير موجود ! ادخل بريد صحيح'
     ];
     }
 }

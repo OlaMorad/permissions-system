@@ -38,8 +38,8 @@ Route::middleware(['throttle:100,1'])->group(function () {
     // Auth
     Route::controller(AuthController::class)->group(function () {
         Route::post('/login', 'login');
-        Route::post('/refresh', 'refresh');
-        Route::post('/logout', 'logout');
+        Route::post('/refresh', 'refresh')->middleware('Verify.Session');
+        Route::get('/logout', 'logout')->middleware('Verify.Session');
         Route::get('/check-session', 'checkSession');
     });
 
@@ -132,7 +132,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::get('paths/achievement', [StatisticsController::class, 'AllPathsAchievementStatistics'])->middleware('role:المدير');
         Route::get('/external', [StatisticsController::class, 'ExternalStatisticsSummary']);
         Route::get('/weekly-done', [StatisticsController::class, 'weeklyDone']);
-        Route::get('/weekly/path/{id}', [StatisticsController::class, 'weeklyDoneByPath'])->middleware('role:المدير');
+        Route::get('/weekly/path/{id}', [StatisticsController::class, 'weeklyDoneByPath'])->middleware('role:المدير|نائب المدير');
         Route::get('/InternalStatisticsSummary', [StatisticsController::class, 'InternalStatisticsSummary']);
         Route::get('/InternalStatisticsForAdmin', [StatisticsController::class, 'InternalStatisticsForAdmin'])->middleware('role:المدير|نائب المدير');
 

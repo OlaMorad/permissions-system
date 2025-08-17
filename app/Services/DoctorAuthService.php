@@ -22,15 +22,15 @@ class DoctorAuthService
     public function pre_register($request)
     {
         $email = $request->email;
-         $phone = $request->phone;
+        $phone = $request->phone;
 
-   if (EmailVerification::where('email', $email)->exists()) {
-        return response()->json(['message' => 'تم إرسال كود تحقق مسبقاً لهذا البريد، يرجى استخدامه أو الانتظار حتى ينتهي.'], 422);
-    }
+        if (EmailVerification::where('email', $email)->exists()) {
+            return response()->json(['message' => 'تم إرسال كود تحقق مسبقاً لهذا البريد، يرجى استخدامه أو الانتظار حتى ينتهي.'], 422);
+        }
 
-    if (EmailVerification::where('data', 'like', '%"phone":"'.$phone.'"%')->exists()) {
-        return response()->json(['message' => 'تم إرسال كود تحقق مسبقاً لهذا الرقم، يرجى استخدامه أو الانتظار حتى ينتهي.'], 422);
-    }
+        if (EmailVerification::where('data', 'like', '%"phone":"' . $phone . '"%')->exists()) {
+            return response()->json(['message' => 'تم إرسال كود تحقق مسبقاً لهذا الرقم، يرجى استخدامه أو الانتظار حتى ينتهي.'], 422);
+        }
         // توليد كود تحقق 4 خانات
         $code = rand(1000, 9999);
 
@@ -45,7 +45,7 @@ class DoctorAuthService
 
         forgetPasswordJob::dispatch($email, $code);
 
-        return new successResource(['message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني.','email'=>$email]);
+        return new successResource(['message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني.', 'email' => $email]);
     }
 
     public function verify_register_code($request)
@@ -92,7 +92,10 @@ class DoctorAuthService
     public function login(array $credentials)
     {
         if (!$token = Auth::guard('api')->attempt($credentials)) {
-            return new failResource("الاسم او كلمة المرور غير صحيحين");
+            return response()->json(
+                (new failResource("الاسم او كلمة المرور غير صحيحين"))->toArray(request()),
+                401
+            );
         }
 
         $user = Auth::user();
@@ -150,7 +153,7 @@ class DoctorAuthService
         forgetPasswordJob::dispatch($email, $code);
 
         return new successResource([
-            'تم إرسال رمز التحقق إلى بريدك الإلكتروني.',
+            'message' =>'تم إرسال رمز التحقق إلى بريدك الإلكتروني.',
             'reset_token' => $resetToken
         ]);
     }
@@ -213,7 +216,7 @@ class DoctorAuthService
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
-            'avatar' =>asset('storage/'.$user->avatar),
+            'avatar' => asset('storage/' . $user->avatar),
             'contact_info' => $contactInfo,
         ]);
     }
