@@ -30,6 +30,7 @@ class AdminService
         $employeeData = $employees->map(function ($employee) use ($pathNAme, $stats) {
               $userId = $employee->id;
             return [
+                'employee_id'=>$employee->id,
                 'avatar' => $employee->user?->avatar ? asset('storage/' . $employee->user->avatar) : null,
                 'name' => $employee->user?->name ?: null,
                 'phone' => $employee->user?->phone ?: null,
@@ -45,6 +46,7 @@ class AdminService
 
             $managerData = $managers->map(function ($manager) use ($pathNAme) {
         return [
+           'manager_id'=>$manager->id,
             'avatar' => $manager->user?->avatar ? asset('storage/' . $manager->user->avatar) : null,
             'name' => $manager->user?->name ?: null,
             'phone' => $manager->user?->phone ?: null,
