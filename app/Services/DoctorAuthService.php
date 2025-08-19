@@ -5,15 +5,18 @@ namespace App\Services;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Doctor;
+use App\Models\ContactInfo;
 use Illuminate\Support\Str;
+use App\Models\Specialization;
 use App\Jobs\forgetPasswordJob;
 use App\Models\EmailVerification;
+use Illuminate\Support\Facades\DB;
 use App\Http\Resources\failResource;
+use App\Models\DoctorSpecialization;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\successResource;
-use App\Models\ContactInfo;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class DoctorAuthService
@@ -208,6 +211,12 @@ class DoctorAuthService
     {
         $user = Auth::user();
         $doctor = $user->doctor;
+$specializationIds = DB::table('doctor_specialization')
+    ->where('doctor_id', $user->doctor->id)
+    ->pluck('specialization_id');
+
+$my_specialization = Specialization::whereIn('id', $specializationIds)->select('name')->get();
+
         if (!$doctor) {
             return response()->json(['message' => 'الدكتور غير موجود.'], 404);
         }
@@ -218,6 +227,7 @@ class DoctorAuthService
             'phone' => $user->phone,
             'avatar' => asset('storage/' . $user->avatar),
             'contact_info' => $contactInfo,
+            'my_specialization'=>$my_specialization
         ]);
     }
 }

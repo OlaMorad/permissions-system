@@ -156,6 +156,8 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('/add', [SpecializationController::class, 'store'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::get('show/my/Specialization', [SpecializationController::class, 'show_my_Specialization'])->middleware('Verify.Session', 'role:الطبيب');
+        Route::get('filter/{bachelors_degree}', [SpecializationController::class, 'filter_Specialization'])->middleware('Verify.Session', 'role:الطبيب');
+
     });
 
     // Exam Requests
@@ -176,6 +178,8 @@ Route::middleware(['throttle:100,1'])->group(function () {
     // Doctor
     Route::controller(DoctorController::class)->group(function () {
         Route::post('add_specialization', 'add_specialization')->middleware('Verify.Session', 'role:الطبيب');
+        Route::get('welcome/message', 'show_welcome_message')->middleware('Verify.Session', 'role:الطبيب');
+
     });
 
     // Program
@@ -245,5 +249,5 @@ Route::post('face/recogination', [FaceRecognitionController::class, 'verify'])->
 Route::post('uploadAvatar', [uploadImageController::class, 'uploadAvatar'])->middleware('Verify.Session');
 
 // convert status
-Route::get('ConverStatus/{type}', [ConvertStatusController::class, 'Convert_status_for_user'])->middleware('Verify.Session','role:نائب المدير');
+Route::patch('ConverStatus/{type}', [ConvertStatusController::class, 'Convert_status_for_user'])->middleware('Verify.Session','role:نائب المدير');
 
