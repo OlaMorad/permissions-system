@@ -23,6 +23,12 @@ public function login(array $credentials,$request)
     $user->last_login_at = now();
     $user->save();
 
+        if ($request->filled('device_token')) {
+        \App\Models\DeviceToken::updateOrCreate(
+            ['user_id' => $user->id],
+            ['device_token' => $request->device_token]
+        );
+    }
     $userData = [
         'name' => $user->name,
         'avatar' => asset('storage/' . $user->avatar),

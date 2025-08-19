@@ -1,0 +1,157 @@
+[33ma9aa1f6[m[33m ([m[1;36mHEAD -> [m[1;32masmaa[m[33m)[m remove firebase service account secret from repo
+[33mfa3a44e[m edit exam request seeder & add settings for firebase
+[33m2cfa135[m[33m ([m[1;31morigin/asmaa[m[33m)[m refactor doctor profile
+[33m71bc3dd[m Merge pull request #98 from OlaMorad/Ola
+[33ma200448[m[33m ([m[1;31morigin/Ola[m[33m)[m change Password
+[33m7d37460[m Merge pull request #97 from OlaMorad/asmaa
+[33mf087e10[m filter specialization
+[33mc266658[m Merge pull request #96 from OlaMorad/asmaa
+[33me2af1cf[m add id in show employees by path
+[33m4f29fdf[m Merge pull request #95 from OlaMorad/Ola
+[33m29e4df0[m edit response
+[33md5c78ee[m Merge pull request #94 from OlaMorad/asmaa
+[33md1b44a0[m return email in pre register
+[33m1085c05[m Merge pull request #93 from OlaMorad/asmaa
+[33mc3bb835[m edit pre register
+[33m36c84f0[m Merge pull request #92 from OlaMorad/asmaa
+[33m21494d2[m show all employees and managers
+[33mfc26b13[m Merge pull request #91 from OlaMorad/Ola
+[33m31ccb08[m add validation messages
+[33m9b00192[m Merge pull request #90 from OlaMorad/asmaa
+[33m08abb59[m edit manager & active manager and employee add personal photo in exam request
+[33m808badb[m Merge pull request #89 from OlaMorad/Ola
+[33mcec7896[m show all roles
+[33m9bf5014[m Merge pull request #88 from OlaMorad/Ola
+[33mb2d917e[m get receipt image
+[33m553e866[m Merge pull request #87 from OlaMorad/asmaa
+[33md6b84bd[m edit InternalStatistics
+[33mf24a14a[m Merge pull request #86 from OlaMorad/asmaa
+[33m7e8bb47[m edit InternalStatistics
+[33mfaa4ca4[m Merge pull request #85 from OlaMorad/asmaa
+[33m0a68023[m InternalStatisticsForAdmin
+[33me7b874c[m Merge pull request #84 from OlaMorad/Ola
+[33mb4f1a03[m upload receipt
+[33md07f108[m Merge pull request #83 from OlaMorad/asmaa
+[33mc632411[m uploadAvatar
+[33me2684ff[m إضافة ملف .gitkeep لرفع مجلد storage/app/public
+[33m7dd1e86[m gitignore
+[33mf660ecd[m Merge pull request #82 from OlaMorad/asmaa
+[33m4807498[m edit avatar
+[33m554820e[m Merge pull request #81 from OlaMorad/asmaa
+[33m9e516f3[m merge2
+[33mfbdb69f[m Merge pull request #80 from OlaMorad/asmaa
+[33mdb5bf67[m merge
+[33mdbf83d3[m Merge pull request #79 from OlaMorad/asmaa
+[33mb6e632a[m edit face recogination
+[33m3be8a8b[m Merge pull request #78 from OlaMorad/Ola
+[33me745907[m edit show all forms
+[33m6a1ef64[m Merge pull request #77 from OlaMorad/asmaa
+[33mdb2646f[m face recogination
+[33m51f5a6a[m Merge pull request #76 from OlaMorad/Ola
+[33m68c2822[m solve conflict
+[33mfa12231[m edit register employee and get doctor profile
+[33mfcc2f1b[m Merge pull request #75 from OlaMorad/asmaa
+[33mb91a0b7[m Search
+[33mc8663b1[m Merge pull request #74 from OlaMorad/asmaa
+[33mf89a554[m add doctor image in show content exam request
+[33mb0b4bf6[m Merge pull request #73 from OlaMorad/asmaa
+[33m35f1b44[m add exam date in show_all_end_request_exam
+[33mefc7333[m Merge pull request #72 from OlaMorad/asmaa
+[33ma6c2e2c[m mimes
+[33m767695b[m Merge pull request #71 from OlaMorad/Ola
+[33me252570[m show receipt_image
+[33m84457be[m Merge pull request #70 from OlaMorad/Ola
+[33mfc82113[m exam profile and stastus from archive transaction
+[33md0449ec[m Merge pull request #69 from OlaMorad/Ola
+[33mc37b71a[m transaction status
+[33m15ff404[m Merge pull request #68 from OlaMorad/asmaa
+[33mcf9157c[m edit status in show all employee by path
+[33m8ec1d53[m Merge pull request #67 from OlaMorad/asmaa
+[33mb6ce7bb[m edit show all employee by path
+[33m886ec43[m Merge pull request #66 from OlaMorad/asmaa
+[33m5ee217b[m import internal mails
+[33m7511c96[m Merge pull request #65 from OlaMorad/Ola
+[33m0f53492[m doctor transaction and handle payment
+[33ma76018d[m Merge pull request #64 from OlaMorad/asmaa
+[33m8ad6934[m add exam number to show questions
+[33me98fa28[m Merge pull request #63 from OlaMorad/asmaa
+[33m50ab352[m complete auth doctor
+[33m1352ee1[m Merge pull request #62 from OlaMorad/asmaa
+[33m84cbe06[m auth doctor
+[33m4b68662[m Merge pull request #61 from OlaMorad/asmaa
+[33m876b237[m arabic message internal mails
+[33md9108b4[m Merge pull request #60 from OlaMorad/Ola
+[33mecd66f1[m show announcement details
+[33m690ba98[m Merge pull request #59 from OlaMorad/Ola
+[33mf308ac6[m answer Exam
+[33m4383de9[m Merge pull request #58 from OlaMorad/Ola
+[33mdb5f927[m format date
+[33m2363ec0[m Merge pull request #57 from OlaMorad/asmaa
+[33m04a3177[m add & show exam questions
+[33m783aaf3[m Merge pull request #56 from OlaMorad/Ola
+[33madcfb4a[m delete laravel/telescope
+[33m19390d6[m Merge pull request #55 from OlaMorad/Ola
+[33m10ac26c[m / Prevent duplicate exam programs per cycle
+[33m3b31afa[m Merge pull request #54 from OlaMorad/asmaa
+[33m16856b0[m refactor exam request
+[33m50c3caf[m Merge branch 'main' of https://github.com/OlaMorad/permissions-system into asmaa
+[33mfbbe0ff[m Merge pull request #53 from OlaMorad/Ola
+[33m7f5856a[m solve conflict
+[33m5812929[m Display doctors' scores and update exam status to 'finished' and 'active'
+[33m7e3a712[m Merge branch 'Ola' of https://github.com/OlaMorad/permissions-system into asmaa
+[33ma79fcc5[m auto reject an update status for program
+[33mc6cdb2e[m Merge pull request #52 from OlaMorad/asmaa
+[33m028caab[m show employees by path
+[33m7f0e6e5[m Merge pull request #51 from OlaMorad/Ola
+[33m1151812[m update program status
+[33maf403e2[m Merge pull request #50 from OlaMorad/asmaa
+[33md511cf2[m hash questions & refactor exam request & add archive by path for admins
+[33m6aeeb99[m Merge pull request #49 from OlaMorad/asmaa
+[33mc4ec13d[m add import archive
+[33m73a582a[m Merge pull request #48 from OlaMorad/asmaa
+[33m37c0010[m resolve conflict
+[33m26461cd[m Merge pull request #47 from OlaMorad/Ola
+[33m91aefe4[m add address to show employees
+[33m1d1e827[m Merge pull request #46 from OlaMorad/Ola
+[33m572569d[m add program,show program,show all programs
+[33me244667[m Merge pull request #45 from OlaMorad/asmaa
+[33m853ce3b[m ttl token and login message
+[33m3b45783[m Merge pull request #44 from OlaMorad/asmaa
+[33m52057d5[m Merge branch 'main' of https://github.com/OlaMorad/permissions-system into asmaa
+[33m8ef41b5[m add form content for exam request
+[33mf4e5dea[m Merge pull request #43 from OlaMorad/Ola
+[33md7c613a[m comment middleware
+[33m163779b[m Merge pull request #42 from OlaMorad/Ola
+[33m441abda[m show working hours and add requests form seeder
+[33mbd7c90d[m Merge pull request #41 from OlaMorad/asmaa
+[33me83f417[m add questions manual and excel
+[33mfab49a7[m Merge pull request #40 from OlaMorad/Ola
+[33m713c335[m check session by cookies token
+[33m2e9b038[m Merge pull request #39 from OlaMorad/Ola
+[33md5552c2[m add specialization and show all specializations
+[33m1883065[m Merge pull request #38 from OlaMorad/Ola
+[33m7721a4d[m edit permission seeder
+[33mb98d094[m Merge pull request #37 from OlaMorad/Ola
+[33m7d7818f[m add validation messages
+[33m2ad6698[m Merge pull request #36 from OlaMorad/Ola
+[33m4076c85[m add collection to project
+[33mf5a3795[m edit middleware
+[33m74d2136[m Merge pull request #35 from OlaMorad/Ola
+[33maff5897[m edit show transaction content
+[33mdd8fd21[m Merge pull request #34 from OlaMorad/asmaa
+[33m9dbb8fc[m add cookie for refresh
+[33m490f80a[m Merge pull request #33 from OlaMorad/Ola
+[33mc3d580f[m check response
+[33m06cfc87[m Merge pull request #32 from OlaMorad/asmaa
+[33mae59a84[m add cookie
+[33m45d272b[m Merge pull request #31 from OlaMorad/asmaa
+[33m77b9681[m edit statistics internal mails
+[33m6c7d6f4[m Merge pull request #30 from OlaMorad/Ola
+[33m3653bba[m export_transactions and weekly statistics
+[33ma95e29d[m Merge pull request #29 from OlaMorad/asmaa
+[33m7eebfef[m add final status and edit show employees
+[33m0093ed3[m Merge pull request #28 from OlaMorad/Ola
+[33m65b6eaa[m archive and update status for transaction
+[33mcb3f162[m Merge pull request #27 from OlaMorad/asmaa
+[33m440def8[m add fake data for transactions
+[33m
