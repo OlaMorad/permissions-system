@@ -230,6 +230,7 @@ Route::controller(DoctorAuthController::class)->group(function () {
     Route::post('set/password', 'set_password');
     Route::get('deactivate', 'deactivate_account')->middleware(['Verify.Session', 'role:الطبيب']);
     Route::get('profile', 'doctor_profile')->middleware(['Verify.Session', 'role:الطبيب']);
+    Route::post('doctor/change-password','changePassword')->middleware(['Verify.Session', 'role:الطبيب']);
 });
 
 //search

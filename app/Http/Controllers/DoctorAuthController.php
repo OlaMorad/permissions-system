@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\CodeRequest;
 use App\Http\Requests\DoctorLoginRequest;
 use Illuminate\Http\Request;
@@ -51,6 +52,11 @@ return $this->doctor->forget_password($request);
     public function doctor_profile()
     {
         return $this->doctor->doctor_profile();
+    }
+
+    public function changePassword(ChangePasswordRequest $request)
+    {
+        return $this->doctor->changePassword($request);
     }
 }
 
