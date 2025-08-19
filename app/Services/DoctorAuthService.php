@@ -230,4 +230,20 @@ $my_specialization = Specialization::whereIn('id', $specializationIds)->select('
             'my_specialization'=>$my_specialization
         ]);
     }
+
+    public function changePassword($request)
+    {
+        $user = Auth::user();
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json(
+                (new failResource('كلمة المرور القديمة غير صحيحة.'))->toArray(request()),
+                422
+            );
+        }
+            $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return new successResource('تم تغيير كلمة المرور بنجاح.');
+    }
 }
