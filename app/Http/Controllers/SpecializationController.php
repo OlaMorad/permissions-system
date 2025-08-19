@@ -31,7 +31,14 @@ class SpecializationController extends Controller
         return $this->SpecializationService->update($id, $request->validated());
     }
 
-    public function show_my_Specialization(){
-          return $this->SpecializationService->show_my_Specialization();
+    public function show_my_Specialization()
+    {
+        return $this->SpecializationService->show_my_Specialization();
     }
+
+    public function filter_Specialization($bachelors_degree)
+    {
+        return $this->SpecializationService->filter_Specialization($bachelors_degree);
+    }
+
 }

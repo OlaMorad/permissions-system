@@ -11,7 +11,7 @@ class SpecializationService
 
     public function store(array $data)
     {
-        $data=Specialization::create($data);
+        $data = Specialization::create($data);
         return (new successResource($data))->response()->setStatusCode(201);
     }
 
@@ -24,9 +24,16 @@ class SpecializationService
         return new successResource($specialization);
     }
 
-    public function show_my_Specialization(){
+    public function show_my_Specialization()
+    {
 
-        $doctor=Auth::user()->doctor->specializations;
-        return new successResource([ $doctor]);
+        $doctor = Auth::user()->doctor->specializations;
+        return new successResource([$doctor]);
     }
+
+    public function filter_Specialization($bachelors_degree)
+    {
+ return new successResource(
+        Specialization::where('bachelors_degree',  $bachelors_degree)->get()
+    );    }
 }
