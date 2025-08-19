@@ -81,7 +81,7 @@ class Requests_FormSeeder extends Seeder
             'status' => FormStatus::Active->value,
         ]);
 
-        FormPath::create([
+FormPath::create([
             'form_id' => $form2->id,
             'path_id' => 7,
         ]);
@@ -99,9 +99,6 @@ class Requests_FormSeeder extends Seeder
             ['label' => 'خريج جامعة', 'type' => Element_Type::INPUT],
             ['label' => 'مسجل في سجل', 'type' => Element_Type::INPUT],
             ['label' => 'برقم', 'type' => Element_Type::NUMBER],
-            ['label' => 'تاريخ', 'type' => Element_Type::DATE],
-            ['label' => 'حاصى على ترخيص', 'type' => Element_Type::INPUT],
-            ['label' => 'رقم', 'type' => Element_Type::NUMBER],
             ['label' => 'تاريخ', 'type' => Element_Type::DATE],
             ['label' => 'بصفة', 'type' => Element_Type::INPUT],
             ['label' => 'لدى مديرية الصحة', 'type' => Element_Type::INPUT],
@@ -131,7 +128,7 @@ class Requests_FormSeeder extends Seeder
             'status' => FormStatus::Active->value,
         ]);
 
-        FormPath::create([
+FormPath::create([
             'form_id' => $form3->id,
             'path_id' => 7,
         ]);
@@ -148,6 +145,9 @@ class Requests_FormSeeder extends Seeder
             ['label' => 'الجنسية', 'type' => Element_Type::INPUT],
             ['label' => 'خريج جامعة', 'type' => Element_Type::INPUT],
             ['label' => 'الاختصاص', 'type' => Element_Type::INPUT],
+            ['label' => 'مكان التدريب للأختصاص', 'type' => Element_Type::INPUT],
+            ['label' => 'خارج القطر', 'type' => Element_Type::CHECKBOX],
+            ['label' => 'الدولة', 'type' => Element_Type::INPUT],
             ['label' => 'أرجو قبول اعتذاري عن دخول الاختبار', 'type' => Element_Type::TEXT],
             ['label' => 'كتابي', 'type' => Element_Type::CHECKBOX],
             ['label' => 'عملي', 'type' => Element_Type::CHECKBOX],
