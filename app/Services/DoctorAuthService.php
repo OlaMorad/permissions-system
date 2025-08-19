@@ -211,12 +211,6 @@ class DoctorAuthService
     {
         $user = Auth::user();
         $doctor = $user->doctor;
-$specializationIds = DB::table('doctor_specialization')
-    ->where('doctor_id', $user->doctor->id)
-    ->pluck('specialization_id');
-
-$my_specialization = Specialization::whereIn('id', $specializationIds)->select('name')->get();
-
         if (!$doctor) {
             return response()->json(['message' => 'الدكتور غير موجود.'], 404);
         }
@@ -225,9 +219,9 @@ $my_specialization = Specialization::whereIn('id', $specializationIds)->select('
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
-            'avatar' => asset('storage/' . $user->avatar),
+            'avatar' => $user->avatar ? asset('storage/' . $user->avatar) : null,
             'contact_info' => $contactInfo,
-            'my_specialization'=>$my_specialization
+            'my_specialization'=>$doctor->specializations()->pluck('name')
         ]);
     }
 
