@@ -18,7 +18,7 @@ class ExamController extends Controller
         protected DoctorService $doctorService
 
     ) {}
-    public function show_exam_quetions(ExamNameRequest $request)
+    public function show_exam_quetions()
     {
         $doctor = Auth::user()->doctor->id;
         return $this->exam->getTodayExamQuestionsForSpecialization($doctor);

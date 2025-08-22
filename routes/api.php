@@ -237,10 +237,10 @@ Route::controller(DoctorAuthController::class)->group(function () {
 Route::controller(SearchController::class)->prefix('search')->group(function () {
     Route::get('degree', 'Search_degree_doctor');
     Route::get('Exam/request', 'Search_Exam_Request');
-    Route::get('Specialization/Name', 'Search_Specialization_Name');
+    Route::get('Specialization/Name', 'Search_Specialization_Name')->middleware('Verify.Session','role:نائب المدير|موظف الامتحانات|رئيس الامتحانات|الطبيب');
     Route::get('Employee', 'Search_Employee');
-    Route::get('Form', 'Search_Form');
-    Route::get('Announcements', 'Search_Announcements');
+    Route::get('Form', 'Search_Form')->middleware('Verify.Session','role:رئيس الديوان');
+    Route::get('Announcements', 'Search_Announcements')->middleware('Verify.Session','role:المدير');
 });
 
 //face
