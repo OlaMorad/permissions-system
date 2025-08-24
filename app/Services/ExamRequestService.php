@@ -175,6 +175,71 @@ class ExamRequestService
                 'value' => $value,
             ];
         }
+if($formContent->form->name == "طلب اعتذار عن الاختبار") {
+
+    // قيم السنة + الدورة + الاختصاص من نفس طلب الاعتذار
+    $year = null;
+    $cycle = null;
+    $specialization = null;
+
+    foreach ($formContent->elementValues as $elementValue) {
+        $label = $elementValue->formElement->label ?? '';
+        if (stripos($label, 'السنة') !== false) {
+            $year = $elementValue->value;
+        }
+        if (stripos($label, 'دورة' )!== false) {
+            $cycle = $elementValue->value;
+        }
+        if (stripos($label, 'اختصاص') !== false) {
+            $specialization = $elementValue->value;
+        }
+
+    }
+
+    // البحث عن طلب ترشيح لنفس الطبيب ونفس المواصفات
+    $tarshi7Request = ExamRequest::where('doctor_id', $examRequest->doctor_id)
+        ->whereHas('formContent.form', function($q) {
+            $q->where('name','LIKE','%'. 'طلب ترشيح '.'%');
+        })
+        ->whereHas('formContent.elementValues', function($q) use ($year) {
+            $q->whereHas('formElement', fn($qq) => $qq->where('label', 'السنة'))
+               ->where('value', $year);
+        })
+  ->whereHas('formContent.elementValues', function($q) use ($cycle) {
+    $q->whereHas('formElement', function($qq) use ($cycle) {
+        $qq->whereIn('label', ['تشرين الأول', 'نيسان'])
+           ->where('label', $cycle);
+    })
+    ->where('value', 'on');
+})
+
+        ->whereHas('formContent.elementValues', function($q) use ($specialization) {
+            $q->whereHas('formElement', fn($qq) => $qq->where('label', 'like', '%اختصاص%'))
+               ->where('value', $specialization);
+        })
+        ->latest() // آخر طلب ترشيح
+        ->first();
+    $studentPhoto = null;
+
+    if ($tarshi7Request && $tarshi7Request->formContent) {
+        foreach ($tarshi7Request->formContent->elementValues as $elVal) {
+            $label = $elVal->formElement->label ?? '';
+            if (stripos($label, 'صورة شخصية') !== false) {
+                $studentPhoto = $elVal->value;
+                if ($studentPhoto && str_starts_with($studentPhoto, 'exam_attachments/')) {
+                    $studentPhoto = asset('storage/' . $studentPhoto);
+                }
+            }
+        }
+    }
+
+    return [
+        'form_name' => $formContent->form->name,
+        'uuid' => $examRequest->uuid,
+        'elements' => $elements,
+        'صورة شخصية' => $studentPhoto,
+    ];
+}
 
         return [
             'form_name' => $formContent->form->name,
