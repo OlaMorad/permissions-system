@@ -13,7 +13,8 @@ class InternalMailArchive extends Model
         'status',
         'to',
         'to_phones',
-        'received_at'
+        'received_at',
+        'body'
     ];
 
     protected $casts = [

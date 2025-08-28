@@ -269,7 +269,7 @@ class InternalMailArchiveService
     }
 
 
-//عرض الارشيف الوارد للمدير ونائبه حسب المسار الممرر
+    //عرض الارشيف الوارد للمدير ونائبه حسب المسار الممرر
     public function show_received_archive_for_director($pathName)
     {
         $user = Auth::user();

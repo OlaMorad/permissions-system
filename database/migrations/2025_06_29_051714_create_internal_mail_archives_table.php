@@ -21,6 +21,7 @@ return new class extends Migration
             $table->json('to');          // أسماء الدوائر بصيغة JSON
             $table->json('to_phones');   // أرقام هواتف المستلمين بصيغة JSON
             $table->timestamp('received_at')->nullable(); // في حال المدير
+            $table->text('body');
             $table->timestamps();
         });
     }

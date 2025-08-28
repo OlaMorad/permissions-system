@@ -11,6 +11,7 @@ use App\Traits\LoggerTrait;
 use App\Models\InternalMail;
 use App\Enums\StatusInternalMail;
 use Illuminate\Support\Facades\DB;
+use App\Models\InternalMailArchive;
 use Illuminate\Support\Facades\Auth;
 use App\Presenters\InternalMailsPresenter;
 
@@ -271,6 +272,14 @@ public function show_import_internal_mails()
             return abort(403, 'لا يحق لك روؤية البريد');
 
         $mail = InternalMail::where('uuid', $uuid)->select('subject', 'body', 'updated_at', 'from_user_id')->first();
+          if (!$mail) {
+        $mail = InternalMailArchive::where('uuid', $uuid)
+            ->select('subject', 'body', 'updated_at', 'from_user_id')
+            ->first();
+        if (!$mail) {
+            return abort(404, 'البريد غير موجود');
+        }
+    }
         $sender = User::where('id', $mail->from_user_id)->first();
         $senderRole = DB::table('model_has_roles')->where('model_id', $sender->id)->first();
         $Role = Role::where('id', $senderRole->role_id)->select('name')->first();

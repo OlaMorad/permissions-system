@@ -7,11 +7,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "kreait/laravel-firebase": "^5.8",
         "algolia/algoliasearch-client-php": "^4.26",
+        "kreait/laravel-firebase": "^5.8",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.0",
-        "laravel/scout": "^10.18",
+        "laravel/scout": "10.18",
         "laravel/tinker": "^2.9",
         "league/commonmark": "2.7",
         "league/flysystem-aws-s3-v3": "3.0",
