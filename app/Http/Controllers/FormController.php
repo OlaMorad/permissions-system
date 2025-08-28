@@ -62,6 +62,7 @@ class FormController extends Controller
     {
         $form = Form::with('elements')->findOrFail($id);
         $response = [
+            'form_name'=> $form->name,
             'elements' => $form->elements
         ];
         return new successResource([$response]);

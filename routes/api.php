@@ -241,6 +241,8 @@ Route::controller(SearchController::class)->prefix('search')->group(function () 
     Route::get('Employee', 'Search_Employee');
     Route::get('Form', 'Search_Form')->middleware('Verify.Session','role:رئيس الديوان');
     Route::get('Announcements', 'Search_Announcements')->middleware('Verify.Session','role:المدير');
+    Route::get('/transactions', 'TransactionSearch');
+    Route::get('transactions/archived','ArchiveTransactionSearch');
 });
 
 //face

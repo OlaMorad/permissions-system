@@ -15,10 +15,12 @@ use App\Http\Resources\failResource;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\successResource;
 use App\Models\Announcement;
+use App\Models\ArchiveTransaction;
+use App\Models\Transaction;
 
 class SearchService
 {
-    public function __construct(protected EmployeeService $employeeService , protected SearchServiceHelper $helper) {}
+    public function __construct(protected EmployeeService $employeeService, protected SearchServiceHelper $helper) {}
     public function Search_degree_doctor($request)
     {
         $search = Candidate::where('degree', $request)->get();
@@ -134,7 +136,29 @@ class SearchService
         return new successResource([$search]);
     }
 
-    public function Search_Archive($request){
+    public function Search_Archive($request) {}
 
+    // بحث في المعاملات
+    public function TransactionSearch($key)
+    {
+        if (empty($key)) {
+            return new failResource('Search key is required');
+        }
+
+        $transactions = Transaction::search($key)->get();
+
+        return new successResource($transactions);
+    }
+    // بحث في ارشيف المعاملات
+    public function Archive_Transaction_Search($key)
+    {
+        if (empty($key)) {
+            return new failResource('Search key is required');
+        }
+
+        // البحث عبر Scout على ArchiveTransaction
+        $archives = ArchiveTransaction::search($key)->get();
+
+        return new successResource($archives);
     }
 }
