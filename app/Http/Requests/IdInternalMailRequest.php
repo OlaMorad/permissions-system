@@ -17,7 +17,7 @@ class IdInternalMailRequest extends FormRequest
         return [
             'uuid' => [
                 'required',
-                Rule::exists('internal_mails','uuid'),
+                // Rule::exists('internal_mails','uuid'),
             ],
         ];
     }
@@ -26,7 +26,7 @@ class IdInternalMailRequest extends FormRequest
     {
         return [
             'uuid.required' => 'رقم البريد مطلوب.',
-            'uuid.exists' => 'البريد غير موجود.',
+            // 'uuid.exists' => 'البريد غير موجود.',
         ];
     }
 }
