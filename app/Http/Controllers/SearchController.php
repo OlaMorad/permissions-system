@@ -49,4 +49,15 @@ class SearchController extends Controller
         return $this->search->Search_Archive($searchTerm);
 
     }
+    public function TransactionSearch(Request $request)
+    {
+        $key = $request->input('key');
+        return $this->search->TransactionSearch($key);
+
+    }
+    public function ArchiveTransactionSearch(Request $request)
+    {
+        $key = $request->input('key');
+        return $this->search->Archive_Transaction_Search($key);
+    }
 }

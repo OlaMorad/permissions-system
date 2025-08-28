@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Scout\Searchable;
+
 class Transaction extends Model
 {
-    use HasFactory;
+    use HasFactory,Searchable;
     protected $fillable = [
         'uuid',
         'form_content_id',
@@ -61,4 +63,16 @@ class Transaction extends Model
     return $this->hasOne(ArchiveTransaction::class, 'uuid', 'uuid');
 }
 
+
+    public function toSearchableArray()
+    {
+        // نجيب محتوى المعاملة مع الطبيب
+        $content = $this->content?->loadMissing(['doctor.user']);
+
+        return [
+            'uuid' => $this->uuid,
+            'receipt_number' => $this->receipt_number,
+            'doctor_name' => $content->doctor->user->name ?? null,
+        ];
+    }
 }
