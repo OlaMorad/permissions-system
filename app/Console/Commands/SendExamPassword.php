@@ -6,7 +6,7 @@ use App\Models\Exam;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-
+use App\Services\FirebaseNotificationService;
 class SendExamPassword extends Command
 {
     /**
@@ -22,7 +22,13 @@ class SendExamPassword extends Command
      * @var string
      */
     protected $description = 'Send password 5 minutes before exam start';
+   protected FirebaseNotificationService $firebase;
 
+    public function __construct(FirebaseNotificationService $firebase)
+    {
+        parent::__construct();
+        $this->firebase = $firebase;
+    }
     /**
      * Execute the console command.
      */
@@ -36,10 +42,26 @@ class SendExamPassword extends Command
 
         foreach ($exams as $exam) {
             $start = Carbon::parse($exam->start_time);
-            $diff = $start->diffInMinutes($now, false); // الفرق بالدقائق 
+            $diff = $start->diffInMinutes($now, false); // الفرق بالدقائق
             if ($diff === 5) {
                 $password = Str::random(8); // توليد كلمة سر 8 محارف
                 echo "كلمة السر لأمتحان {$exam->specialization->name}: $password\n";
+                
+                  foreach ($exam->candidates as $candidate) {
+                    $doctor = $candidate->doctor;
+
+                    if (!$doctor || !$doctor->user) continue;
+
+                    $title = "كلمة سر الامتحان: {$exam->specialization->name}";
+                    $body = "كلمة السر الخاصة بك: $password";
+
+                    $data = [
+                        'exam_id' => $exam->id,
+                        'password' => $password,
+                    ];
+
+                    $this->firebase->sendToUser($doctor->user->id, $title, $body, $data);
+                }
             }
         }
     }
