@@ -51,7 +51,8 @@ return [
              */
 
 'credentials' => [
-    'file' => env('FIREBASE_CREDENTIALS'),
+    'credentials_file' => env('FIREBASE_CREDENTIALS', null),
+    'project_id' => env('FIREBASE_PROJECT_ID', null),
 ],
 
             /*

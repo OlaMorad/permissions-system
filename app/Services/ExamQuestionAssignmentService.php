@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class ExamQuestionAssignmentService
 {
+    protected FirebaseNotificationService $firebase;
+
+    public function __construct(FirebaseNotificationService $firebase)
+    {
+        $this->firebase = $firebase;
+    }
     public function assignQuestionsToExams(Program $program): void
     {
         $avoidRecentlyUsedBefore = Carbon::now()->subMonths(12); //
@@ -27,7 +33,7 @@ class ExamQuestionAssignmentService
 
             $questions = $questions->merge(
                 QuestionBank::where('specialization_id', $specializationId)
-                    ->where('difficulty_level', 'بسيط')->where('status',QuestionBankEnum::APPROVED->value)
+                    ->where('difficulty_level', 'بسيط')->where('status', QuestionBankEnum::APPROVED->value)
                     ->where(function ($q) use ($avoidRecentlyUsedBefore) {
                         $q->whereNull('last_used_at')
                             ->orWhere('last_used_at', '<', $avoidRecentlyUsedBefore);
@@ -68,8 +74,19 @@ class ExamQuestionAssignmentService
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-                    $question->update(['last_used_at' => now()]);
+                $question->update(['last_used_at' => now()]);
+            }
 
+            $addedCount = $questions->count();
+
+            if ($addedCount === $totalQuestions) {
+                $title = "تم إضافة أسئلة الامتحان بنجاح";
+                $body = "تمت إضافة 100 سؤال لامتحان {$exam->specialization->name}";
+                $this->firebase->sendToRole('المدير', $title, $body);
+            } else {
+                $title = "تنبيه: نقص الأسئلة في الامتحان";
+                $body = "تم إضافة $addedCount سؤال فقط لامتحان {$exam->specialization->name}";
+                $this->firebase->sendToRole('رئيس الامتحانات', $title, $body);
             }
         }
     }
