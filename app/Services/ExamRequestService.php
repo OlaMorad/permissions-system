@@ -55,6 +55,9 @@ class ExamRequestService
         $form = Form::find($data['form_id']);
         $formName = $form?->name ?? '';
 
+            if ($specializationValue && $this->helper->hasNoApprovedProgram( $specializationValue)) {
+        throw new \Exception("لا يمكنك تقديم طلب لهذا الاختصاص لأنه لا يوجد برنامج امتحاني مقبول بعد.");
+    }
         if (str_contains($formName, 'اعتذار')) {
             // تحقق إذا سبق وقدم اعتذار بنفس السنة والدورة والاختصاص
             if ($this->helper->hasPreviousApologyRequest($doctor->id, $year, $cycle, $form->id, $specialization->name)) {
