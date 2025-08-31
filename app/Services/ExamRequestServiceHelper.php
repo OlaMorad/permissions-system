@@ -5,8 +5,10 @@ namespace App\Services;
 use Carbon\Carbon;
 use App\Models\Exam;
 use App\Models\Form;
+use App\Models\Program;
 use App\Models\ExamRequest;
 use App\Models\FormContent;
+use App\Enums\ExamRequestEnum;
 use App\Models\Specialization;
 
 
@@ -175,4 +177,17 @@ class ExamRequestServiceHelper
 
         return null;
     }
+
+
+public function hasNoApprovedProgram(string $specializationName): bool
+{ 
+    $specializationID = Specialization::where('name', $specializationName)->value('id');
+    if (!$specializationID) {
+        return true;
+    }
+    $hasExam = Exam::where('specialization_id', $specializationID)->value('program_id');
+    $hasProgram=Program::where('id',$hasExam)->where('approved',ExamRequestEnum::APPROVED->value)->exists();
+    return !$hasProgram;
+}
+
 }

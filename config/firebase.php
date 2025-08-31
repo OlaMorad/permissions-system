@@ -50,10 +50,12 @@ return [
              *
              */
 
-'credentials' => [
-    'credentials_file' => env('FIREBASE_CREDENTIALS', null),
-    'project_id' => env('FIREBASE_PROJECT_ID', null),
-],
+            'credentials' => [
+                'credentials_file' => env('FIREBASE_CREDENTIALS', null),
+                'project_id' => env('FIREBASE_PROJECT_ID', null),
+                'sender_id' => env('FIREBASE_SENDER_ID', null),
+
+            ],
 
             /*
              * ------------------------------------------------------------------------
