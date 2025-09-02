@@ -78,7 +78,6 @@ public function login(array $credentials,$request)
             $token = $useCookie
                 ? $request->cookie('jwt_token')
                 : $request->bearerToken();
-
             // التوكن غير موجود
             if (!$token) {
                 return response()->json([

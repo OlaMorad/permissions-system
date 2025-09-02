@@ -83,7 +83,17 @@ class ExamRequestService
 
             $this->storeElementValues($formContent, $data['elements'] ?? []);
             $this->storeAttachments($formContent, $data['attachments'] ?? []);
-
+  app(\App\Services\FirebaseNotificationService::class)
+        ->sendToRole(
+            'موظف الامتحانات',
+            'طلب امتحاني جديد',
+            "تم تقديم طلب امتحاني جديد من الطبيب {$doctor->user->name}",
+            [
+                'form_content_id' => $formContent->id,
+                'form_id' => $formContent->form_id,
+                'doctor_id' => $doctor->id,
+            ]
+        );
             return $formContent;
         });
     }

@@ -27,6 +27,7 @@ class Exam extends Model
 
     protected $casts = [
         'status' => Program_ExamStatus::class,
+          'date' => 'date',
     ];
     protected $appends = ['exam_time'];
 

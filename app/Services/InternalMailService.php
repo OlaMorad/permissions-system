@@ -235,7 +235,7 @@ public function show_import_internal_mails()
 
     // 4. دمج القائمتين مع إزالة التكرار
     $allMails = $approvedMails->merge($pendingMails)->unique('id');
-
+ $this->markAsRead($allMails, $userPathId);
     // 5. تجهيز البيانات للعرض
     return $allMails->map(function ($mail) {
         $user = $mail->fromUser;
@@ -291,4 +291,14 @@ public function show_import_internal_mails()
         $mail->from = $from;
         return  $mail;
     }
+    protected function markAsRead($mails, $userPathId)
+{
+    if ($mails->isNotEmpty()) {
+        DB::table('internal_mail_paths')
+            ->whereIn('internal_mail_id', $mails->pluck('id'))
+            ->where('path_id', $userPathId)
+            ->update(['is_read' => 1]);
+    }
+}
+
 }

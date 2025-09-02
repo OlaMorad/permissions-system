@@ -2,53 +2,59 @@
 
 namespace App\Services;
 
-use App\Models\Role;
 use App\Models\User;
 use App\Models\DeviceToken;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
+use Illuminate\Support\Facades\Log;
 
 class FirebaseNotificationService
 {
     protected $messaging;
 
+    public function messaging()
+    {
+        if ($this->messaging) {
+            return $this->messaging;
+        }
 
+        $credentialsFile = config('firebase.projects.app.credentials.credentials_file');
+        $projectId = config('firebase.projects.app.credentials.project_id');
 
-public function messaging()
-{
-    if ($this->messaging) {
-        return $this->messaging;
+        if (!$credentialsFile || !$projectId) {
+            Log::error('Firebase credentials or project ID not set.');
+            throw new \Exception('Firebase credentials or project ID not set.');
+        }
+
+        $factory = (new Factory)
+            ->withServiceAccount($credentialsFile)
+            ->withProjectId($projectId);
+
+        return $this->messaging = $factory->createMessaging();
     }
-
-    $credentialsFile = config('firebase.projects.app.credentials.credentials_file');
-    $projectId = config('firebase.projects.app.credentials.project_id');
-
-    if (!$credentialsFile || !$projectId) {
-        throw new \Exception('Firebase credentials or project ID not set.');
-    }
-
-    $factory = (new \Kreait\Firebase\Factory)
-        ->withServiceAccount($credentialsFile)
-        ->withProjectId($projectId);
-
-    return $this->messaging = $factory->createMessaging();
-}
-
-
-
-
 
     public function sendToUser(int $userId, string $title, string $body, array $data = []): bool
     {
         $deviceTokens = DeviceToken::where('user_id', $userId)->pluck('device_token')->toArray();
-        if (empty($deviceTokens)) return false;
+
+        if (empty($deviceTokens)) {
+            Log::warning("No device tokens found for user_id={$userId}");
+            return false;
+        }
 
         $notification = Notification::create($title, $body);
-        $message = CloudMessage::new()->withNotification($notification)->withData($data);
+        $message = CloudMessage::new()
+            ->withNotification($notification)
+            ->withData($data);
 
         foreach ($deviceTokens as $token) {
-            $this->messaging->send($message, $token);
+            try {
+                $this->messaging()->send($message, $token);
+                Log::info("Notification sent successfully to user_id={$userId}, token={$token}");
+            } catch (\Throwable $e) {
+                Log::error("Failed to send notification to user_id={$userId}, token={$token}. Error: " . $e->getMessage());
+            }
         }
 
         return true;
@@ -57,9 +63,17 @@ public function messaging()
     public function sendToRole(string $roleName, string $title, string $body, array $data = [])
     {
         $users = User::role($roleName)->get();
+
+        if ($users->isEmpty()) {
+            Log::warning("No users found with role={$roleName}");
+            return false;
+        }
+
         foreach ($users as $user) {
             $this->sendToUser($user->id, $title, $body, $data);
         }
+
+        Log::info("Notifications sent to role={$roleName}");
         return true;
     }
 }

@@ -16,15 +16,17 @@ return [
     */
 
     'paths' => ['api/*'],
-    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://152cb7311714.ngrok-free.app',
-        'http://localhost:3002',
         'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        // 'https://29f658ff04d4.ngrok-free.app'
     ],
 
-    'allowed_origins_patterns' => [],
+'allowed_origins_patterns' => [
+    '#^https://[a-z0-9\-]+\.ngrok-free\.app$#',
+],
 
     'allowed_headers' => ['*'],
 
