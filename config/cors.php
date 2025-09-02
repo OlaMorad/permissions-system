@@ -15,13 +15,14 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 
-    'allowed_methods' => ['*'],
-
-    'allowed_origins' => ['https://8c3d1628dfbf.ngrok-free.app',
- 'http://localhost:3002',
- 'http://localhost:3000',],
+    'allowed_origins' => [
+        'https://152cb7311714.ngrok-free.app',
+        'http://localhost:3002',
+        'http://localhost:3000',
+    ],
 
     'allowed_origins_patterns' => [],
 

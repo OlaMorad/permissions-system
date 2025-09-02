@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ExamRequestEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,6 +17,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('bachelors_degree');
             $table->json('experience_years');
+            $table->string('status')->default(ExamRequestEnum::PENDING->value);
             $table->timestamps();
         });
     }

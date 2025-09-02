@@ -55,10 +55,10 @@ public function login(array $credentials,$request)
                 60 * 24, // دقيقة
                 '/',
                 null, // النطاق (يمكنكِ تغييره حسب الدومين)
-                true,  // Secure (HTTPS)
-                true,  // HttpOnly
+                true,    // Secure (HTTPS)
+                true ,  // HttpOnly
                 false, // raw
-                'Strict' // SameSite
+                'None' // SameSite
             );
     }
 
