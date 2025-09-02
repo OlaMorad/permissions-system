@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ExamRequestEnum;
 use App\Http\Requests\AddSpecializationRequest;
 use App\Http\Requests\UpdateSpecializationRequest;
 use App\Http\Resources\successResource;
@@ -22,13 +23,19 @@ class SpecializationController extends Controller
     // عرض كل الاختصاصات
     public function index()
     {
-        $data = Specialization::all();
-        return new successResource($data);
+        $data = Specialization::where('status', ExamRequestEnum::APPROVED->value)->get();
+        // إخفاء حقل status من الريسبونس
+        $data->makeHidden('status');
+        return new SuccessResource($data);
     }
     // التعديل على احد الاختصاصات
     public function update(UpdateSpecializationRequest $request, $id)
     {
-        return $this->SpecializationService->update($id, $request->validated());
+        $specialization = $this->SpecializationService->update($id, $request->validated());
+        // إخفاء حقل status قبل الإرجاع
+        $specialization->makeHidden('status');
+
+        return $specialization;
     }
 
     public function show_my_Specialization()
@@ -40,5 +47,4 @@ class SpecializationController extends Controller
     {
         return $this->SpecializationService->filter_Specialization($bachelors_degree);
     }
-
 }

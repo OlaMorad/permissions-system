@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ExamRequestEnum;
 use App\Models\Specialization;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\successResource;
@@ -33,7 +34,11 @@ class SpecializationService
 
     public function filter_Specialization($bachelors_degree)
     {
- return new successResource(
-        Specialization::where('bachelors_degree',  $bachelors_degree)->get()
-    );    }
+        $specializations = Specialization::where('bachelors_degree', $bachelors_degree)
+            ->where('status', ExamRequestEnum::APPROVED->value) // فلترة المقبول
+            ->get()
+            ->makeHidden('status'); // إخفاء حقل status
+
+        return new successResource($specializations);
+    }
 }

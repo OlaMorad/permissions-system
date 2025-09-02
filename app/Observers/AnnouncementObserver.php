@@ -18,7 +18,7 @@ class AnnouncementObserver
     {
         // إرسال إشعار لجميع الأطباء
         $this->firebase->sendToRole(
-            'doctor', // اسم الرول للأطباء
+            'الطبيب', // اسم الرول للأطباء
             'إعلان جديد',
             $announcement->title,
             ['announcement_id' => $announcement->id] // بيانات إضافية للفرونت
