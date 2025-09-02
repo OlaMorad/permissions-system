@@ -180,7 +180,7 @@ class ExamRequestServiceHelper
 
 
 public function hasNoApprovedProgram(string $specializationName): bool
-{ 
+{
     $specializationID = Specialization::where('name', $specializationName)->value('id');
     if (!$specializationID) {
         return true;
