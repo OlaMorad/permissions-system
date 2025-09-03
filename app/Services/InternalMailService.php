@@ -79,11 +79,20 @@ class InternalMailService
             'subject'      => $request->subject,
             'body'         => $request->body,
         ]);
+$attachData = [];
+foreach ($pathIds as $pid) {
+    $rolesInPath = DB::table('roles')->where('path_id', $pid)->pluck('id');
+    foreach ($rolesInPath as $rid) {
+        // كل سجل منفصل في جدول الـ pivot
+        $mail->paths()->attach($pid, ['role_id' => $rid]);
 
-        // نضيف المسار لجدول الكسر
-        $mail->paths()->attach($pathIds);
-        $this->logInfo(' إنشاء بريد داخلي', ['from_user_id' => $currentUser->id]);
-        return collect($mail)->except('id');
+}
+
+}
+
+$this->logInfo(' إنشاء بريد داخلي', ['from_user_id' => $currentUser->id]);
+return collect($mail)->except('id');
+
     }
 
 
@@ -291,14 +300,20 @@ public function show_import_internal_mails()
         $mail->from = $from;
         return  $mail;
     }
-    protected function markAsRead($mails, $userPathId)
+
+protected function markAsRead($mails, $userPathId)
 {
-    if ($mails->isNotEmpty()) {
+    $currentUser = Auth::user();
+    $roleId = $currentUser->roles()->pluck('id')->first();
+
+    if ($mails->isNotEmpty() && $roleId) {
         DB::table('internal_mail_paths')
             ->whereIn('internal_mail_id', $mails->pluck('id'))
             ->where('path_id', $userPathId)
+            ->where('role_id', $roleId)
             ->update(['is_read' => 1]);
     }
 }
+
 
 }
