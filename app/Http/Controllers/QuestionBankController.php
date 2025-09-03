@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use  App\Services\QuestionService;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Http\Resources\successResource;
+use App\Http\Requests\UpdateQuestionStatusRequest;
 
 class QuestionBankController extends Controller
 {
@@ -25,4 +26,11 @@ class QuestionBankController extends Controller
         $this->questionService->addFromExcel( $request);
         return new successResource('تم الاستيراد من الإكسل');
     }
+
+    public function updateStatus(UpdateQuestionStatusRequest $request)
+{
+    $validated = $request->validated();
+
+    return $this->questionService->updateQuestionStatus($validated, $validated['status']);
+}
 }
