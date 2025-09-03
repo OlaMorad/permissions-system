@@ -21,6 +21,9 @@ return new class extends Migration
             $table->foreignId('path_id')
                 ->constrained('paths')
                 ->cascadeOnDelete();
+                            $table->foreignId('role_id')
+                ->constrained('roles')
+                ->cascadeOnDelete();
             $table->boolean('is_read')->default(0);
             $table->timestamps();
         });

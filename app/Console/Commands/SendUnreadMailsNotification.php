@@ -38,11 +38,12 @@ class SendUnreadMailsNotification extends Command
             if (!$pathId) {
                 continue;
             }
-
+            $roleId = $user->roles()->pluck('id')->first();
             // نحسب الرسائل المرتبطة بالـ path اللي لسا ما انقرت من جدول الكسر
             $unreadCount = DB::table('internal_mail_paths')
                 ->join('internal_mails', 'internal_mail_paths.internal_mail_id', '=', 'internal_mails.id')
                 ->where('internal_mail_paths.path_id', $pathId)
+                ->where('internal_mail_paths.role_id', $roleId)
                 ->where('internal_mail_paths.is_read', 0)
                 ->count();
 
