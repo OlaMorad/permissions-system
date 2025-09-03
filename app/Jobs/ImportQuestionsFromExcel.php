@@ -12,21 +12,22 @@ class ImportQuestionsFromExcel implements ShouldQueue
 {
     use Queueable;
 
-   protected  $path;
+    protected  $path;
     protected int $specializationId;
-
-    public function __construct( $path, int $specializationId)
+    protected string $batchId;
+    public function __construct($path, int $specializationId, string $batchId)
     {
         $this->path = $path;
         $this->specializationId = $specializationId;
+        $this->batchId = $batchId;
     }
 
     public function handle(): void
     {
-           $fullPath = storage_path("app/" . $this->path);
+        $fullPath = storage_path("app/" . $this->path);
 
-        Excel::import(new QuestionsImport($this->specializationId), $this->path);
-                // حذف الملف المؤقت بعد الاستيراد
+        Excel::import(new QuestionsImport($this->specializationId, $this->batchId), $this->path);
+        // حذف الملف المؤقت بعد الاستيراد
         Storage::delete($this->path);
     }
 }

@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('question_hash')->unique();
             $table->timestamp('last_used_at')->nullable();
             $table->String('status')->default(QuestionBankEnum::PENDING->value);
+            $table->uuid('batch_id')->nullable()->index();
             $table->timestamps();
         });
     }

@@ -57,7 +57,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('/register-manager/{role_id}', 'create_manager')->middleware(['role:نائب المدير', 'Verify.Session']);
         Route::get('show_my_employees', 'show_my_employees')->middleware('Verify.Session');
         Route::get('show_all_managers', 'show_all_managers');
-        Route::post('/edit_manager_information','edit_manager_information')->middleware(['role:نائب المدير', 'Verify.Session']);
+        Route::post('/edit_manager_information', 'edit_manager_information')->middleware(['role:نائب المدير', 'Verify.Session']);
     });
 
     // Permissions
@@ -135,7 +135,6 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::get('/weekly/path/{id}', [StatisticsController::class, 'weeklyDoneByPath'])->middleware('role:المدير|نائب المدير');
         Route::get('/InternalStatisticsSummary', [StatisticsController::class, 'InternalStatisticsSummary']);
         Route::get('/InternalStatisticsForAdmin', [StatisticsController::class, 'InternalStatisticsForAdmin'])->middleware('role:المدير|نائب المدير');
-
     });
 
     // Paths
@@ -157,7 +156,6 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::get('show/my/Specialization', [SpecializationController::class, 'show_my_Specialization'])->middleware('Verify.Session', 'role:الطبيب');
         Route::get('filter/{bachelors_degree}', [SpecializationController::class, 'filter_Specialization'])->middleware('Verify.Session', 'role:الطبيب');
-
     });
 
     // Exam Requests
@@ -173,13 +171,13 @@ Route::middleware(['throttle:100,1'])->group(function () {
     Route::controller(QuestionBankController::class)->group(function () {
         Route::post('/add_question_manual', 'addManual')->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::post('/addExcelQuestions', 'importFromExcel')->middleware('Verify.Session', 'role:رئيس الامتحانات');
+        Route::post('/updateStatus', 'updateStatus')->middleware('Verify.Session', 'role:المدير');
     });
 
     // Doctor
     Route::controller(DoctorController::class)->group(function () {
         Route::post('add_specialization', 'add_specialization')->middleware('Verify.Session', 'role:الطبيب');
         Route::get('welcome/message', 'show_welcome_message')->middleware('Verify.Session', 'role:الطبيب');
-
     });
 
     // Program
@@ -230,19 +228,19 @@ Route::controller(DoctorAuthController::class)->group(function () {
     Route::post('set/password', 'set_password');
     Route::get('deactivate', 'deactivate_account')->middleware(['Verify.Session', 'role:الطبيب']);
     Route::get('profile', 'doctor_profile')->middleware(['Verify.Session', 'role:الطبيب']);
-    Route::post('doctor/change-password','changePassword')->middleware(['Verify.Session', 'role:الطبيب']);
+    Route::post('doctor/change-password', 'changePassword')->middleware(['Verify.Session', 'role:الطبيب']);
 });
 
 //search
 Route::controller(SearchController::class)->prefix('search')->group(function () {
     Route::get('degree', 'Search_degree_doctor');
     Route::get('Exam/request', 'Search_Exam_Request');
-    Route::get('Specialization/Name', 'Search_Specialization_Name')->middleware('Verify.Session','role:نائب المدير|موظف الامتحانات|رئيس الامتحانات|الطبيب');
+    Route::get('Specialization/Name', 'Search_Specialization_Name')->middleware('Verify.Session', 'role:نائب المدير|موظف الامتحانات|رئيس الامتحانات|الطبيب');
     Route::get('Employee', 'Search_Employee');
-    Route::get('Form', 'Search_Form')->middleware('Verify.Session','role:رئيس الديوان');
-    Route::get('Announcements', 'Search_Announcements')->middleware('Verify.Session','role:المدير');
+    Route::get('Form', 'Search_Form')->middleware('Verify.Session', 'role:رئيس الديوان');
+    Route::get('Announcements', 'Search_Announcements')->middleware('Verify.Session', 'role:المدير');
     Route::get('/transactions', 'TransactionSearch')->middleware('Verify.Session');
-    Route::get('transactions/archived','ArchiveTransactionSearch')->middleware('Verify.Session');
+    Route::get('transactions/archived', 'ArchiveTransactionSearch')->middleware('Verify.Session');
 });
 
 //face
@@ -252,5 +250,4 @@ Route::post('face/recogination', [FaceRecognitionController::class, 'verify'])->
 Route::post('uploadAvatar', [uploadImageController::class, 'uploadAvatar'])->middleware('Verify.Session');
 
 // convert status
-Route::patch('ConverStatus/{type}', [ConvertStatusController::class, 'Convert_status_for_user'])->middleware('Verify.Session','role:نائب المدير');
-
+Route::patch('ConverStatus/{type}', [ConvertStatusController::class, 'Convert_status_for_user'])->middleware('Verify.Session', 'role:نائب المدير');
