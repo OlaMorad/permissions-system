@@ -18,5 +18,5 @@ Schedule::command('exams:update-status')->everyMinute();
 Schedule::command('exams:update-present-candidates')->everyTenMinutes();
 Schedule::command('email-verifications:clear-expired')->everyMinute();
 Schedule::command('exam:send-password')->everyMinute();
-Schedule::command('mails:notify-unread')->everyMinute();
+Schedule::command('mails:notify-unread')->dailyAt('10:00');
 Schedule::command('exams:notify-closing')->daily();

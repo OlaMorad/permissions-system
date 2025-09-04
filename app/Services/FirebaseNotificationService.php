@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\DeviceToken;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification;
 use Illuminate\Support\Facades\Log;
 
 class FirebaseNotificationService
@@ -44,30 +43,29 @@ class FirebaseNotificationService
         }
 
         foreach ($deviceTokens as $token) {
-            foreach ($deviceTokens as $token) {
-                try {
-                    $message = CloudMessage::new()
-                        ->withTarget('token', $token)
-                        ->withNotification([
-                            'title' => $title,
-                            'body'  => $body,
-                        ])
-                        ->withData($data);
 
-    
-                    $this->messaging()->send($message);
+            try {
+                $message = CloudMessage::fromArray([
+                    'token' => $token,
+                    'notification' => [
+                        'title' => $title,
+                        'body'  => $body,
+                    ],
+                    'data' => $data,
+                ]);
 
-                    Log::info("Notification sent successfully to user_id={$userId}, token={$token}");
-                } catch (\Throwable $e) {
-                    Log::error("Failed to send notification to user_id={$userId}, token={$token}. Error: " . $e->getMessage());
-                }
+                $this->messaging()->send($message);
+
+                Log::info("Notification sent successfully to user_id={$userId}, token={$token}");
+            } catch (\Throwable $e) {
+                Log::error("Failed to send notification to user_id={$userId}, token={$token}. Error: " . $e->getMessage());
             }
         }
 
         return true;
     }
 
-    public function sendToRole(string $roleName, string $title, string $body, array $data = [])
+    public function sendToRole(string $roleName, string $title, string $body, array $data = []): bool
     {
         $users = User::role($roleName)->get();
 

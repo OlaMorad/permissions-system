@@ -97,7 +97,7 @@ public function collection(Collection $rows)
 
     // بعد انتهاء الاستيراد، إرسال إشعار للمدير
     $firebase->sendToRole(
-        'مدير',
+        'المدير',
         'انتهاء استيراد ملف أسئلة',
         "تم استيراد ملف أسئلة بنجاح. Batch ID: {$this->batchId}, عدد الأسئلة المستوردة: {$imported}, عدد الأسطر الفاشلة: " . count($failedRows),
         ['batch_id' => $this->batchId, 'imported' => $imported, 'failed' => count($failedRows)]
