@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Enums\FormStatus;
 use App\Models\Form;
 use App\Services\FirebaseNotificationService;
+use Illuminate\Support\Facades\Log;
 
 class FormObserver
 {
@@ -18,6 +19,12 @@ class FormObserver
      */
     public function created(Form $form): void
     {
+        // اذا الكوست صفر بيكون طلب امتحاني
+        // تحقق إذا الكوست أكبر من صفر
+        if ($form->cost <= 0) {
+            return; // ما بعمل شي إذا الكوست صفر أو أقل
+        }
+
         $title = "تم إضافة نموذج معاملة جديد";
         $body  = "{$form->name}";
 
@@ -26,6 +33,12 @@ class FormObserver
             'form_name'  => $form->name,
         ];
         $this->notification->sendToRole('المدير', $title, $body, $data);
+        Log::info('Notification sent', [
+            'role'  => 'المدير',
+            'title' => $title,
+            'body'  => $body,
+            'data'  => $data,
+        ]);
     }
 
     /**

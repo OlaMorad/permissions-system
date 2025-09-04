@@ -7,8 +7,10 @@ use App\Models\Transaction;
 use App\Enums\TransactionStatus;
 use App\Models\ArchiveTransaction;
 use App\Models\Employee;
+use App\Services\FirebaseNotificationService;
 use App\Services\UserRoleService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class TransactionObserver
 {
@@ -41,6 +43,7 @@ class TransactionObserver
                 'sent_at' => now(),
             ]);
             $this->archiveOrUpdate($transaction);
+            $this->notifyDoctor($transaction, 'تم رفض معاملتك في الدائرة الحالية');
             return;
         }
 
@@ -83,6 +86,7 @@ class TransactionObserver
 
         if ($next) {
             $this->updateTransaction($transaction, $current, $next);
+            $this->notifyDoctor($transaction, 'تمت الإجراءات في الدائرة السابقة وتم تحويل معاملتك إلى الدائرة التالية', $current, $next);
         } else {
             $this->archiveOrUpdate($transaction); // هذا بيحفظ الحالة الحالية قبل ما نغيّرها
             // لا يوجد مسار تالي => تعيين حالة المنجزة
@@ -93,6 +97,8 @@ class TransactionObserver
                 'to'         => null,
                 'sent_at'    => now(),
             ]);
+            $this->notifyDoctor($transaction, 'تمت معالجة معاملتك بالكامل وانتهت جميع الإجراءات');
+
             // حذف المحتوى فقط في حالة منجزة
             if ($transaction->content) {
                 $transaction->content->delete();
@@ -218,6 +224,26 @@ class TransactionObserver
                 'receipt' => $m->receipt,
             ])->values()->all(),
         ];
+    }
+    // دالة موحدة لإرسال الإشعار للطبيب
+    private function notifyDoctor(Transaction $transaction, string $message, $fromPath = null, $toPath = null)
+    {
+        if (!$transaction->content || !$transaction->content->doctor) return;
+
+        $doctor = $transaction->content->doctor;
+        $userId = $doctor->user->id ?? null;
+
+        if ($userId) {
+            $data = [
+                'transaction_uuid' => $transaction->uuid,
+                'from_path' => $fromPath,
+                'to_path' => $toPath,
+            ];
+
+            app(FirebaseNotificationService::class)->sendToUser($userId, 'تحديث المعاملة', $message, $data);
+
+            Log::info("Notification sent to doctor_id={$doctor->id}, transaction_id={$transaction->id}", $data);
+        }
     }
 
     /**

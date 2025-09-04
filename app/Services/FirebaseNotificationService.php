@@ -43,17 +43,24 @@ class FirebaseNotificationService
             return false;
         }
 
-        $notification = Notification::create($title, $body);
-        $message = CloudMessage::new()
-            ->withNotification($notification)
-            ->withData($data);
-
         foreach ($deviceTokens as $token) {
-            try {
-                $this->messaging()->send($message, $token);
-                Log::info("Notification sent successfully to user_id={$userId}, token={$token}");
-            } catch (\Throwable $e) {
-                Log::error("Failed to send notification to user_id={$userId}, token={$token}. Error: " . $e->getMessage());
+            foreach ($deviceTokens as $token) {
+                try {
+                    $message = CloudMessage::new()
+                        ->withTarget('token', $token)
+                        ->withNotification([
+                            'title' => $title,
+                            'body'  => $body,
+                        ])
+                        ->withData($data);
+
+    
+                    $this->messaging()->send($message);
+
+                    Log::info("Notification sent successfully to user_id={$userId}, token={$token}");
+                } catch (\Throwable $e) {
+                    Log::error("Failed to send notification to user_id={$userId}, token={$token}. Error: " . $e->getMessage());
+                }
             }
         }
 

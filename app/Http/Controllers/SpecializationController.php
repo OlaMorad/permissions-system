@@ -9,6 +9,7 @@ use App\Http\Resources\successResource;
 use App\Models\Specialization;
 use App\Services\SpecializationService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SpecializationController extends Controller
 {
@@ -46,5 +47,21 @@ class SpecializationController extends Controller
     public function filter_Specialization($bachelors_degree)
     {
         return $this->SpecializationService->filter_Specialization($bachelors_degree);
+    }
+
+    public function changeStatus($id, Request $request)
+    {
+        $request->validate([
+            'status' => [
+                'required',
+                'string',
+                Rule::in([
+                    ExamRequestEnum::APPROVED->value,
+                    ExamRequestEnum::REJECTED->value,
+                ]),
+            ],
+        ]);
+
+        return $this->SpecializationService->changeStatus($id, $request->status);
     }
 }
