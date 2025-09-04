@@ -41,4 +41,18 @@ class SpecializationService
 
         return new successResource($specializations);
     }
+    // الموافقة على اضافة اختصاص او تعديل اختصاص
+    public function changeStatus(int $id, string $status)
+    {
+        $specialization = Specialization::findOrFail($id);
+
+        $specialization->update([
+            'status' => $status,
+        ]);
+
+        return new successResource([
+            'id'     => $specialization->id,
+            'new_status' => $specialization->status,
+        ]);
+    }
 }

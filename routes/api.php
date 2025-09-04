@@ -156,6 +156,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('/{id}', [SpecializationController::class, 'update'])->middleware('Verify.Session', 'role:رئيس الامتحانات');
         Route::get('show/my/Specialization', [SpecializationController::class, 'show_my_Specialization'])->middleware('Verify.Session', 'role:الطبيب');
         Route::get('filter/{bachelors_degree}', [SpecializationController::class, 'filter_Specialization'])->middleware('Verify.Session', 'role:الطبيب');
+        Route::patch('/status/{id}', [SpecializationController::class, 'changeStatus'])->middleware('Verify.Session', 'role:المدير');
     });
 
     // Exam Requests
