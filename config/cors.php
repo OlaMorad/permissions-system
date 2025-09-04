@@ -21,7 +21,8 @@ return [
     'allowed_origins' => [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-        'https://b19e3469edd1.ngrok-free.app'
+
+        'https://3474b2ea4829.ngrok-free.app'
         // 'https://29f658ff04d4.ngrok-free.app'
     ],
 

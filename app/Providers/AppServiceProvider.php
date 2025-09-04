@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Models\Announcement;
 use App\Models\Form;
 use App\Models\Program;
+use App\Models\Specialization;
 use App\Observers\ManagerObserver;
 use App\Observers\employeeObserver;
 use App\Observers\ExamRequestObserver;
@@ -18,6 +19,7 @@ use App\Observers\TransactionObserver;
 use App\Observers\AnnouncementObserver;
 use App\Observers\FormObserver;
 use App\Observers\ProgramObserver;
+use App\Observers\SpecializationObserver;
 use Illuminate\Support\ServiceProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
@@ -44,5 +46,6 @@ class AppServiceProvider extends ServiceProvider
         Announcement::observe(AnnouncementObserver::class);
         Form::observe(FormObserver::class);
         Program::observe(ProgramObserver::class);
+        Specialization::observe(SpecializationObserver::class);
     }
 }

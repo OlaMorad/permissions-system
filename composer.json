@@ -9,6 +9,7 @@
         "php": "^8.2",
         "algolia/algoliasearch-client-php": "^4.26",
         "guzzlehttp/guzzle": "*",
+        "kreait/firebase-php": "^7.10",
         "kreait/laravel-firebase": "^5.8",
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.0",
