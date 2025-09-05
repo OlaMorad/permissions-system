@@ -27,6 +27,9 @@ class SearchServiceHelper
         ])
             ->whereIn('status', $statuses)
             ->whereIn('doctor_id', $doctorIds)
+            ->whereHas('formContent.form', function ($query) {
+                $query->where('cost', 0);
+            })
             ->get()
             ->map(function ($request) use ($includeStatus) {
                 $elementValues = $request->formContent->elementValues;

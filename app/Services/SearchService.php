@@ -54,7 +54,7 @@ class SearchService
 
     public function Search_Specialization_Name($request)
     {
-        $search = Specialization::where('name', 'LIKE', '%' . $request . '%')->get();
+        $search = Specialization::where('name', 'LIKE', '%' . $request . '%')->get()->makeHidden('status');
         return new successResource([$search]);
     }
 
@@ -125,7 +125,7 @@ class SearchService
 
     public function Search_Form($request)
     {
-        $search = Form::where('name', 'LIKE', '%' . $request . '%')->get();
+        $search = Form::where('name', 'LIKE', '%' . $request . '%')->where('cost', '!=', 0)->get();
         return new successResource([$search]);
     }
 
