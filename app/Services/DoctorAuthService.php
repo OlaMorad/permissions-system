@@ -92,7 +92,7 @@ class DoctorAuthService
     }
 
 
-    public function login(array $credentials)
+    public function login(array $credentials, ?string $deviceToken = null)
     {
         if (!$token = Auth::guard('api')->attempt($credentials)) {
             return response()->json(
@@ -117,6 +117,13 @@ class DoctorAuthService
         $user->last_login_at = now();
         $user->save();
 
+        //  تخزين device_token إذا مرر
+        if (!empty($deviceToken)) {
+            \App\Models\DeviceToken::updateOrCreate(
+                ['user_id' => $user->id],
+                ['device_token' => $deviceToken]
+            );
+        }
         $userData = [
             'name' => $user->name,
             'avatar' => asset('storage/' . $user->avatar),
