@@ -30,7 +30,10 @@ class QuestionService implements QuestioneInterface
                 'رئيس الامتحانات',
                 'فشل إضافة سؤال',
                 "السؤال '{$plainQuestion}' موجود مسبقاً ولم يتم إضافته.",
-                ['question' => $plainQuestion]
+                ['question' => $plainQuestion,
+                   'action_required' => true,
+                   'type'=>'question_bank'
+                   ]
             );
             return response()->json(['message' => 'السؤال موجود مسبقاً']);
         }
