@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class DoctorTransactionService
 {
-// جلب المعاملات الحالية التي لم تنهي مسارها بعد او ترفض
+    // جلب المعاملات الحالية التي لم تنهي مسارها بعد او ترفض
     public function getCurrentTransactionsForDoctor()
     {
         $doctorId = Auth::user()->doctor->id;
@@ -72,6 +72,7 @@ class DoctorTransactionService
 
             return [
                 'uuid' => $transaction->uuid,
+                'cost ' => $form->cost ?? null,
                 'full_path' => collect($steps)->map(fn($id) => $stepNames[$id] ?? '')->values()->all(),
                 'current_path' => in_array($transaction->status_to, [TransactionStatus::COMPLETED, TransactionStatus::REJECTED])
                     ? 'انتهت'
@@ -101,6 +102,7 @@ class DoctorTransactionService
 
             return [
                 'uuid' => $archived->uuid,
+                'cost' => $content['form_cost'] ?? null,
                 'full_path' => $stepIds->map(fn($id) => $pathNames[$id] ?? '')->values()->all(),
                 'current_path' => 'انتهت',
                 'doctor_name' => $content['doctor_name'] ?? '',

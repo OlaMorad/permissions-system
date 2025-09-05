@@ -37,17 +37,17 @@ class SendExamPassword extends Command
     public function handle()
     {
         $now = Carbon::now();
+        $today = $now->toDateString();
 
-        // جلب كل الامتحانات مع الاختصاص
-        $exams = Exam::with('specialization')->get();
+        $exams = Exam::with('specialization')->whereDate('date', $today)->get();
 
         foreach ($exams as $exam) {
             $start = Carbon::parse($exam->start_time);
             $diff = $now->diffInMinutes($start, false);
-          //  Log::info("Exam {$exam->id} starts at {$start}, now={$now}, diff={$diff}");
+           //  Log::info("Exam {$exam->id} starts at {$start}, now={$now}, diff={$diff}");
             if ($diff <= 5 && $diff >= 0) {
                 $password = Str::random(8); // توليد كلمة سر 8 محارف
-             //   Log::info("Generated password: {$password}");
+                //   Log::info("Generated password: {$password}");
                 echo "كلمة السر لأمتحان {$exam->specialization->name}: $password\n";
 
 
