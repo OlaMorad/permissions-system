@@ -116,8 +116,6 @@ class DoctorAuthService
         }
         $user->last_login_at = now();
         $user->save();
-
-        //  تخزين device_token إذا مرر
         if (!empty($deviceToken)) {
             \App\Models\DeviceToken::updateOrCreate(
                 ['user_id' => $user->id],
