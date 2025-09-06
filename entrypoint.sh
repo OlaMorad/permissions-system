@@ -9,7 +9,7 @@ while ! mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" --silent; do
 done
 
 echo "MySQL is ready! Running migrations..."
-php artisan migrate:fresh --force
+php artisan migrate:fresh --step
 
 echo "Seeding database..."
 php artisan db:seed --force
