@@ -12,11 +12,11 @@ echo "MySQL is ready! Running migrations..."
 mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SET FOREIGN_KEY_CHECKS=0;"
 
 php artisan db:wipe --force
-php artisan migrate:fresh --force
+# php artisan migrate --force
 mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SET FOREIGN_KEY_CHECKS=1;"
 
 echo "Seeding database..."
-php artisan db:seed --force
+# php artisan db:seed --force
 
 echo "Starting Laravel server..."
 echo "PORT is $PORT"
