@@ -21,4 +21,4 @@ php artisan db:seed --force
 echo "Starting Laravel server..."
 echo "PORT is $PORT"
 
-exec php -S 0.0.0.0:$PORT -t public
+php artisan serve --host=0.0.0.0 --port=8080
