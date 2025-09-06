@@ -1,16 +1,15 @@
 #!/bin/sh
 set -e
 
-# انتظار MySQL لتكون جاهزة
-echo "Waiting for MySQL to be ready..."
-until php -r "new PDO('mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));"
-do
-  echo "MySQL is unavailable - sleeping"
-  sleep 3
-done
+echo "Starting Laravel container..."
 
-echo "MySQL is ready - running migrations..."
-php artisan migrate --force
+# تأكد من وجود .env
+if [ ! -f .env ]; then
+    cp .env.example .env
+fi
+
+echo "Running migrations..."
+php artisan migrate:fresh --force
 
 echo "Seeding database..."
 php artisan db:seed --force
