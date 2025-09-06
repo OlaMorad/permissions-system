@@ -40,4 +40,9 @@ class ExamController extends Controller
     {
         return $this->doctorService->check_exam_time();
     }
+    // التحقق من كلمة السر الامتحانية
+    public function check_exam_password(Request $request)
+    {
+        return $this->doctorService->checkExamPassword($request);
+    }
 }

@@ -82,7 +82,10 @@ class DoctorService
         // if ($now->gt($entryDeadline)) {
         //     return response()->json(['message' => 'انتهت مدة الدخول إلى الامتحان'], 403);
         // }
-        $canEnter = $now->gte($startTime) && $now->lte($entryDeadline);
+
+        // can_enter = true إذا الآن >= دقيقة قبل بدء الامتحان و <= ثلث مدة الامتحان بعد البدء
+        $oneMinuteBeforeStart = $startTime->copy()->subMinute();
+        $canEnter = $now->gte($oneMinuteBeforeStart) && $now->lte($entryDeadline);
 
         // حساب الوقت المتبقي لبدء الامتحان
         $timeRemaining = $now->lt($startTime)
@@ -98,5 +101,30 @@ class DoctorService
             'time_remaining' => $timeRemaining,
             'can_enter' => $canEnter,
         ]);
+    }
+// التحقق من كلمة السر الامتحانية
+    public function checkExamPassword($request)
+    {
+        $doctor = Auth::user()->doctor;
+        $candidate = $doctor->candidates()->latest()->first();
+
+        if (!$candidate || !$candidate->exam) {
+            return response()->json(['message' => 'لا يوجد ترشيح أو امتحان مرتبط.'], 404);
+        }
+
+        $exam = $candidate->exam;
+        $inputPassword = $request->input('password');
+
+        $examPassword = $exam->password()->first();
+
+        if (!$examPassword) {
+            return response()->json(['message' => 'لا توجد كلمة سر مخزنة لهذا الامتحان.'], 404);
+        }
+
+        if ($examPassword->password === $inputPassword) {
+            return response()->json(['message' => 'كلمة السر صحيحة. يمكنك الدخول.'], 200);
+        }
+
+        return response()->json(['message' => 'كلمة السر غير صحيحة.'], 403);
     }
 }
