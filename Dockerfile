@@ -33,7 +33,7 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # فتح البورت الافتراضي
-EXPOSE 8080
+EXPOSE 8000
 
 # تشغيل entrypoint
 CMD ["/usr/local/bin/entrypoint.sh"]
