@@ -1,15 +1,15 @@
 #!/bin/sh
 set -e
 
-echo "Starting Laravel container..."
+echo "Waiting for MySQL to be ready..."
 
-# تأكد من وجود .env
-if [ ! -f .env ]; then
-    cp .env.example .env
-fi
+while ! mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" --silent; do
+    echo "MySQL is unavailable - sleeping"
+    sleep 3
+done
 
-echo "Running migrations..."
-php artisan migrate:fresh --force
+echo "MySQL is ready! Running migrations..."
+php artisan migrate --force
 
 echo "Seeding database..."
 php artisan db:seed --force
