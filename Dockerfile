@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 
 
 # تثبيت الاعتماديات
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
 # إنشاء ملف .env من المثال إذا مش موجود
 RUN cp .env.example .env || true
