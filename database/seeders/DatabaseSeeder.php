@@ -23,11 +23,11 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             PermissionsSeeder::class,
             Role_PermissionSeeder::class,
-            // AdminSeeder::class,
+            AdminSeeder::class,
             pathSeeder::class,
-            // FormSeeder::class,
+            FormSeeder::class,
             Requests_FormSeeder::class,
-            // ContactInfoSeeder::class,
+            ContactInfoSeeder::class,
         ]);
     }
 }
