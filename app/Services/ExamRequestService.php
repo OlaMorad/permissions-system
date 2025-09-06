@@ -275,7 +275,9 @@ class ExamRequestService
                 $firebase = app(FirebaseNotificationService::class);
 
                 $title = "تحديث حالة طلبك";
-                $body  = "تم " . ($status === 'status' ? 'الموافقة على' : 'رفض') . " طلبك لفحص الامتحان.";
+                $body = $status === ExamRequestEnum::APPROVED->value
+                    ? "تمت الموافقة على طلبك لفحص الامتحان."
+                    : "تم رفض طلبك لفحص الامتحان.";
 
                 $data = [
                     'exam_request_uuid' => $examRequest->uuid,

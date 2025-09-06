@@ -209,6 +209,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('submit/answers', 'submit_answers')->middleware(['Verify.Session', 'role:الطبيب']);
         Route::get('exam/profile', 'exam_profile')->middleware(['Verify.Session', 'role:الطبيب']);
         Route::get('exam', 'check_exam_time')->middleware(['Verify.Session', 'role:الطبيب']);
+        Route::post('exam/password','check_exam_password')->middleware(['Verify.Session', 'role:الطبيب']);
     });
     //announcements
     Route::controller(AnnouncementController::class)->prefix('announcement')->group(function () {

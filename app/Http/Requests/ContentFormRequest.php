@@ -101,7 +101,10 @@ class ContentFormRequest extends FormRequest
     {
         $label = $element->label;
         $type = $element->type->value;
-
+        // تجاهل النصوص تمامًا
+        if ($type === Element_Type::TEXT->value) {
+            return;
+        }
         if (is_null($value)) {
             $validator->errors()->add('elements', "العنصر ذو التسمية '{$label}' مفقود ويجب تعبئته.");
             return;

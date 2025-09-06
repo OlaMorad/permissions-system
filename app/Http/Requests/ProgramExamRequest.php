@@ -185,7 +185,7 @@ class ProgramExamRequest extends FormRequest
                 }
             }
             //  التحقق من عدد الامتحانات = عدد الاختصاصات
-            $specializationCount = Specialization::count();
+            $specializationCount = Specialization::where('status', ExamRequestEnum::APPROVED->value)->count();
             if (count($exams) !== $specializationCount) {
                 $validator->errors()->add(
                     'exams',

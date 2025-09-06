@@ -73,4 +73,9 @@ class Exam extends Model
             'specialization_name' => $this->specialization?->name, // البحث حسب اسم الاختصاص
         ];
     }
+
+    public function password()
+    {
+        return $this->hasOne(ExamPassword::class);
+    }
 }
