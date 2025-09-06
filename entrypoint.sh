@@ -19,5 +19,6 @@ echo "Seeding database..."
 php artisan db:seed --force
 
 echo "Starting Laravel server..."
-exec php artisan serve --host=0.0.0.0 --port=$PORT
 echo "PORT is $PORT"
+
+exec php artisan serve --host=0.0.0.0 --port=$PORT
