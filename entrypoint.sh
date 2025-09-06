@@ -1,24 +1,26 @@
-#!/bin/sh
-set -e
+FROM php:8.2-fpm
 
-echo "Waiting for MySQL to be ready..."
+# تثبيت المكتبات اللازمة
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libzip-dev unzip git curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql mbstring zip exif pcntl bcmath
 
-while ! mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" --silent; do
-    echo "MySQL is unavailable - sleeping"
-    sleep 3
-done
+# تثبيت Composer
+COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
-echo "MySQL is ready! Running migrations..."
-mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SET FOREIGN_KEY_CHECKS=0;"
+WORKDIR /var/www/html
 
-php artisan db:wipe --force
-php artisan migrate:fresh --force
-mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SET FOREIGN_KEY_CHECKS=1;"
+# نسخ المشروع
+COPY . .
 
-echo "Seeding database..."
-php artisan db:seed --force
+# تثبيت الاعتماديات
+RUN composer install --optimize-autoloader --no-dev
 
-echo "Starting Laravel server..."
-echo "PORT is $PORT"
+# نسخ إعدادات nginx
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
-exec php artisan serve --host=0.0.0.0 --port=$PORT
+# فتح بورت
+EXPOSE 80
+
+CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
