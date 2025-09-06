@@ -102,14 +102,17 @@ class DoctorService
             'can_enter' => $canEnter,
         ]);
     }
-// التحقق من كلمة السر الامتحانية
+    // التحقق من كلمة السر الامتحانية
     public function checkExamPassword($request)
     {
         $doctor = Auth::user()->doctor;
         $candidate = $doctor->candidates()->latest()->first();
 
         if (!$candidate || !$candidate->exam) {
-            return response()->json(['message' => 'لا يوجد ترشيح أو امتحان مرتبط.'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يوجد ترشيح أو امتحان مرتبط.'
+            ], 404);
         }
 
         $exam = $candidate->exam;
@@ -118,13 +121,21 @@ class DoctorService
         $examPassword = $exam->password()->first();
 
         if (!$examPassword) {
-            return response()->json(['message' => 'لا توجد كلمة سر مخزنة لهذا الامتحان.'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'لا توجد كلمة سر مخزنة لهذا الامتحان.'
+            ], 404);
         }
 
         if ($examPassword->password === $inputPassword) {
-            return response()->json(['message' => 'كلمة السر صحيحة. يمكنك الدخول.'], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'كلمة السر صحيحة. يمكنك الدخول.'
+            ]);
         }
 
-        return response()->json(['message' => 'كلمة السر غير صحيحة.'], 403);
-    }
+        return response()->json([
+            'success' => false,
+            'message' => 'كلمة السر غير صحيحة.'
+        ], 401);    }
 }

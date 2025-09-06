@@ -45,25 +45,29 @@ class SendExamPassword extends Command
         foreach ($exams as $exam) {
             $start = Carbon::parse($exam->start_time);
             $diff = $now->diffInMinutes($start, false);
-           //  Log::info("Exam {$exam->id} starts at {$start}, now={$now}, diff={$diff}");
+           // Log::info("Exam {$exam->id} starts at {$start}, now={$now}, diff={$diff}");
             if ($diff <= 5 && $diff >= 0) {
-                $password = Str::random(8); // توليد كلمة سر 8 محارف
-                //   Log::info("Generated password: {$password}");
-                ExamPassword::create([
-                    'exam_id' => $exam->id,
-                    'password' => $password,
-                ]);
-           //     echo "كلمة السر لأمتحان {$exam->specialization->name}: $password\n";
+                // تأكد إذا الامتحان عنده كلمة سر مخزنة أصلاً
+                $exists = ExamPassword::where('exam_id', $exam->id)->exists();
+                if (!$exists) {
+                    $password = Str::random(8);
+                    //   Log::info("Generated password: {$password}");
+                    ExamPassword::create([
+                        'exam_id' => $exam->id,
+                        'password' => $password,
+                    ]);
+                    //     echo "كلمة السر لأمتحان {$exam->specialization->name}: $password\n";
 
 
-                $title = "كلمة سر الامتحان: {$exam->specialization->name}";
-                $body = "كلمة السر الخاصة بك: $password";
+                    $title = "كلمة سر الامتحان: {$exam->specialization->name}";
+                    $body = "كلمة السر الخاصة بك: $password";
 
-                $data = [
-                    'exam_id' => $exam->id,
-                    'password' => $password,
-                ];
-                $this->firebase->sendToRole('رئيس الامتحانات', $title, $body, $data);
+                    $data = [
+                        'exam_id' => $exam->id,
+                        'password' => $password,
+                    ];
+                    $this->firebase->sendToRole('رئيس الامتحانات', $title, $body, $data);
+                }
             }
         }
     }

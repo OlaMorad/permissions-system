@@ -43,6 +43,9 @@ class ExamController extends Controller
     // التحقق من كلمة السر الامتحانية
     public function check_exam_password(Request $request)
     {
+        $request->validate([
+            'password' => 'required|string|min:6|max:50',
+        ]);
         return $this->doctorService->checkExamPassword($request);
     }
 }
