@@ -17,23 +17,15 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo_mysql mbstring zip
 
-
 # تثبيت الاعتماديات
 RUN composer install --optimize-autoloader
-
-# إنشاء ملف .env من المثال إذا مش موجود
-RUN cp .env.example .env || true
-
-# توليد مفتاح التطبيق و JWT secret
-RUN php artisan key:generate
-RUN php artisan jwt:secret
 
 # نسخ السكربت وتشغيله عند بدء الحاوية
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # فتح البورت الافتراضي
-EXPOSE 8080
+EXPOSE 8000
 
 # تشغيل entrypoint
 CMD ["/usr/local/bin/entrypoint.sh"]
