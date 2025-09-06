@@ -161,4 +161,25 @@ class SearchService
 
         return new successResource($archives);
     }
+    // البحث عن امتحان حسب اسم الاختصاص 
+    public function exam_search($key = null)
+    {
+        if (empty($key)) {
+            // رجع كل الامتحانات لما ما يكون في مفتاح بحث
+            $exams = Exam::with('specialization')
+                ->whereNotNull('status')
+                ->get()
+                ->map(fn($exam) => $exam->toSearchableArray())
+                ->values();
+
+            return new successResource($exams);
+        }
+        // بحالة إدخال مفتاح بحث
+        $exams = Exam::search($key)->get()
+            ->filter(fn($exam) => !is_null($exam->status))
+            ->map(fn($exam) => $exam->toSearchableArray())
+            ->values();
+
+        return new successResource($exams);
+    }
 }

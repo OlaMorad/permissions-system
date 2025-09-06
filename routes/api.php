@@ -242,6 +242,7 @@ Route::controller(SearchController::class)->prefix('search')->group(function () 
     Route::get('Announcements', 'Search_Announcements')->middleware('Verify.Session', 'role:المدير|الطبيب');
     Route::get('/transactions', 'TransactionSearch')->middleware('Verify.Session');
     Route::get('transactions/archived', 'ArchiveTransactionSearch')->middleware('Verify.Session');
+    Route::get('/exam', 'ExamSearch')->middleware('Verify.Session', 'role:الطبيب');;
 });
 
 //face

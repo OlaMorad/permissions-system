@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Exam;
+use App\Models\ExamPassword;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -48,7 +49,11 @@ class SendExamPassword extends Command
             if ($diff <= 5 && $diff >= 0) {
                 $password = Str::random(8); // توليد كلمة سر 8 محارف
                 //   Log::info("Generated password: {$password}");
-                echo "كلمة السر لأمتحان {$exam->specialization->name}: $password\n";
+                ExamPassword::create([
+                    'exam_id' => $exam->id,
+                    'password' => $password,
+                ]);
+           //     echo "كلمة السر لأمتحان {$exam->specialization->name}: $password\n";
 
 
                 $title = "كلمة سر الامتحان: {$exam->specialization->name}";
