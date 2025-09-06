@@ -60,4 +60,10 @@ class SearchController extends Controller
         $key = $request->input('key');
         return $this->search->Archive_Transaction_Search($key);
     }
+
+    public function ExamSearch(Request $request)
+    {
+        $key = $request->input('key');
+        return $this->search->exam_search($key);
+    }
 }

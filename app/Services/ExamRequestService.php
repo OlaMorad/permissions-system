@@ -55,9 +55,9 @@ class ExamRequestService
         $form = Form::find($data['form_id']);
         $formName = $form?->name ?? '';
 
-            if ($specializationValue && $this->helper->hasNoApprovedProgram( $specializationValue)) {
-        throw new \Exception("لا يمكنك تقديم طلب لهذا الاختصاص لأنه لا يوجد برنامج امتحاني مقبول بعد.");
-    }
+        if ($specializationValue && $this->helper->hasNoApprovedProgram($specializationValue)) {
+            throw new \Exception("لا يمكنك تقديم طلب لهذا الاختصاص لأنه لا يوجد برنامج امتحاني مقبول بعد.");
+        }
         if (str_contains($formName, 'اعتذار')) {
             // تحقق إذا سبق وقدم اعتذار بنفس السنة والدورة والاختصاص
             if ($this->helper->hasPreviousApologyRequest($doctor->id, $year, $cycle, $form->id, $specialization->name)) {
@@ -83,17 +83,17 @@ class ExamRequestService
 
             $this->storeElementValues($formContent, $data['elements'] ?? []);
             $this->storeAttachments($formContent, $data['attachments'] ?? []);
-  app(\App\Services\FirebaseNotificationService::class)
-        ->sendToRole(
-            'موظف الامتحانات',
-            'طلب امتحاني جديد',
-            "تم تقديم طلب امتحاني جديد من الطبيب {$doctor->user->name}",
-            [
-                'form_content_id' => $formContent->id,
-                'form_id' => $formContent->form_id,
-                'doctor_id' => $doctor->id,
-            ]
-        );
+            app(\App\Services\FirebaseNotificationService::class)
+                ->sendToRole(
+                    'موظف الامتحانات',
+                    'طلب امتحاني جديد',
+                    "تم تقديم طلب امتحاني جديد من الطبيب {$doctor->user->name}",
+                    [
+                        'form_content_id' => $formContent->id,
+                        'form_id' => $formContent->form_id,
+                        'doctor_id' => $doctor->id,
+                    ]
+                );
             return $formContent;
         });
     }
@@ -188,71 +188,70 @@ class ExamRequestService
                 'value' => $value,
             ];
         }
-if($formContent->form->name == "طلب اعتذار عن الاختبار") {
+        if ($formContent->form->name == "طلب اعتذار عن الاختبار") {
 
-    // قيم السنة + الدورة + الاختصاص من نفس طلب الاعتذار
-    $year = null;
-    $cycle = null;
-    $specialization = null;
+            // قيم السنة + الدورة + الاختصاص من نفس طلب الاعتذار
+            $year = null;
+            $cycle = null;
+            $specialization = null;
 
-    foreach ($formContent->elementValues as $elementValue) {
-        $label = $elementValue->formElement->label ?? '';
-        if (stripos($label, 'السنة') !== false) {
-            $year = $elementValue->value;
-        }
-        if (stripos($label, 'دورة' )!== false) {
-            $cycle = $elementValue->value;
-        }
-        if (stripos($label, 'اختصاص') !== false) {
-            $specialization = $elementValue->value;
-        }
-
-    }
-
-    // البحث عن طلب ترشيح لنفس الطبيب ونفس المواصفات
-    $tarshi7Request = ExamRequest::where('doctor_id', $examRequest->doctor_id)
-        ->whereHas('formContent.form', function($q) {
-            $q->where('name','LIKE','%'. 'طلب ترشيح '.'%');
-        })
-        ->whereHas('formContent.elementValues', function($q) use ($year) {
-            $q->whereHas('formElement', fn($qq) => $qq->where('label', 'السنة'))
-               ->where('value', $year);
-        })
-  ->whereHas('formContent.elementValues', function($q) use ($cycle) {
-    $q->whereHas('formElement', function($qq) use ($cycle) {
-        $qq->whereIn('label', ['تشرين الأول', 'نيسان'])
-           ->where('label', $cycle);
-    })
-    ->where('value', 'on');
-})
-
-        ->whereHas('formContent.elementValues', function($q) use ($specialization) {
-            $q->whereHas('formElement', fn($qq) => $qq->where('label', 'like', '%اختصاص%'))
-               ->where('value', $specialization);
-        })
-        ->latest() // آخر طلب ترشيح
-        ->first();
-    $studentPhoto = null;
-
-    if ($tarshi7Request && $tarshi7Request->formContent) {
-        foreach ($tarshi7Request->formContent->elementValues as $elVal) {
-            $label = $elVal->formElement->label ?? '';
-            if (stripos($label, 'صورة شخصية') !== false) {
-                $studentPhoto = $elVal->value;
-                if ($studentPhoto && str_starts_with($studentPhoto, 'exam_attachments/')) {
-                    $studentPhoto = asset('storage/' . $studentPhoto);
+            foreach ($formContent->elementValues as $elementValue) {
+                $label = $elementValue->formElement->label ?? '';
+                if (stripos($label, 'السنة') !== false) {
+                    $year = $elementValue->value;
+                }
+                if (stripos($label, 'دورة') !== false) {
+                    $cycle = $elementValue->value;
+                }
+                if (stripos($label, 'اختصاص') !== false) {
+                    $specialization = $elementValue->value;
                 }
             }
-        }
-    }
 
-    return [
-        'form_name' => $formContent->form->name,
-        'uuid' => $examRequest->uuid,
-        'elements' => $elements,
-        'صورة شخصية' => $studentPhoto,
-    ];
-}
+            // البحث عن طلب ترشيح لنفس الطبيب ونفس المواصفات
+            $tarshi7Request = ExamRequest::where('doctor_id', $examRequest->doctor_id)
+                ->whereHas('formContent.form', function ($q) {
+                    $q->where('name', 'LIKE', '%' . 'طلب ترشيح ' . '%');
+                })
+                ->whereHas('formContent.elementValues', function ($q) use ($year) {
+                    $q->whereHas('formElement', fn($qq) => $qq->where('label', 'السنة'))
+                        ->where('value', $year);
+                })
+                ->whereHas('formContent.elementValues', function ($q) use ($cycle) {
+                    $q->whereHas('formElement', function ($qq) use ($cycle) {
+                        $qq->whereIn('label', ['تشرين الأول', 'نيسان'])
+                            ->where('label', $cycle);
+                    })
+                        ->where('value', 'on');
+                })
+
+                ->whereHas('formContent.elementValues', function ($q) use ($specialization) {
+                    $q->whereHas('formElement', fn($qq) => $qq->where('label', 'like', '%اختصاص%'))
+                        ->where('value', $specialization);
+                })
+                ->latest() // آخر طلب ترشيح
+                ->first();
+            $studentPhoto = null;
+
+            if ($tarshi7Request && $tarshi7Request->formContent) {
+                foreach ($tarshi7Request->formContent->elementValues as $elVal) {
+                    $label = $elVal->formElement->label ?? '';
+                    if (stripos($label, 'صورة شخصية') !== false) {
+                        $studentPhoto = $elVal->value;
+                        if ($studentPhoto && str_starts_with($studentPhoto, 'exam_attachments/')) {
+                            $studentPhoto = asset('storage/' . $studentPhoto);
+                        }
+                    }
+                }
+            }
+
+            return [
+                'form_name' => $formContent->form->name,
+                'uuid' => $examRequest->uuid,
+                'elements' => $elements,
+                'صورة شخصية' => $studentPhoto,
+            ];
+        }
 
         return [
             'form_name' => $formContent->form->name,
@@ -269,8 +268,25 @@ if($formContent->form->name == "طلب اعتذار عن الاختبار") {
             $examRequest->update([
                 'status' => $status
             ]);
+            //  إرسال إشعار للطبيب صاحب الطلب
+            $userId = $examRequest->doctor->user->id ?? null;
+
+            if ($userId) {
+                $firebase = app(FirebaseNotificationService::class);
+
+                $title = "تحديث حالة طلبك";
+                $body  = "تم " . ($status === 'status' ? 'الموافقة على' : 'رفض') . " طلبك لفحص الامتحان.";
+
+                $data = [
+                    'exam_request_uuid' => $examRequest->uuid,
+                    'status' => $status,
+                ];
+
+                $firebase->sendToUser($userId, $title, $body, $data);
+            }
         }
     }
+
     private function getExamRequestsByStatus(array $statuses, bool $includeStatus = true)
     {
         $examRequests = ExamRequest::with([

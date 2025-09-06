@@ -2,3 +2,25 @@ FROM laravelsail/php82-composer
 
 # تثبيت امتداد pdo_mysql
 RUN docker-php-ext-install pdo_mysql
+
+WORKDIR /var/www/html
+
+COPY . .
+
+# تثبيت الاعتماديات
+RUN composer install --no-dev --optimize-autoloader
+
+# نسخ ملف env إذا مش موجود
+RUN cp .env.example .env || true
+
+# توليد مفتاح التطبيق
+RUN php artisan key:generate
+RUN php artisan jwt:secret
+# المهاجرات والـ seed
+RUN php artisan migrate --force
+RUN php artisan db:seed --force
+
+EXPOSE 8080
+
+# تشغيل السيرفر على البورت يلي Railway يعطيه
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}

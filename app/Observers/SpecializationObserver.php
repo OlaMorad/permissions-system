@@ -21,11 +21,13 @@ class SpecializationObserver
 
         $data = [
             'specialization_id' => $specialization->id,
+            'type' => 'specialization', // نوع الإشعار
             'specialization_name' => $specialization->name,
             'status' => $specialization->status,
             'bachelors_degree' => $specialization->bachelors_degree,
            // 'experience_years' => $specialization->experience_years,
             'created_at' => $specialization->created_at,
+            'action_required' => true,
 
         ];
 
@@ -58,8 +60,8 @@ class SpecializationObserver
 
         // أي تغييرات أخرى (غير status) → إشعار للمدير
         if (!empty($changes) && !array_key_exists('status', $changes)) {
-            $title = "تم تعديل اختصاص";
-            $body  = "يرجى مراجعة التعديلات التي تمت على بيانات الاختصاص";
+            $title = "تم تعديل على بيانات الاختصاص";
+            $body  = "{$specialization->name}";
 
             $data = [
                 'specialization_id' => $specialization->id,
