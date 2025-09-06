@@ -1,12 +1,12 @@
 # صورة الأساس
-FROM laravelsail/php82-composer
+FROM php:8.2-fpm
 
-# تثبيت امتداد MySQL والحزم المطلوبة
+# تثبيت الأدوات اللازمة وامتدادات PHP
 RUN apt-get update && apt-get install -y \
     libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libzip-dev \
-    default-mysql-client \
+    default-mysql-client nginx supervisor git unzip curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql mbstring zip
+    && docker-php-ext-install gd pdo_mysql mbstring zip opcache
 
 # مجلد العمل
 WORKDIR /var/www/html
@@ -14,15 +14,16 @@ WORKDIR /var/www/html
 # نسخ ملفات المشروع
 COPY . .
 
-# تثبيت الاعتماديات
+# تثبيت Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer install --optimize-autoloader
 
-# نسخ السكربت وتشغيله عند بدء الحاوية
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# نسخ إعدادات Nginx و Supervisor
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # فتح البورت الافتراضي
 EXPOSE 8000
 
-# تشغيل entrypoint
-CMD ["/usr/local/bin/entrypoint.sh"]
+# تشغيل Supervisor (تشغل nginx و php-fpm معًا)
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
