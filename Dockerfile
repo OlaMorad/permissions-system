@@ -16,6 +16,9 @@ RUN cp .env.example .env || true
 RUN php artisan key:generate
 RUN php artisan jwt:secret
 
+# نسخ السكربت وتشغيله عند بدء الحاوية
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 EXPOSE 8080
 
-CMD php artisan serve --host=0.0.0.0 --port=${PORT}
+CMD ["/usr/local/bin/entrypoint.sh"]
