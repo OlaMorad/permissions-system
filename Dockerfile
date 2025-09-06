@@ -24,7 +24,7 @@ RUN php artisan jwt:secret
 CMD sh -c "php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
 
 
-EXPOSE 8080
+EXPOSE ${PORT}
 
 # تشغيل السيرفر على البورت يلي Railway يعطيه
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+CMD php artisan serve --host=0.0.0.0 --port=${PORT}
