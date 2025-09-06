@@ -20,9 +20,9 @@ RUN cp .env.example .env || true
 # توليد مفتاح التطبيق
 RUN php artisan key:generate
 RUN php artisan jwt:secret
-# المهاجرات والـ seed
-RUN php artisan migrate --force
-RUN php artisan db:seed --force
+
+CMD sh -c "php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+
 
 EXPOSE 8080
 
