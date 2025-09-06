@@ -6,6 +6,10 @@ RUN docker-php-ext-install pdo_mysql
 WORKDIR /var/www/html
 
 COPY . .
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo_mysql mbstring zip
 
 # تثبيت الاعتماديات
 RUN composer install --no-dev --optimize-autoloader
