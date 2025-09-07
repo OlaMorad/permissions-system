@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class InternalMail extends Model
 {
+    protected $table = 'internal_mails';
         protected $fillable=[
         'from_user_id',
         'status',

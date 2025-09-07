@@ -35,12 +35,5 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # فتح البورت الافتراضي
 EXPOSE 8000
 
-# تنظيف كاش Laravel
-RUN php artisan config:clear \
-    && php artisan cache:clear \
-    && php artisan route:clear \
-    && php artisan view:clear \
-    && composer dump-autoload
-
 # تشغيل entrypoint
 CMD ["/usr/local/bin/entrypoint.sh"]
