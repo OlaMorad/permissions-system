@@ -10,7 +10,6 @@ class InternalMail extends Model
 {
     protected $fillable=[
         'from_user_id',
-        // 'to_user_id',
         'status',
         'subject',
         'body',
