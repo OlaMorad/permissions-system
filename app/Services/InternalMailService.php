@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Models\Manager;
 use App\Models\Employee;
 use App\Traits\LoggerTrait;
-use App\Models\InternalMail;
+use App\Models\internalMail;
 use App\Enums\StatusInternalMail;
 use Illuminate\Support\Facades\DB;
 use App\Models\InternalMailArchive;
