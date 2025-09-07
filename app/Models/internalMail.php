@@ -6,7 +6,7 @@ use App\Enums\StatusInternalMail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class internalMail extends Model
+class InternalMail extends Model
 {
     protected $fillable=[
         'from_user_id',
