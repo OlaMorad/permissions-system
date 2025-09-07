@@ -1,12 +1,8 @@
 # صورة الأساس
-FROM php:8.2-fpm
+FROM laravelsail/php82-composer
 
-# تثبيت الأدوات اللازمة وامتدادات PHP
-RUN apt-get update && apt-get install -y \
-    libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libzip-dev \
-    default-mysql-client nginx supervisor git unzip curl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql mbstring zip opcache
+# تثبيت امتداد MySQL
+RUN docker-php-ext-install pdo_mysql
 
 # مجلد العمل
 WORKDIR /var/www/html
@@ -14,16 +10,30 @@ WORKDIR /var/www/html
 # نسخ ملفات المشروع
 COPY . .
 
-# تثبيت Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# تثبيت الحزم المطلوبة و gd و zip و mbstring
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libzip-dev \
+    default-mysql-client \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo_mysql mbstring zip
+
+
+# تثبيت الاعتماديات
 RUN composer install --optimize-autoloader
 
-# نسخ إعدادات Nginx و Supervisor
-COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# إنشاء ملف .env من المثال إذا مش موجود
+RUN cp .env.example .env || true
+
+# توليد مفتاح التطبيق و JWT secret
+RUN php artisan key:generate
+RUN php artisan jwt:secret
+
+# نسخ السكربت وتشغيله عند بدء الحاوية
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # فتح البورت الافتراضي
 EXPOSE 8000
 
-# تشغيل Supervisor (تشغل nginx و php-fpm معًا)
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# تشغيل entrypoint
+CMD ["/usr/local/bin/entrypoint.sh"]
