@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Models\Manager;
 use App\Models\Employee;
 use App\Traits\LoggerTrait;
-use App\Models\internalMail;
+use App\Models\InternalMail;
 use App\Enums\StatusInternalMail;
 use Illuminate\Support\Facades\DB;
 use App\Models\InternalMailArchive;
@@ -73,7 +73,7 @@ class InternalMailService
             ? StatusInternalMail::APPROVED
             : StatusInternalMail::PENDING;
 
-        $mail = internalMail::create([
+        $mail = InternalMail::create([
             'from_user_id' => $currentUser->id,
             'status'       => $status,
             'subject'      => $request->subject,
@@ -116,7 +116,7 @@ return collect($mail)->except('id');
         }
 
         // تحميل الرسائل الصادرة فقط من الموظفين التابعين أو من المدير الأعلى نفسه (في حال كان Admin)
-        $mails = internalMail::with(['fromUser:id,name', 'paths:id,name'])
+        $mails = InternalMail::with(['fromUser:id,name', 'paths:id,name'])
             ->where(function ($query) use ($employeeIds, $currentUser, $isAdmin) {
                 $query->whereIn('from_user_id', $employeeIds);
 
@@ -184,7 +184,7 @@ return collect($mail)->except('id');
             return response()->json(['message' => 'ليس لديك صلاحية تعديل حالة هذا البريد. (أنت لست مديرًا)'], 403);
         }
 
-        $mail = internalMail::where('uuid', $request->uuid)->firstOrFail();
+        $mail = InternalMail::where('uuid', $request->uuid)->firstOrFail();
         if (!$mail) {
             return response()->json(['message' => 'البريد المطلوب غير موجود.'], 404);
         }
@@ -227,14 +227,14 @@ public function show_import_internal_mails()
         ->unique();
 
     // 2. جلب الرسائل التي حالتها APPROVED ومطابقة للـ IDs أعلاه
-    $approvedMails = internalMail::with(['fromUser:id,name,phone,avatar'])
+    $approvedMails = InternalMail::with(['fromUser:id,name,phone,avatar'])
         ->where('status', StatusInternalMail::APPROVED)
         ->whereIn('id', $approvedMailIds)
         ->select('id', 'uuid', 'from_user_id', 'subject', 'updated_at')
         ->get();
 
     // 3. جلب الرسائل PENDING التي المرسل منها نفس مسار المستخدم (دون النظر إلى جدول internal_mail_paths)
-    $pendingMails = internalMail::with(['fromUser:id,name,phone,avatar'])
+    $pendingMails = InternalMail::with(['fromUser:id,name,phone,avatar'])
         ->where('status', StatusInternalMail::PENDING)
         ->whereHas('fromUser.roles', function ($q) use ($userPathId) {
             $q->where('path_id', $userPathId);
@@ -280,7 +280,7 @@ public function show_import_internal_mails()
         if ($roleName == 'الطبيب')
             return abort(403, 'لا يحق لك روؤية البريد');
 
-        $mail = internalMail::where('uuid', $uuid)->select('subject', 'body', 'updated_at', 'from_user_id')->first();
+        $mail = InternalMail::where('uuid', $uuid)->select('subject', 'body', 'updated_at', 'from_user_id')->first();
           if (!$mail) {
         $mail = InternalMailArchive::where('uuid', $uuid)
             ->select('subject', 'body', 'updated_at', 'from_user_id')
