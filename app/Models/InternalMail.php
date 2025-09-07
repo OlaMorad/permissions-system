@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use App\Enums\StatusInternalMail;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class InternalMail extends Model
 {
-    protected $fillable=[
+        protected $fillable=[
         'from_user_id',
         'status',
         'subject',
