@@ -2,7 +2,6 @@
 set -e
 
 echo "Waiting for MySQL to be ready..."
-
 while ! mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" --silent; do
     echo "MySQL is unavailable - sleeping"
     sleep 3
@@ -18,7 +17,14 @@ mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SET FOR
 echo "Seeding database..."
 php artisan db:seed --force
 
-echo "Starting Laravel server..."
-echo "PORT is $PORT"
+# تشغيل الـ Queue Worker بالخلفية
+echo "Starting Laravel Queue Worker..."
+php artisan queue:work --verbose --tries=3 --timeout=90 &
 
+# تشغيل الـ Scheduler بالخلفية
+echo "Starting Laravel Scheduler..."
+php artisan schedule:work &
+
+# تشغيل السيرفر
+echo "Starting Laravel server..."
 exec php -S 0.0.0.0:$PORT -t public
