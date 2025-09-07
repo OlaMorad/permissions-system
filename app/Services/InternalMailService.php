@@ -316,4 +316,5 @@ protected function markAsRead($mails, $userPathId)
 }
 
 
+
 }
