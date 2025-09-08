@@ -51,7 +51,7 @@ return [
              */
 
             'credentials' => [
-                'credentials_file' =>  json_decode(env('FIREBASE_CREDENTIALS'), true),
+                'credentials_file' => storage_path('app/' . env('FIREBASE_CREDENTIALS', '')),
                 'project_id' => env('FIREBASE_PROJECT_ID', null),
                 'sender_id' => env('FIREBASE_SENDER_ID', null),
 
