@@ -12,7 +12,7 @@ use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\ProgramController;
-use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\employeeController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\DoctorAuthController;
 use App\Http\Controllers\PermissionController;
@@ -47,7 +47,7 @@ Route::middleware(['throttle:100,1','working.hours'])->group(function () {
     Route::middleware('Verify.Session')->group(function () {
         Route::post('/register-employee', [EmployeeController::class, 'create_employee'])->middleware(['role:نائب المدير', 'Verify.Session']);
         Route::post('/edit_employee_information', [EmployeeController::class, 'edit_employee_information'])->middleware(['role:نائب المدير', 'Verify.Session']);
-        Route::get('/show_employees', [EmployeeController::class, 'show_employees']);
+        Route::get('/show_employees', [employeeController::class, 'show_employees']);
         Route::get('/convert_employee_status', [EmployeeController::class, 'convert_employee_status']);
     });
 
