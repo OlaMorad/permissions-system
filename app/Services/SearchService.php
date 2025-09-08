@@ -133,7 +133,7 @@ class SearchService
     {
         $search = Announcement::where('title', 'LIKE', '%' . $request . '%')
             ->orwhere('body', 'LIKE', '%' . $request . '%')->get();
-        return new successResource([$search]);
+        return new successResource($search);
     }
 
     public function Search_Archive($request) {}
@@ -161,7 +161,7 @@ class SearchService
 
         return new successResource($archives);
     }
-    // البحث عن امتحان حسب اسم الاختصاص 
+    // البحث عن امتحان حسب اسم الاختصاص
     public function exam_search($key = null)
     {
         if (empty($key)) {

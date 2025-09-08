@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('bachelors_degree');
             $table->json('experience_years');
-            $table->string('status')->default(ExamRequestEnum::PENDING->value);
+            $table->string('status')->default(ExamRequestEnum::APPROVED->value);
             $table->timestamps();
         });
     }

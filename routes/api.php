@@ -236,7 +236,7 @@ Route::controller(SearchController::class)->prefix('search')->group(function () 
     Route::get('Exam/request', 'Search_Exam_Request');
     Route::get('Specialization/Name', 'Search_Specialization_Name')->middleware('Verify.Session', 'role:نائب المدير|موظف الامتحانات|رئيس الامتحانات|الطبيب');
     Route::get('Employee', 'Search_Employee');
-    Route::get('Form', 'Search_Form')->middleware('Verify.Session', 'role:رئيس الديوان|الطبيب');
+    Route::get('Form', 'Search_Form')->middleware('Verify.Session', 'role:رئيس الديوان|الطبيب|المدير');
     Route::get('Announcements', 'Search_Announcements')->middleware('Verify.Session', 'role:المدير|الطبيب');
     Route::get('/transactions', 'TransactionSearch')->middleware('Verify.Session');
     Route::get('transactions/archived', 'ArchiveTransactionSearch')->middleware('Verify.Session');
