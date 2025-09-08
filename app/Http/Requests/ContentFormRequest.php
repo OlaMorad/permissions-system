@@ -77,6 +77,7 @@ class ContentFormRequest extends FormRequest
             foreach ($groups as $group) {
                 $selectedCount = 0;
                 $labels = array_map(fn($el) => $el->label, $group);
+                $groupType = $group[0]->type->value; // كل عناصر المجموعة من نفس النوع
 
                 foreach ($group as $element) {
                     $label = $element->label;
@@ -87,11 +88,24 @@ class ContentFormRequest extends FormRequest
                     }
                 }
 
-                if ($selectedCount !== 1) {
-                    $validator->errors()->add(
-                        'elements',
-                        'يجب اختيار خيار واحد فقط من بين: ' . implode(' أو ', $labels)
-                    );
+                if ($groupType === Element_Type::CHECKBOX->value) {
+                    //  Checkbox: لازم خيار واحد بالضبط
+                    if ($selectedCount !== 1) {
+                        $validator->errors()->add(
+                            'elements',
+                            'يجب اختيار خيار واحد فقط من بين: ' . implode(' أو ', $labels)
+                        );
+                    }
+                }
+
+                if ($groupType === Element_Type::Multiple_Choice->value) {
+                    //  Multiple Choice: لازم خيار واحد أو أكثر
+                    if ($selectedCount < 1) {
+                        $validator->errors()->add(
+                            'elements',
+                            'يجب اختيار خيار واحد على الأقل من بين: ' . implode(' أو ', $labels)
+                        );
+                    }
                 }
             }
         });
@@ -101,8 +115,8 @@ class ContentFormRequest extends FormRequest
     {
         $label = $element->label;
         $type = $element->type->value;
-        // تجاهل النصوص تمامًا
-        if ($type === Element_Type::TEXT->value) {
+        // تجاهل النصوص والعناوين
+        if ($type === Element_Type::TEXT->value || $type === Element_Type::TITLE->value) {
             return;
         }
         if (is_null($value)) {

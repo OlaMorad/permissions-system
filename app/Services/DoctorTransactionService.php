@@ -72,7 +72,7 @@ class DoctorTransactionService
 
             return [
                 'uuid' => $transaction->uuid,
-                'cost ' => $form->cost ?? null,
+                'cost' => $form->cost ?? null,
                 'full_path' => collect($steps)->map(fn($id) => $stepNames[$id] ?? '')->values()->all(),
                 'current_path' => in_array($transaction->status_to, [TransactionStatus::COMPLETED, TransactionStatus::REJECTED])
                     ? 'انتهت'
