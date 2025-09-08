@@ -33,7 +33,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::middleware(['throttle:100,1'])->group(function () {
+Route::middleware(['throttle:100,1','working.hours'])->group(function () {
 
     // Auth
     Route::controller(AuthController::class)->group(function () {
@@ -217,10 +217,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::post('/add', 'store')->middleware(['Verify.Session', 'role:المدير']);
         Route::get('/{id}', 'show')->middleware(['Verify.Session', 'role:المدير|الطبيب']);
     });
-});
-
-
-//Doctor Auth
+    //Doctor Auth
 Route::controller(DoctorAuthController::class)->group(function () {
     Route::post('register/doctor', 'register');
     Route::post('verify/register/code', 'verify_register_code');
@@ -254,3 +251,7 @@ Route::post('uploadAvatar', [uploadImageController::class, 'uploadAvatar'])->mid
 
 // convert status
 Route::patch('ConverStatus/{type}', [ConvertStatusController::class, 'Convert_status_for_user'])->middleware('Verify.Session', 'role:نائب المدير');
+
+});
+
+
